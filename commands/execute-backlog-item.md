@@ -16,15 +16,8 @@ Select and execute the highest-priority actionable backlog item, scoped to the a
 
 ### 0. Preflight (MANDATORY)
 
-- Run `gh auth status`. If not authenticated, STOP and instruct the user to run `gh auth login`.
-- Run `git remote get-url origin`. Parse `<owner>/<repo>`. STOP if missing.
-- Resolve project metadata, preferring the local cache:
-  - Read `.git/info/backlog-project.json` if it exists.
-  - Use the cache when: the file exists, `owner`/`repo` match, and `cached_at` is within 24 hours. Cached `status_field_id` and `status_options` IDs save round-trips in step 5 and step 10.
-  - On cache miss/expiry: query `gh project list --owner <owner> --format json` filtered by repo link; on success, refresh the cache (write to a temp file under `.git/info/`, then rename atomically).
-  - If neither cache nor live query find a Project:
-    - STOP
-    - Output exactly: `No Backlog project linked to <owner>/<repo>. Run /create-project first.`
+- Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
+  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
 
 ---
 

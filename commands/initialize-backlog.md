@@ -1,4 +1,4 @@
-# create-project
+# initialize-backlog
 
 You are an AI agent acting as a Senior Project Manager responsible for bootstrapping the GitHub-native backlog system for this repository.
 
@@ -12,7 +12,7 @@ This command is **idempotent**: re-running it on a repo where the project alread
 
 Make the repository ready to host backlog items as GitHub Issues, prioritized inside a linked GitHub Project (v2), so that:
 
-- `add-backlog-item`, `migrate-backlog`, `execute-backlog-item`, and `validate-backlog` can all detect the project dynamically via `gh`
+- All other commands can all read project metadata from `.claude/backlog-project.json`
 - Issues created by any command share the same body shape (driven by the Issue Forms template)
 - Labels are uniform across `type:*`, `priority:*`, and `effort:*`
 
@@ -24,12 +24,10 @@ Make the repository ready to host backlog items as GitHub Issues, prioritized in
 
 Verify the local environment can talk to GitHub:
 
-- Run `gh auth status` — if not authenticated, STOP and instruct the user to run `gh auth login`
 - Parse `<owner>/<repo>` from the origin URL (support both `git@github.com:owner/repo.git` and `https://github.com/owner/repo.git` forms)
 - Confirm Issues are enabled: `gh repo view <owner>/<repo> --json hasIssuesEnabled --jq '.hasIssuesEnabled'`. If `false`, STOP and instruct the user to enable Issues in repository settings.
+- Confirm Projects are enabled: `gh repo view <owner>/<repo> --json hasProjectsEnabled --jq '.hasProjectsEnabled'`. If `false`, STOP and instruct the user to enable Projects in repository settings.
 - Confirm the GitHub Issue Dependencies API is reachable on this repo (used by `add-backlog-item`, `execute-backlog-item`, `validate-backlog`, `refine-backlog-item`, `migrate-backlog`):
-  - `gh api "repos/<owner>/<repo>/issues/dependencies" --silent` (returns `200` for enabled repos, `404` if the feature is unavailable on this plan).
-  - The Dependencies API and the Sub-issues API are GA. They are free for public repos and require a paid plan for private repos. If the response is `404` on a private repo, surface this as a warning (provisioning continues, but `execute-backlog-item`'s block-skipping and dependency audit checks will be no-ops on this repo).
 
 If any required preflight step fails:
 
@@ -45,7 +43,7 @@ Before creating anything:
 
 - Query existing projects:
   - `gh project list --owner <owner> --format json`
-- Filter for a Project (v2) titled `<repo> Backlog` (where `<repo>` is the repository name) that is linked to this repo
+- Filter for a Project (v2) titled `<owner>/<repo> Backlog` that is linked to this repo
 - If a matching Project exists:
   - Record its number and URL
   - SKIP step 3
@@ -58,10 +56,9 @@ Before creating anything:
 If no matching Project exists:
 
 - Create a new Project (v2):
-  - `gh project create --owner <owner> --title "<repo> Backlog"` (where `<repo>` is the repository name)
-- Link it to the repository and set it as the default repository:
+  - `gh project create --owner <owner> --title "<owner>/<repo> Backlog"`
+- Link it to the repository
   - `gh project link <project-number> --owner <owner> --repo <repo>`
-  - `gh repo set-default <owner>/<repo>` — ensures `gh` commands in this repo directory resolve to the correct remote
 - Set a canonical short description on the project:
   - Use the GraphQL mutation `updateProjectV2` with `shortDescription: "Backlog for <owner>/<repo>"`:
 
@@ -220,16 +217,18 @@ The rendered issue body produced by GitHub for this template uses `### What`, `#
 
 ---
 
-### 6. Cache Project Metadata (LOCAL, NEVER TRACKED)
+### 6. Persist Project Metadata
 
-To save other commands a round-trip on every invocation, persist project metadata to `.git/info/backlog-project.json`.
+Persist project metadata to `.claude/backlog-project.json` so other commands can read it without any live GitHub queries.
 
 Resolve the metadata via:
 
 - `gh project field-list <project-number> --owner <owner> --format json` — for the Status field's node ID and the option IDs for `Todo` / `In Progress` / `Done`
 - `gh project view <project-number> --owner <owner> --format json` — for the project's node ID
 
-Write atomically (temp file + rename) to avoid torn reads:
+Create the `.claude/` directory if needed: `mkdir -p .claude`
+
+Write the file:
 
 ```json
 {
@@ -243,16 +242,14 @@ Write atomically (temp file + rename) to avoid torn reads:
     "Todo": "<option-id>",
     "In Progress": "<option-id>",
     "Done": "<option-id>"
-  },
-  "cached_at": "<ISO 8601 timestamp>"
+  }
 }
 ```
 
 Schema notes:
 
-- `cached_at` lets readers expire the cache (recommended TTL: 24h)
-- All other commands MUST treat the cache as advisory — if any read fails, they fall back to live `gh` queries and refresh the cache themselves
-- Re-running `create-project` on a fully-provisioned repo MUST refresh the cache
+- This file is the single source of truth for project metadata — all other commands read it directly with no fallback
+- Re-running `initialize-backlog` on a fully-provisioned repo MUST refresh this file
 
 ---
 
@@ -266,7 +263,7 @@ Print a structured summary so the user can verify provisioning:
 - Labels created or updated (count, with full list)
 - Issue Forms template PR URL (or "already present, no PR needed")
 - Status field options confirmed
-- Cache file path: `.git/info/backlog-project.json`
+- Metadata file path: `.claude/backlog-project.json`
 
 ---
 

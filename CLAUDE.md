@@ -11,14 +11,14 @@ There is **no source code, no build, no tests, no lint**. Each command file is a
 ## The commands and their workflow
 
 ```
-create-project   ─►  plan-release   ─►  add-backlog-item / migrate-backlog
-                                              │
-                                              ├─►  refine-backlog ─► refine-backlog-item   (needs-clarification)
-                                              ├─►  validate-backlog                        (read-only audit)
-                                              └─►  execute-backlog-item                    (picks topmost unblocked)
+initialize-backlog   ─►  plan-release   ─►  add-backlog-item / migrate-backlog
+                                                  │
+                                                  ├─►  refine-backlog ─► refine-backlog-item   (needs-clarification)
+                                                  ├─►  validate-backlog                        (read-only audit)
+                                                  └─►  execute-backlog-item                    (picks topmost unblocked)
 ```
 
-`create-project` is the bootstrap. Every other command preflights for a Project linked to the repo and stops with the standard error if missing. `plan-release` creates Milestones (releases). `add-backlog-item` and `migrate-backlog` create Issues. `execute-backlog-item` picks work. `refine-backlog` orchestrates a session over items flagged `needs-clarification`, delegating each to `refine-backlog-item`. `validate-backlog` audits without mutating.
+`initialize-backlog` is the bootstrap. Every other command preflights for a Project linked to the repo and stops with the standard error if missing. `plan-release` creates Milestones (releases). `add-backlog-item` and `migrate-backlog` create Issues. `execute-backlog-item` picks work. `refine-backlog` orchestrates a session over items flagged `needs-clarification`, delegating each to `refine-backlog-item`. `validate-backlog` audits without mutating.
 
 ## Invariants that MUST be preserved across all commands
 
@@ -29,16 +29,16 @@ grep -hoE "type:[a-z-]+" commands/*.md | sort -u           # 9 type labels
 grep -hoE "priority:P[0-3]" commands/*.md | sort -u         # 4 priority labels
 grep -hoE "effort:(XS|S|M|L|XL)\b" commands/*.md | sort -u  # 5 effort labels
 grep -n "No Backlog project linked" commands/*.md           # identical preflight stop string in 7 files
-grep -n ".git/info/backlog-project.json" commands/*.md      # cache file referenced everywhere
+grep -n ".claude/backlog-project.json" commands/*.md        # metadata file referenced everywhere
 ```
 
 1. **Label catalog** — `type:{feature,bug,security,performance,dx,tech-debt,reliability,compliance,spike}`, `priority:{P0,P1,P2,P3}`, `effort:{XS,S,M,L,XL}`, plus `needs-clarification`. Any new value or rename must be applied in all command files.
 
-2. **Standard preflight stop string** — every consumer command outputs *exactly* `No Backlog project linked to <owner>/<repo>. Run /create-project first.` when no Project is found.
+2. **Standard preflight stop string** — every consumer command outputs *exactly* `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.` when the metadata file is missing.
 
-3. **Issue Forms template body shape** — section headings `### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes` (in this order). `validate-backlog` parses these by exact match. `add-backlog-item`, `migrate-backlog`, `refine-backlog-item` all emit bodies that conform. The template itself is authored at runtime by `create-project` (NOT committed in this repo) and goes out via PR, never direct commit.
+3. **Issue Forms template body shape** — section headings `### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes` (in this order). `validate-backlog` parses these by exact match. `add-backlog-item`, `migrate-backlog`, `refine-backlog-item` all emit bodies that conform. The template itself is authored at runtime by `initialize-backlog` (NOT committed in this repo) and goes out via PR, never direct commit.
 
-4. **Cache file location** — `.git/info/backlog-project.json` (inside `.git/`, never tracked). 24-hour TTL. `create-project` writes it; the other 5 consumers read it with live-query fallback. Schema documented in `create-project.md`.
+4. **Metadata file location** — `.claude/backlog-project.json`. `initialize-backlog` writes it; all other commands read it directly with no live-query fallback. Schema documented in `initialize-backlog.md`.
 
 5. **Active milestone resolution** — earliest open `due_on`, tie-break by lowest version parsed from milestone title (`v1.2.0` < `v1.3.0`), fallback to milestone `number` for non-parseable titles. When no milestone has `due_on`, lowest version wins. This logic must match in `execute-backlog-item` and `add-backlog-item`.
 
@@ -55,14 +55,14 @@ These were made deliberately — don't undo without explicit user direction:
 - **Single repo, single Project** — `Backlog` titled Project v2 linked to the active repo. No cross-repo Projects.
 - **Status is the only Project v2 custom field** — bucket/priority/effort live as repo labels (visible on issue cards everywhere).
 - **`migrate-backlog` skips Done items** — historical work is not migrated to GitHub. PR shipped references stay in the source `BACKLOG.md`.
-- **Issue Forms template ships via PR** — `create-project` opens a `chore/backlog-item-issue-template` PR; it never commits the template directly to the default branch.
+- **Issue Forms template ships via PR** — `initialize-backlog` opens a `chore/backlog-item-issue-template` PR; it never commits the template directly to the default branch.
 - **`validate-backlog` is strictly read-only** — never mutates issues. It surfaces `gh issue edit ...` snippets the user can run.
 - **Migration dep inference is opt-in** — `migrate-backlog` scans source prose for hints like "depends on" / "blocked by" but presents all candidates in a single review block and applies only after user confirmation.
 
 ## When editing commands
 
 - Match the existing style: numbered workflow sections with `(MANDATORY)` / `(STRICT)` / `(RELATIVE)` flags, opening prose `You are an AI agent acting as...`, `Rules & Constraints` section, `Output Expectations` section.
-- New commands MUST add the standard preflight block (auth → origin parse → cache read → live-query fallback → standard stop string → label catalog check).
+- New commands MUST add the standard preflight block (auth → origin parse → metadata file read → standard stop string → label catalog check).
 - After non-trivial edits, run the consistency greps above and verify no spurious bucket/Bucket leftovers (`grep -nE "[Bb]ucket" commands/*.md` should be empty — that term was renamed to `type` in this repo's history).
 - All `gh` errors must be surfaced verbatim — never swallow.
 
@@ -70,7 +70,7 @@ These were made deliberately — don't undo without explicit user direction:
 
 There is no automated test suite. The end-to-end smoke is:
 
-1. `/create-project` in a fresh repo with `gh auth status` succeeding → verify Project, labels, Issue Forms PR.
+1. `/initialize-backlog` in a fresh repo with `gh auth status` succeeding → verify Project, labels, Issue Forms PR, `.claude/backlog-project.json` written.
 2. `/plan-release` → milestone created with `due_on`.
 3. `/add-backlog-item` → issue with all three label groups, body matches template, item in Project at the chosen rank with Status=Todo, deps applied if declared.
 4. `/migrate-backlog` against a small sample BACKLOG.md including a Done item → Done item skipped, others migrated, dep inference candidates reviewed.
