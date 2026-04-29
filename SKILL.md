@@ -1,6 +1,6 @@
 ---
 name: github-backlog-management
-description: Use when managing a product backlog on GitHub — creating or importing backlog items, prioritizing work, executing tasks, auditing backlog quality, or setting up a GitHub Issues + Projects v2 workflow from scratch
+description: GitHub-native backlog automation. Manage Issues + Projects v2 with AI-enforced INVEST quality, dependency tracking, and one-command execution. Create or import backlog items, prioritize work, execute tasks, audit quality, or bootstrap a workflow from scratch.
 ---
 
 # GitHub Backlog Management
