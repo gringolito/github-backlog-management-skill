@@ -32,6 +32,7 @@ Verify the local environment can talk to GitHub:
   - The Dependencies API and the Sub-issues API are GA. They are free for public repos and require a paid plan for private repos. If the response is `404` on a private repo, surface this as a warning (provisioning continues, but `execute-backlog-item`'s block-skipping and dependency audit checks will be no-ops on this repo).
 
 If any required preflight step fails:
+
 - STOP
 - Report the missing prerequisite explicitly
 - Do NOT continue to provisioning
@@ -44,7 +45,7 @@ Before creating anything:
 
 - Query existing projects:
   - `gh project list --owner <owner> --format json`
-- Filter for a Project (v2) titled `Backlog` that is linked to this repo
+- Filter for a Project (v2) titled `<repo> Backlog` (where `<repo>` is the repository name) that is linked to this repo
 - If a matching Project exists:
   - Record its number and URL
   - SKIP step 3
@@ -57,9 +58,17 @@ Before creating anything:
 If no matching Project exists:
 
 - Create a new Project (v2):
-  - `gh project create --owner <owner> --title "Backlog"`
-- Link it to the repository:
+  - `gh project create --owner <owner> --title "<repo> Backlog"` (where `<repo>` is the repository name)
+- Link it to the repository and set it as the default repository:
   - `gh project link <project-number> --owner <owner> --repo <repo>`
+  - `gh repo set-default <owner>/<repo>` — ensures `gh` commands in this repo directory resolve to the correct remote
+- Set a canonical short description on the project:
+  - Use the GraphQL mutation `updateProjectV2` with `shortDescription: "Backlog for <owner>/<repo>"`:
+
+    ```sh
+    gh api graphql -f query='mutation { updateProjectV2(input: { projectId: "<project-id>", shortDescription: "Backlog for <owner>/<repo>" }) { projectV2 { id } } }'
+    ```
+
 - Verify the Project's built-in `Status` field exists with options:
   - `Todo`
   - `In Progress`
@@ -98,6 +107,8 @@ Create the standard label catalog. Use `gh label create --force` so existing lab
 - `effort:M`
 - `effort:L`
 - `effort:XL`
+
+Effort label descriptions MUST NOT include time estimates (e.g. "2 hours", "1 day"). Use only relative size terms (e.g. "Extra small", "Small", "Medium", "Large", "Extra large").
 
 #### Operational labels
 
