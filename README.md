@@ -4,33 +4,26 @@
 
 ---
 
-## Why you should care
+## Motivation
 
-### For solo developers
+Backlogs rot. Items accumulate without acceptance criteria, blockers go unrecorded, priorities drift from execution order, and eventually the backlog stops reflecting reality — so people stop trusting it.
 
-You already know the problem. You have a `TODO.md`, a few sticky notes, three open browser tabs with issues you swore you'd remember, and a growing sense that you're working on the second-most-important thing right now. You don't need a PM. You need a system that gets out of your way.
+This skill keeps a GitHub backlog honest. Every item is INVEST-validated before it lands in the queue. Blockers are tracked with GitHub's native dependency API, not buried in comments. `/execute-backlog-item` picks the topmost unblocked work automatically, so "what do I do next?" has a deterministic answer.
 
-This skill gives you that. Run a command, get a well-formed GitHub Issue with acceptance criteria you actually wrote, ranked in a Project you control. When you sit down to code, `/execute-backlog-item` tells you exactly what to work on next — and skips anything blocked — so you stop making that decision from scratch every morning.
+Everything stays in GitHub — Issues, Projects v2, Milestones, Labels. No extra tools, no database, no webhooks.
 
-No team required. No process overhead. Just you, your repo, and a backlog that doesn't lie to you.
+### What Claude does (and doesn't do)
 
-#### Already have a `TODO.md`, `BACKLOG.md`, or some other list you've been maintaining?
+Claude enforces structure; it doesn't set your priorities. Specifically:
 
-Run `/migrate-backlog`, point Claude at the file, and it imports everything into GitHub Issues — skipping anything already done, inferring dependencies from your own prose, and letting you review before anything is applied. Your history, your format, no manual copying.
+- **INVEST gate** — flags items with vague scope or missing acceptance criteria before they enter the queue
+- **Dependency inference** — reads prose ("depends on X"), surfaces candidates for you to confirm
+- **Next-item selection** — picks the topmost unblocked work; you decide whether to execute it
+- **Audit** — `/validate-backlog` is read-only and surfaces problems as ready-to-run `gh` commands
 
-### For teams
+### Already have a `TODO.md`, `BACKLOG.md`, or some other list?
 
-Most teams treat their backlog as a graveyard. Items accumulate, priorities drift, blockers go unnoticed, and the "top of the queue" is whatever someone remembered to mention in standup.
-
-This skill fixes that without adding yet another tool to your stack. Everything lives in GitHub — Issues, Projects v2, Milestones, Labels — exactly where your team already works. Claude acts as a senior PM embedded in your terminal: it creates well-formed issues, enforces INVEST criteria, respects dependency chains, audits quality, and picks the right next item to execute.
-
-### What you get — solo or team
-
-- A structured, rankable backlog that lives entirely in GitHub
-- Issues that are actually useful (consistent body shape, proper labels, real acceptance criteria)
-- Dependency-aware execution — blocked items are skipped automatically
-- A read-only auditor that surfaces problems without making a mess
-- Zero vendor lock-in — if you stop using this skill tomorrow, your GitHub data stays exactly where it is
+Run `/migrate-backlog`, point Claude at the file, and it imports everything into GitHub Issues — skipping done items, inferring dependencies from your own prose, and letting you review before anything is applied.
 
 ---
 
