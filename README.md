@@ -45,13 +45,13 @@ This skill fixes that without adding yet another tool to your stack. Everything 
 
 ## Installation
 
-This skill is distributed as a [Claude Code skill](https://claude.ai/code). Install it with:
+Clone this repository into Claude Code's skills directory:
 
 ```bash
-claude skills install gringolito/github-backlog-management-skill
+git clone https://github.com/gringolito/github-backlog-management-skill.git ~/.claude/skills/github-backlog-management
 ```
 
-Once installed, all commands below are available in any repository you open with Claude Code.
+Restart Claude Code if it was already running. All commands below are then available in any repository you open with Claude Code.
 
 ---
 
