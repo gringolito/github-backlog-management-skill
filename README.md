@@ -59,7 +59,7 @@ Restart Claude Code if it was already running. All commands below are then avail
 
 | Command | What it does |
 |---|---|
-| `/create-project` | One-time bootstrap: provisions the GitHub Project v2, the full label catalog, and the Issue Forms template. Idempotent — safe to re-run. |
+| `/initialize-backlog` | One-time bootstrap: provisions the GitHub Project v2, the full label catalog, and the Issue Forms template. Idempotent — safe to re-run. |
 | `/plan-release` | Creates a Milestone with a due date. Tie-breaks and active-milestone resolution are automatic. |
 | `/add-backlog-item` | Interactively authors a single backlog item. Enforces INVEST, recommends rank and priority, wires up native GitHub dependencies. |
 | `/migrate-backlog` | Bulk-imports an existing `BACKLOG.md`. Skips Done items. Dependency inference is opt-in — candidates are reviewed before anything is applied. |
@@ -107,15 +107,15 @@ Priority is severity classification. Execution order is the manual Project rank 
 ### Workflow
 
 ```
-/create-project ──► /plan-release ──► /add-backlog-item
-                                      /migrate-backlog
-                                            │
-                                            ├──► /refine-backlog ──► /refine-backlog-item
-                                            ├──► /validate-backlog  (read-only)
-                                            └──► /execute-backlog-item
+/initialize-backlog ──► /plan-release ──► /add-backlog-item
+                                          /migrate-backlog
+                                                │
+                                                ├──► /refine-backlog ──► /refine-backlog-item
+                                                ├──► /validate-backlog  (read-only)
+                                                └──► /execute-backlog-item
 ```
 
-Run `/create-project` once. Every other command preflights for the linked Project and stops with a clear error if it is missing.
+Run `/initialize-backlog` once. Every other command preflights for the linked Project and stops with a clear error if it is missing.
 
 ---
 
@@ -124,10 +124,10 @@ Run `/create-project` once. Every other command preflights for the linked Projec
 ### Starting from scratch
 
 ```
-/create-project
+/initialize-backlog
 ```
 
-This provisions the GitHub Project v2, creates all labels, and opens a PR with the Issue Forms template. Run it once per repo.
+This provisions the GitHub Project v2, creates all labels, opens a PR with the Issue Forms template, and writes `.claude/backlog-project.json`. Run it once per repo.
 
 ### Planning a release
 

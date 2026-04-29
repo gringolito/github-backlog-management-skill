@@ -13,7 +13,7 @@ A set of slash commands for a fully GitHub-native backlog workflow — Issues, P
 
 | Command | When to use |
 |---------|-------------|
-| `/create-project` | First-time setup: provisions Project, labels, Issue Forms template. Idempotent. Run this first. |
+| `/initialize-backlog` | First-time setup: provisions Project, labels, Issue Forms template. Idempotent. Run this first. |
 | `/plan-release` | Create a Milestone with a due date — choose Maintenance, Regular, or Automated mode; semver version inferred from scope |
 | `/add-backlog-item` | Interactively create and rank a single backlog item (enforces INVEST) |
 | `/migrate-backlog` | Bulk-import an existing backlog file; skips Done items; dep inference opt-in |
@@ -25,14 +25,14 @@ A set of slash commands for a fully GitHub-native backlog workflow — Issues, P
 ## Workflow
 
 ```
-create-project ─► plan-release ─► add-backlog-item / migrate-backlog
-                                          │
-                                          ├─► refine-backlog ─► refine-backlog-item
-                                          ├─► validate-backlog (read-only)
-                                          └─► execute-backlog-item
+initialize-backlog ─► plan-release ─► add-backlog-item / migrate-backlog
+                                              │
+                                              ├─► refine-backlog ─► refine-backlog-item
+                                              ├─► validate-backlog (read-only)
+                                              └─► execute-backlog-item
 ```
 
-`create-project` is the bootstrap. Every other command preflights for a linked Project and stops with a standard error if missing.
+`initialize-backlog` is the bootstrap. Every other command preflights for a linked Project and stops with a standard error if missing.
 
 ## Key Invariants (apply to all commands)
 
@@ -45,7 +45,7 @@ create-project ─► plan-release ─► add-backlog-item / migrate-backlog
 **Issue body sections** (exact headings, this order):
 `### What` · `### Why` · `### In Scope` · `### Out of Scope` · `### Acceptance Criteria` · `### INVEST Notes`
 
-**Cache**: `.git/info/backlog-project.json` — 24-hour TTL, lives inside `.git/`, never tracked.
+**Metadata file**: `.claude/backlog-project.json` — written by `initialize-backlog`, read directly by all other commands.
 
 **Priority vs rank**: `priority:*` is severity classification. Project rank (topmost Todo item) is execution order. They should stay consistent but are independent concepts — `execute-backlog-item` sorts by rank only.
 
