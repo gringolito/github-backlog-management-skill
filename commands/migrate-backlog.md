@@ -184,6 +184,26 @@ Done items are historical and would only clutter the Project. Their PR shipped r
 
 For each non-Done item, in priority order (P0 → P3):
 
+0. **Confirmation gate** (skip this sub-step if the user already chose `All`):
+
+   Display the normalized summary:
+
+   ```text
+   Title:    <title>
+   Labels:   type:<x> | priority:<y> | effort:<z>
+   What:     <first line of ### What>
+   Why:      <first line of ### Why>
+   In Scope: <first line of ### In Scope>
+   Out of Scope: <first line of ### Out of Scope> (omit if section is empty)
+   AC:       <first line of ### Acceptance Criteria>
+   ```
+
+   Prompt: `Apply this item? [Y / N / All / Stop]`
+   - `Y` — proceed with creation for this item
+   - `N` — skip this item; record as "skipped by user" in the Migration Report; continue to next item
+   - `All` — set a flag so the prompt is not shown for any remaining items; proceed with this item immediately
+   - `Stop` — halt migration immediately; report how many items were created so far vs. how many remain; do NOT create any further issues
+
 1. Write the constructed body to a temp file
 2. Create the issue:
    - `gh issue create --title "<title>" --body-file <tmp> --label type:<x>,priority:<y>,effort:<z>`
@@ -240,8 +260,9 @@ If the Dependencies API is unavailable on this repo (private repo without paid p
 
 After all items are processed, output a Migration Report containing:
 
-- Total items in source / created in GitHub / skipped (with reasons)
+- Total items in source / created in GitHub / skipped (with reasons broken down by category)
 - **Skipped Done items** — list each by source title with its `PR shipped` reference (if any). These remain in the source BACKLOG.md only and are NOT in GitHub.
+- **Skipped by user** — list each item the user chose `N` for during the confirmation gate, by title and sequence number.
 - Each created issue: `<source title>` → `<issue URL>` (with applied labels)
 - Items with `needs-clarification`: clarification questions inline
 - INVEST violations and suggested improvements
