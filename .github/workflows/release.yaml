@@ -1,0 +1,28 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build release zip
+        run: |
+          ZIP_NAME="github-backlog-management-${GITHUB_REF_NAME}.zip"
+          mkdir github-backlog-management
+          cp -r commands/ README.md SKILL.md LICENSE github-backlog-management/
+          zip -r "${ZIP_NAME}" github-backlog-management/
+          echo "ZIP_NAME=${ZIP_NAME}" >> "$GITHUB_ENV"
+
+      - name: Upload zip to GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" "${ZIP_NAME}"
