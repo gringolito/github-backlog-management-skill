@@ -106,7 +106,9 @@ Validate the refined item against:
 - Valuable
 - Estimable
 - Small
-- Testable
+- Testable — every non-blank line in `### Acceptance Criteria` MUST begin with `- [ ]`. If any line does not match:
+  - List each offending line and show its corrected `- [ ] <text>` form
+  - Propose corrected versions; require user approval before applying the body update
 
 If any principle still fails after refinement:
 
