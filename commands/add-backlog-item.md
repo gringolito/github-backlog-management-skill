@@ -84,7 +84,10 @@ Validate that the item is:
 - Valuable → Clear benefit to user or system
 - Estimable → Enough detail to assess complexity
 - Small → Can be delivered in a single iteration
-- Testable → Acceptance criteria are verifiable
+- Testable → Acceptance criteria are verifiable and in the correct format. **Format check (MANDATORY):** Every non-blank line in `### Acceptance Criteria` MUST begin with `- [ ]`. If any line does not match:
+  - STOP
+  - List each offending line and show its corrected `- [ ] <text>` form
+  - Propose corrected versions; require user approval before creation proceeds
 
 If any principle fails:
 
