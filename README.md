@@ -48,6 +48,84 @@ Restart Claude Code if it was already running. All commands below are then avail
 
 ---
 
+## Authentication & Permissions
+
+### 1. Authenticate the GitHub CLI
+
+If `gh auth status` reports that you are not logged in, run:
+
+```bash
+gh auth login
+```
+
+Choose **GitHub.com**, then **Login with a web browser** (recommended — it handles all scope grants in one step). If you prefer a token, select **Paste an authentication token** instead.
+
+### 2. Verify required token scopes
+
+This skill calls GitHub's Issues, Projects v2, and Dependencies APIs. Your token must include all four scopes:
+
+| Scope | Required for |
+|---|---|
+| `repo` | Create and read Issues, Labels, Milestones, and PRs |
+| `project` | Read and write GitHub Projects v2 |
+| `read:user` | Resolve the authenticated user for metadata |
+| `read:org` | Required when the repo lives under a GitHub organization |
+
+Check your current scopes:
+
+```bash
+gh auth status
+```
+
+If `project` or `read:user` are missing, add them without re-authenticating:
+
+```bash
+gh auth refresh --scopes project,read:user
+```
+
+> **Note:** `gh auth refresh` works for OAuth (web browser) logins. If you authenticated with a Personal Access Token, generate a new classic PAT on GitHub with the scopes listed above.
+
+### 3. Configure Claude Code permissions
+
+This skill runs multi-step workflows that call `gh` and `git` many times in sequence. Without a pre-approved allowlist, Claude Code prompts for permission on every call and interrupts the workflow mid-run.
+
+Add one of the blocks below to `.claude/settings.json` in any repo where you use this skill, or to `~/.claude/settings.json` for a global default.
+
+**YOLO mode — no prompts during any multi-step command:**
+
+```json
+{
+  "permissions": {
+    "allow": ["Bash(gh *)", "Bash(git *)"]
+  }
+}
+```
+
+**Safe / read-only mode — `/validate-backlog` and read queries run silently; write commands still ask for confirmation:**
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh auth status *)",
+      "Bash(gh repo view *)",
+      "Bash(gh issue list *)",
+      "Bash(gh issue view *)",
+      "Bash(gh label list *)",
+      "Bash(gh project list *)",
+      "Bash(gh project view *)",
+      "Bash(gh project item-list *)",
+      "Bash(gh project field-list *)",
+      "Bash(gh release list *)"
+    ]
+  }
+}
+```
+
+> **Note:** `gh api` calls used for reading milestones and issue dependencies are not listed above — the same command prefix covers both reads and writes, so they cannot be cleanly separated by pattern. In safe mode these calls will still prompt; approve them when the command starts with `gh api "repos/..."` and contains no `-X POST` or `-X DELETE` flag.
+
+---
+
 ## Features
 
 | Command | What it does |
