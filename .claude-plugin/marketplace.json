@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "gringolito",
+  "description": "Plugins by Filipe Utzig",
+  "owner": {
+    "name": "Filipe Utzig",
+    "email": "filipe@gringolito.com"
+  },
+  "plugins": [
+    {
+      "name": "github-backlog-management",
+      "description": "GitHub-native backlog automation. Manage Issues + Projects v2 with AI-enforced INVEST quality, dependency tracking, and one-command execution.",
+      "source": {
+        "source": "github",
+        "repo": "gringolito/github-backlog-management-skill"
+      },
+      "version": "0.1.0",
+      "category": "productivity"
+    }
+  ]
+}

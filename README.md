@@ -38,13 +38,26 @@ Run `/migrate-backlog`, point Claude at the file, and it imports everything into
 
 ## Installation
 
-Clone this repository into Claude Code's skills directory:
+### Native plugin install (recommended)
+
+Add the marketplace and install the plugin with two Claude Code commands:
+
+```text
+/plugin marketplace add gringolito/github-backlog-management-skill
+/plugin install github-backlog-management@gringolito
+```
+
+Restart Claude Code if it was already running. All commands below are then available in any repository you open with Claude Code.
+
+### Manual install (fallback)
+
+If your version of Claude Code does not support the plugin system, clone directly into the skills directory:
 
 ```bash
 git clone https://github.com/gringolito/github-backlog-management-skill.git ~/.claude/skills/github-backlog-management
 ```
 
-Restart Claude Code if it was already running. All commands below are then available in any repository you open with Claude Code.
+Restart Claude Code if it was already running.
 
 ---
 

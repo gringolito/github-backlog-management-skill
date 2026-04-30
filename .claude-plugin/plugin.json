@@ -1,0 +1,13 @@
+{
+  "name": "github-backlog-management",
+  "description": "GitHub-native backlog automation. Manage Issues + Projects v2 with AI-enforced INVEST quality, dependency tracking, and one-command execution.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Filipe Utzig",
+    "email": "filipe@gringolito.com"
+  },
+  "homepage": "https://github.com/gringolito/github-backlog-management-skill",
+  "repository": "https://github.com/gringolito/github-backlog-management-skill",
+  "license": "MIT",
+  "commands": "./commands"
+}
