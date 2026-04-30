@@ -86,7 +86,18 @@ Outcomes:
 1. **A candidate wins** — proceed to step 3 (Item Validation). In the eventual plan output, list every item that was skipped above this one with their open blockers, so the user knows why the queue was deeper than expected.
 2. **Every candidate is blocked** — STOP. Report:
    - `All actionable items are blocked. Resolve a blocker or re-rank.`
-   - Followed by the full skipped list with each item's open blockers.
+   - Followed by a **per-blocker analysis table** with these columns:
+
+     | Blocked item | Blocker   | Blocker state  | Suggested action |
+     |--------------|-----------|----------------|------------------|
+     | #N title     | #M title  | open / closed  | see rules below  |
+
+   - **Suggested action rules** (apply the first matching rule):
+     - Blocker `closed` + dependency still active → `Stale — clear with: gh api -X DELETE repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by/<m>`
+     - Blocker `open`, cross-repo → `External — coordinate with owning team (<blocker-repo>)`
+     - Blocker `open`, has assignee → `In Progress — monitor`
+     - Blocker `open`, no assignee → `Unassigned — assign or re-plan`
+   - Close with a summary line: `N of M blockers may be resolvable without new work` (count stale + in-progress blockers as resolvable)
    - DO NOT pick a blocked item even with user confirmation — re-running `execute-backlog-item` after the user resolves a blocker is the correct loop.
 
 The Issue Dependencies API is GA on public repos and on paid plans for private repos. If the API returns `404` (feature unavailable), treat all items as unblocked and emit a one-time warning: `Issue Dependencies API unavailable on this repo — block-skipping disabled.`
