@@ -216,6 +216,7 @@ Run all of the following checks:
 - **Project Status set** — the item has a non-empty Status value in the Project
 - **INVEST re-check** — re-evaluate the final live body (not the in-memory draft) against all six INVEST principles
 - **INVEST Notes clear** — `### INVEST Notes` is either empty or contains only acknowledged residual questions with no open action items
+- **Effort consistency** — assess whether the current `effort:*` label still fits the refined `### In Scope` and `### Acceptance Criteria`, using the same relative heuristics as step 7. If the label appears inconsistent with the refined scope: gate fails, explain the mismatch, and suggest the likely correct effort label. The user must correct the label (via step 7 flow) before the gate can pass.
 
 If ANY check fails:
 
