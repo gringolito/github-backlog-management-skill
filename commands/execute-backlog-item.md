@@ -137,6 +137,8 @@ If priority or effort labels are missing or duplicated, STOP and direct the user
   - Avoids out-of-scope work
   - Research the solution online if needed
 
+- If the item carries `type:spike`, apply the **Spike Lifecycle** described in Step 7 (`#### For Spikes`) instead of the standard implementation flow. The plan should reflect the investigation approach and likely shape of the findings document, not a code change.
+
 - If the item is too large for a single iteration (based on `effort:*`):
   - Draft a split proposal: list each sub-issue with a title, What/Why/Acceptance Criteria, suggested type/priority/effort labels, and how they map to the parent's Acceptance Criteria
   - Present the proposal and wait for explicit approval
@@ -191,6 +193,26 @@ Branch name format: `<prefix><slug>-<issue-number>` (e.g. `fix/null-pointer-in-a
 - Implement functionality
 - Add tests that validate Acceptance Criteria
 
+#### For Spikes (`type:spike`)
+
+A spike's deliverable is **knowledge** — a findings document plus the follow-on backlog items it surfaces — not a shippable feature. Apply this flow:
+
+1. **Investigate** the question framed in `### What` / `### Why` within the time-box implied by the `effort:*` label. Prototyping is permitted in throwaway branches but is NOT the deliverable.
+2. **Author the findings document** at `docs/spikes/<issue-number>-<slug>.md` with these sections (in this order):
+   - `## Question` — restate the spike's investigative question
+   - `## Approach` — what was investigated, sources consulted, prototypes built
+   - `## Findings` — what was learned, including dead-ends
+   - `## Recommendation` — the recommended path forward (or "abandon — see Findings")
+   - `## Follow-on Work` — bulleted list of new backlog items this spike surfaces (filled in step 4)
+3. **Present the findings summary to the user** for confirmation/edits before the document is finalized. Do NOT proceed until the user signs off on the findings.
+4. **Determine parent context**: check whether the spike is itself a sub-issue of a parent. Use `gh api "repos/<owner>/<repo>/issues/<n>/parent"` (returns `404` if the spike has no parent — treat as standalone). Record the parent issue number if present.
+5. **Propose follow-on backlog items** for each piece of surfaced work — one per item — with title, What, Why, draft Acceptance Criteria, and suggested `type:*` / `priority:*` / `effort:*` labels. Present the full list to the user and wait for explicit approval per item (some may be discarded).
+6. **Create the approved follow-ons** by invoking `/add-backlog-item` for each in sequence:
+   - If the spike has NO parent → create as **standalone top-level items** (do NOT pass a parent number; the new items are NOT sub-issues of the spike)
+   - If the spike HAS a parent → pass the **spike's parent issue number** so the new items become **peer sub-issues of the spike** (children of the same parent), NOT children of the spike itself
+   - Record the resulting issue numbers and update the `## Follow-on Work` section of the findings document with `#<n>` references
+7. The spike's PR diff is typically only the findings document. Code changes (if any) belong in the follow-on items, not in the spike's PR.
+
 ---
 
 ### 8. Validation
@@ -198,6 +220,12 @@ Branch name format: `<prefix><slug>-<issue-number>` (e.g. `fix/null-pointer-in-a
 - Verify ALL Acceptance Criteria are satisfied
 - Run full test suite
 - Ensure no regressions
+
+For `type:spike` items, additionally:
+
+- Confirm the findings document exists at `docs/spikes/<issue-number>-<slug>.md` with all required sections
+- Confirm every approved follow-on was created and that its issue number is referenced in the `## Follow-on Work` section
+- Confirm follow-on parentage matches the rule in Step 7 (standalone if spike had no parent; peer sub-issues of the spike's parent otherwise)
 
 ---
 
@@ -208,6 +236,12 @@ Branch name format: `<prefix><slug>-<issue-number>` (e.g. `fix/null-pointer-in-a
 - Open a Pull Request via `gh pr create`. PR body MUST include:
   - `Closes #<issue-number>` (so GitHub auto-links and auto-closes the issue on merge)
   - A summary of changes mapped to each Acceptance Criterion
+
+For `type:spike` items, the PR is typically a **findings-document-only** diff:
+
+- PR title uses the `spike:` Conventional Commits prefix (matching the `spike/` branch prefix)
+- PR body MUST additionally list every follow-on item created (`#<n> — <title>`), so reviewers can audit that the surfaced work landed in the backlog
+- It is normal and expected for a spike PR to contain no code changes
 
 ---
 
