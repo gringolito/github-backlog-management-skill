@@ -14,11 +14,12 @@ There is **no source code, no build, no tests, no lint**. Each command file is a
 initialize-backlog   ─►  plan-release   ─►  add-backlog-item / migrate-backlog
                                                   │
                                                   ├─►  refine-backlog ─► refine-backlog-item   (needs-clarification)
+                                                  ├─►  release-status                          (read-only dashboard)
                                                   ├─►  validate-backlog                        (read-only audit)
                                                   └─►  execute-backlog-item                    (picks topmost unblocked)
 ```
 
-`initialize-backlog` is the bootstrap. Every other command preflights for a Project linked to the repo and stops with the standard error if missing. `plan-release` creates Milestones (releases). `add-backlog-item` and `migrate-backlog` create Issues. `execute-backlog-item` picks work. `refine-backlog` orchestrates a session over items flagged `needs-clarification`, delegating each to `refine-backlog-item`. `validate-backlog` audits without mutating.
+`initialize-backlog` is the bootstrap. Every other command preflights for a Project linked to the repo and stops with the standard error if missing. `plan-release` creates Milestones (releases). `add-backlog-item` and `migrate-backlog` create Issues. `execute-backlog-item` picks work. `refine-backlog` orchestrates a session over items flagged `needs-clarification`, delegating each to `refine-backlog-item`. `release-status` produces a read-only milestone health dashboard. `validate-backlog` audits without mutating.
 
 ## Invariants that MUST be preserved across all commands
 
@@ -28,7 +29,7 @@ When editing any command, these must stay consistent across files. Most consiste
 grep -hoE "type:[a-z-]+" commands/*.md | sort -u           # 9 type labels
 grep -hoE "priority:P[0-3]" commands/*.md | sort -u         # 4 priority labels
 grep -hoE "effort:(XS|S|M|L|XL)\b" commands/*.md | sort -u  # 5 effort labels
-grep -n "No Backlog project linked" commands/*.md           # identical preflight stop string in 7 files
+grep -n "No Backlog project linked" commands/*.md           # identical preflight stop string in 8 files
 grep -n ".claude/backlog-project.json" commands/*.md        # metadata file referenced everywhere
 ```
 
@@ -40,7 +41,7 @@ grep -n ".claude/backlog-project.json" commands/*.md        # metadata file refe
 
 4. **Metadata file location** — `.claude/backlog-project.json`. `initialize-backlog` writes it; all other commands read it directly with no live-query fallback. Schema documented in `initialize-backlog.md`.
 
-5. **Active milestone resolution** — earliest open `due_on`, tie-break by lowest version parsed from milestone title (`v1.2.0` < `v1.3.0`), fallback to milestone `number` for non-parseable titles. When no milestone has `due_on`, lowest version wins. This logic must match in `execute-backlog-item` and `add-backlog-item`.
+5. **Active milestone resolution** — earliest open `due_on`, tie-break by lowest version parsed from milestone title (`v1.2.0` < `v1.3.0`), fallback to milestone `number` for non-parseable titles. When no milestone has `due_on`, lowest version wins. This logic must match in `execute-backlog-item`, `add-backlog-item`, and `release-status`.
 
 6. **Priority label vs Project rank** — these are independent concepts. `priority:*` is severity classification. Execution order is the manual rank in the Project's `Todo` column (top wins). `add-backlog-item` does relative analysis on BOTH and recommends keeping them consistent, but `execute-backlog-item` sorts by rank ONLY and ignores the priority label for ordering. Don't conflate.
 
@@ -75,5 +76,6 @@ There is no automated test suite. The end-to-end smoke is:
 3. `/add-backlog-item` → issue with all three label groups, body matches template, item in Project at the chosen rank with Status=Todo, deps applied if declared.
 4. `/migrate-backlog` against a small sample BACKLOG.md including a Done item → Done item skipped, others migrated, dep inference candidates reviewed.
 5. `/execute-backlog-item` → picks topmost unblocked item, surfaces skipped-because-blocked items above it.
-6. `/validate-backlog` → seed deliberate violations (missing `priority:*`, dangling blocker, cross-Project blocker) and confirm they appear in the Critical/Quality/Consistency report sections.
-7. `/refine-backlog` → presents the `needs-clarification` queue, user selects items, loop delegates to `/refine-backlog-item`; label removed only after pre-removal validation gate passes.
+6. `/release-status` → confirm Markdown dashboard renders with correct counts by Status, blocked-items section (or graceful omission on `404`), and unestimated list; run again with an explicit milestone argument and verify it resolves correctly.
+7. `/validate-backlog` → seed deliberate violations (missing `priority:*`, dangling blocker, cross-Project blocker) and confirm they appear in the Critical/Quality/Consistency report sections.
+8. `/refine-backlog` → presents the `needs-clarification` queue, user selects items, loop delegates to `/refine-backlog-item`; label removed only after pre-removal validation gate passes.
