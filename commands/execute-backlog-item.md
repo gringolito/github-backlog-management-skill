@@ -83,7 +83,7 @@ For each candidate in rank order (Tier 1 first, then Tier 2):
 
 Outcomes:
 
-1. **A candidate wins** — proceed to step 3 (Item Validation). In the eventual plan output, list every item that was skipped above this one with their open blockers, so the user knows why the queue was deeper than expected.
+1. **A candidate wins** — proceed to step 2.6 (Sub-issue Check). In the eventual plan output, list every item that was skipped above this one with their open blockers, so the user knows why the queue was deeper than expected.
 2. **Every candidate is blocked** — STOP. Report:
    - `All actionable items are blocked. Resolve a blocker or re-rank.`
    - Followed by a **per-blocker analysis table** with these columns:
@@ -101,6 +101,24 @@ Outcomes:
    - DO NOT pick a blocked item even with user confirmation — re-running `execute-backlog-item` after the user resolves a blocker is the correct loop.
 
 The Issue Dependencies API is GA on public repos and on paid plans for private repos. If the API returns `404` (feature unavailable), treat all items as unblocked and emit a one-time warning: `Issue Dependencies API unavailable on this repo — block-skipping disabled.`
+
+---
+
+### 2.6. Sub-issue Check (STRICT)
+
+After block-skipping yields a winning candidate, check whether it has open sub-issues that should be executed first.
+
+1. Fetch sub-issues: `gh issue view <n> --json subIssues`
+2. Filter to sub-issues whose state is `open`.
+3. Cross-reference against the already-fetched Project item list (from Step 2) to find which open sub-issues are present in the Project with Status = `Todo`.
+4. **If one or more open sub-issues are in the Project's Todo column:**
+   - Log: `Skipping parent #N — open sub-issues found. Picking #M.`
+   - Apply the same block-skipping logic (Step 2.5) to the sub-issues ranked in the Project's Todo column; pick the first unblocked one.
+   - If all sub-issues are blocked, report them using the same per-blocker analysis table from Step 2.5 and STOP.
+   - The selected sub-issue becomes the new winner and proceeds to Step 3.
+5. **If no open sub-issues are in the Project's Todo column** (none exist, all are closed, or none were added to the Project): proceed with the parent normally — it becomes the winner and proceeds to Step 3.
+
+The `gh issue view <n> --json subIssues` endpoint returns `[]` when the issue has no sub-issues; treat this the same as case 5.
 
 ---
 
@@ -270,6 +288,7 @@ Print:
 - Final Project Status (typically `In Progress` until PR merges)
 - Whether the issue was assigned to the active milestone
 - Items skipped above this one because they were blocked (with `#N` and the open blockers that gated them) — surfaces why the picked item wasn't necessarily the topmost
+- Parent items skipped because open sub-issues were found in the Project's Todo column (log: `Skipping parent #N — open sub-issues found. Picking #M.`)
 
 ---
 
