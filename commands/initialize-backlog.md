@@ -253,7 +253,111 @@ Schema notes:
 
 ---
 
-### 7. Output Summary
+### 7. View Provisioning (IDEMPOTENT)
+
+Provision 4 standard Project views so the backlog is immediately usable without manual setup.
+
+Target views (in desired order):
+
+| # | Name | Filter | Default sort | Group by |
+| --- | ------ | -------- | -------------- | ---------- |
+| 1 | Backlog | `status:Todo` | Rank (position column) | — |
+| 2 | Bugs | `label:"type:bug"` | Rank | — |
+| 3 | Triage | `status:Todo no:assignee` | Rank | — |
+| 4 | Needs Grooming | `label:"needs-clarification"` | Rank | — |
+| 5 | Done | `status:Done` | Rank | Milestone |
+
+**Backlog MUST be at position 1** — it is the default landing view for the Project.
+
+#### 7a. Query existing views
+
+```sh
+gh api graphql -f query='
+{
+  node(id: "<project-id>") {
+    ... on ProjectV2 {
+      views(first: 20) {
+        nodes { id name }
+      }
+    }
+  }
+}'
+```
+
+Index results by name. For each target view:
+- If a view with that exact name already exists → record its ID, mark as "already present — skipped"
+- If it does not exist → create it (step 7b), mark as "created"
+
+#### 7b. Create missing views
+
+Create views in target order (Backlog first) so the first-created view lands at position 1:
+
+```sh
+gh api graphql -f query='
+mutation {
+  addProjectV2View(input: {
+    projectId: "<project-id>",
+    name: "<view-name>",
+    layout: TABLE_LAYOUT
+  }) {
+    projectView { id name }
+  }
+}'
+```
+
+#### 7c. Apply filters
+
+After creating (or finding) each view, apply its filter string via `updateProjectV2View`:
+
+```sh
+gh api graphql -f query='
+mutation {
+  updateProjectV2View(input: {
+    projectId: "<project-id>",
+    viewId: "<view-id>",
+    filter: "<filter-string>"
+  }) {
+    projectView { id }
+  }
+}'
+```
+
+Filter strings by view:
+
+- **Backlog**: `status:Todo`
+- **Bugs**: `label:"type:bug"`
+- **Triage**: `status:Todo no:assignee`
+- **Needs Grooming**: `label:"needs-clarification"`
+- **Done**: `status:Done`
+
+If `updateProjectV2View` does not expose a `filter` input field (verify against the live schema), skip filter application and note in the output summary: `"<view-name> view created — filter must be applied manually"`.
+
+#### 7d. Apply group-by for the Done view
+
+After the Done view is created or found, set its group-by field to Milestone via `updateProjectV2View` with a `groupByFields` input referencing the Milestone field ID:
+
+```sh
+gh api graphql -f query='
+mutation {
+  updateProjectV2View(input: {
+    projectId: "<project-id>",
+    viewId: "<done-view-id>",
+    groupByFields: ["<milestone-field-id>"]
+  }) {
+    projectView { id }
+  }
+}'
+```
+
+Resolve the Milestone field ID from the field list fetched in step 6. If `groupByFields` is not supported by the live schema, note in the output summary: `"Done view created — Milestone grouping must be applied manually"`.
+
+#### 7e. Ensure Backlog is at position 1
+
+If the Project already existed and Backlog was not just created first, verify its position in the `views` query response (position 0 in the array = default view). If it is not first, use a `reorderProjectV2Views` mutation (or equivalent) to move it. If the API does not support reordering, report: `"Backlog view exists but position could not be set automatically — verify in Project settings."`
+
+---
+
+### 8. Output Summary
 
 Print a structured summary so the user can verify provisioning:
 
@@ -264,6 +368,15 @@ Print a structured summary so the user can verify provisioning:
 - Issue Forms template PR URL (or "already present, no PR needed")
 - Status field options confirmed
 - Metadata file path: `.claude/backlog-project.json`
+- Views provisioning table:
+
+  | View | Status |
+  |------|--------|
+  | Backlog | created / already present — skipped |
+  | Bugs | created / already present — skipped |
+  | Triage | created / already present — skipped |
+  | Needs Grooming | created / already present — skipped |
+  | Done | created / already present — skipped |
 
 ---
 
