@@ -149,6 +149,7 @@ Add one of the blocks below to `.claude/settings.json` in any repo where you use
 | `/migrate-backlog` | Bulk-imports an existing `BACKLOG.md`. Skips Done items. Dependency inference is opt-in — candidates are reviewed before anything is applied. |
 | `/refine-backlog` | Lists all `needs-clarification` candidates, lets you select which to refine, then loops through them one by one — asking continue/stop after each. |
 | `/refine-backlog-item` | Refines a single `needs-clarification` item: discovery dialogue, body rewrite, INVEST gate, label/rank/dep re-evaluation, and label removal after a final validation pass. |
+| `/release-status` | Read-only milestone health dashboard — issue counts by Project Status, % complete, blocked items, and unestimated items. Accepts an optional milestone argument; defaults to the active milestone. |
 | `/validate-backlog` | Read-only audit. Emits actionable `gh issue edit ...` snippets. Never mutates anything. |
 | `/execute-backlog-item` | Picks the topmost unblocked Todo item, respects active milestone scope, skips blocked items, and walks you through to a PR. |
 
@@ -195,6 +196,7 @@ Priority is severity classification. Execution order is the manual Project rank 
                                           /migrate-backlog
                                                 │
                                                 ├──► /refine-backlog ──► /refine-backlog-item
+                                                ├──► /release-status    (read-only)
                                                 ├──► /validate-backlog  (read-only)
                                                 └──► /execute-backlog-item
 ```
@@ -250,6 +252,20 @@ Lists all `needs-clarification` items sorted by priority, lets you select which 
 ```
 
 Refines a single item directly (useful when you know exactly which issue needs attention). Guides a discovery dialogue, rewrites the body, re-evaluates labels and rank, runs a validation gate, and removes `needs-clarification` only when everything checks out.
+
+### Checking release health
+
+```
+/release-status
+```
+
+Produces a Markdown dashboard for the active milestone: issue counts by Project Status (Done / In Progress / Todo), % complete, blocked items (requires GitHub's native dependency API), and open items missing an `effort:*` label. Pass a milestone title, number, or version string to target a specific release:
+
+```
+/release-status v1.3.0
+```
+
+The output is valid GitHub-Flavored Markdown — paste it directly into a standup document, Slack message, or GitHub comment.
 
 ### Auditing backlog health
 
