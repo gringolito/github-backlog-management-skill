@@ -26,14 +26,14 @@ initialize-backlog   ─►  plan-release   ─►  add-backlog-item / migrate-b
 When editing any command, these must stay consistent across files. Most consistency violations are caught by:
 
 ```bash
-grep -hoE "type:[a-z-]+" commands/*.md | sort -u           # 9 type labels
+grep -hoE "type:[a-z-]+" commands/*.md | sort -u           # 10 type labels
 grep -hoE "priority:P[0-3]" commands/*.md | sort -u         # 4 priority labels
 grep -hoE "effort:(XS|S|M|L|XL)\b" commands/*.md | sort -u  # 5 effort labels
 grep -n "No Backlog project linked" commands/*.md           # identical preflight stop string in 8 files
 grep -n ".claude/backlog-project.json" commands/*.md        # metadata file referenced everywhere
 ```
 
-1. **Label catalog** — `type:{feature,bug,security,performance,dx,tech-debt,reliability,compliance,spike}`, `priority:{P0,P1,P2,P3}`, `effort:{XS,S,M,L,XL}`, plus `needs-clarification`. Any new value or rename must be applied in all command files.
+1. **Label catalog** — `type:{feature,bug,security,performance,dx,tech-debt,reliability,compliance,spike,external-blocker}`, `priority:{P0,P1,P2,P3}`, `effort:{XS,S,M,L,XL}`, plus `needs-clarification`. Any new value or rename must be applied in all command files. `type:external-blocker` is infrastructure-only — never assigned to work items.
 
 2. **Standard preflight stop string** — every consumer command outputs *exactly* `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.` when the metadata file is missing.
 

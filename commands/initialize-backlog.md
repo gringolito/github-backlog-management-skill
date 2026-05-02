@@ -89,6 +89,7 @@ Create the standard label catalog. Use `gh label create --force` so existing lab
 - `type:reliability`
 - `type:compliance`
 - `type:spike`
+- `type:external-blocker`
 
 #### Priority labels (one of these must be on every backlog item)
 
@@ -137,15 +138,16 @@ If the file is missing or the user approved replacement:
 - Create a branch: `chore/backlog-item-issue-template`
   - `git checkout -b chore/backlog-item-issue-template`
 - Create the parent directory if needed: `mkdir -p .github/ISSUE_TEMPLATE`
-- Write the canonical contents below to `.github/ISSUE_TEMPLATE/backlog-item.yml`
-- Commit using Conventional Commits:
-  - `git add .github/ISSUE_TEMPLATE/backlog-item.yml`
-  - `git commit -m "chore: add backlog-item issue forms template"`
+- Write the canonical contents of §5c below to `.github/ISSUE_TEMPLATE/backlog-item.yml`
+- Write the canonical contents of §5d below to `.github/ISSUE_TEMPLATE/external-blocker.yml`
+- Commit both files using Conventional Commits:
+  - `git add .github/ISSUE_TEMPLATE/backlog-item.yml .github/ISSUE_TEMPLATE/external-blocker.yml`
+  - `git commit -m "chore: add backlog-item and external-blocker issue forms templates"`
 - Push the branch: `git push -u origin chore/backlog-item-issue-template`
-- Open a PR via `gh pr create --title "chore: add backlog-item issue forms template" --body "<body>"` where the body explains:
-  - This template is the canonical body shape for backlog-item issues
-  - All `add-backlog-item`, `migrate-backlog` commands depend on these section headings (`### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes`)
-  - `validate-backlog` parses these sections — changing them will break parsing
+- Open a PR via `gh pr create --title "chore: add backlog-item and external-blocker issue forms templates" --body "<body>"` where the body explains:
+  - `backlog-item.yml` is the canonical body shape for backlog items — all commands depend on its section headings
+  - `external-blocker.yml` is the template for infrastructure stub issues created by `/add-external-blocker`
+  - `validate-backlog` parses `backlog-item.yml` sections — changing them will break parsing
 - Print the PR URL
 
 The remaining provisioning steps (project, labels) are NOT gated by this PR — they are direct API calls. The template only takes effect on the default branch after the PR is merged. Until then, `add-backlog-item` and `migrate-backlog` will still emit issue bodies in the canonical shape (the template is for human use in the GitHub UI).
@@ -214,6 +216,42 @@ body:
 ```
 
 The rendered issue body produced by GitHub for this template uses `### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes` headings. All other commands MUST emit bodies that use these exact headings (case + ordering preserved).
+
+#### 5d. Canonical contents — external-blocker.yml
+
+```yaml
+name: External Blocker
+description: Record an external constraint (API limitation, vendor issue, regulatory hold, etc.) blocking a backlog item
+title: "External blocker: "
+labels: ["type:external-blocker"]
+body:
+  - type: textarea
+    id: reason
+    attributes:
+      label: Reason
+      description: What external constraint is causing the block?
+      placeholder: e.g. "Vendor API does not support X; waiting for SDK v3 release"
+    validations:
+      required: true
+  - type: input
+    id: external-reference
+    attributes:
+      label: External Reference / URL
+      description: Link to vendor issue, RFC, ticket, or documentation (optional).
+      placeholder: https://...
+    validations:
+      required: false
+  - type: textarea
+    id: resolution-path
+    attributes:
+      label: Expected Resolution Path
+      description: How is this expected to be resolved? (optional)
+      placeholder: e.g. "Monitor vendor release notes; re-evaluate in next sprint"
+    validations:
+      required: false
+```
+
+This template pre-applies the `type:external-blocker` label. There is no "Blocked Item" field — a single stub can block multiple items, and GitHub tracks blocking relationships natively via the Issue Dependencies API.
 
 ---
 

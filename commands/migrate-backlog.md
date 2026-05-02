@@ -57,7 +57,7 @@ If item boundaries are unclear:
 For EACH item, derive the GitHub-native representation:
 
 - **Title** — concise; will be issue title
-- **Type** — exactly one type label (`type:feature`, `type:bug`, `type:security`, `type:performance`, `type:dx`, `type:tech-debt`, `type:reliability`, `type:compliance`, `type:spike`)
+- **Type** — exactly one type label (`type:feature`, `type:bug`, `type:security`, `type:performance`, `type:dx`, `type:tech-debt`, `type:reliability`, `type:compliance`, `type:spike`); never `type:external-blocker` — stubs are infrastructure and are never migrated from backlog files
 - **Priority** — exactly one priority label (`priority:P0` / `priority:P1` / `priority:P2` / `priority:P3`)
 - **Effort** — exactly one effort label (`effort:XS` / `effort:S` / `effort:M` / `effort:L` / `effort:XL`) — complexity-based, NOT time
 - **Body sections** (matching the Issue Forms template at `.github/ISSUE_TEMPLATE/backlog-item.yml`):

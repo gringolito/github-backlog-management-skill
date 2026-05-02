@@ -50,6 +50,7 @@ Before any item work, verify the repository is provisioned:
   - Reliability (`type:reliability`)
   - Compliance (`type:compliance`)
   - Spike (`type:spike`)
+- `type:external-blocker` is reserved for infrastructure stubs created by `/add-external-blocker` — DO NOT classify work items with this type; if the user attempts to, STOP and redirect them to `/add-external-blocker`
 - If classification is unclear → STOP and ask for clarification
 
 ---

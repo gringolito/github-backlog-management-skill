@@ -39,7 +39,7 @@ initialize-backlog ─► plan-release ─► add-backlog-item / migrate-backlog
 ## Key Invariants (apply to all commands)
 
 **Label catalog**
-- `type:` — `feature` `bug` `security` `performance` `dx` `tech-debt` `reliability` `compliance` `spike`
+- `type:` — `feature` `bug` `security` `performance` `dx` `tech-debt` `reliability` `compliance` `spike` `external-blocker`
 - `priority:` — `P0` `P1` `P2` `P3`
 - `effort:` — `XS` `S` `M` `L` `XL`
 - Operational: `needs-clarification`
