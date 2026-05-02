@@ -94,38 +94,14 @@ Do NOT add the stub to the linked Project, do NOT assign a milestone, do NOT ass
 
 ### 4. Dependency Registration (STRICT)
 
-Resolve the database IDs of both issues:
+Delegate to `/block-backlog-item` to register the stub as a blocker of `#N`:
 
 ```
-gh api "repos/<owner>/<repo>/issues/<N>" --jq '.id'
-gh api "repos/<owner>/<repo>/issues/<stub>" --jq '.id'
+/block-backlog-item #<N> #<stub>
 ```
 
-Register the stub as a blocker of `#N`:
 
-```
-gh api -X POST "repos/<owner>/<repo>/issues/<N>/dependencies/blocked_by" \
-  -f issue_id=<stub-database-id>
-```
-
-If the API returns `404`:
-- Output: `Issue Dependencies API unavailable on this repo — blocked_by not applied. Stub #<stub> was created but is not linked as a blocker.`
-- STOP
-
-If any other error occurs, surface it verbatim and STOP.
-
----
-
-### 5. Verification (MANDATORY)
-
-Read back `#N`'s blockers to confirm the stub appears:
-
-```
-gh api "repos/<owner>/<repo>/issues/<N>/dependencies/blocked_by" \
-  --jq '.[].number'
-```
-
-Confirm `#stub` appears in the list.
+If it reports `Issue Dependencies API unavailable on this repo — blocked_by not applied`, append: `Stub #<stub> was created but is not linked as a blocker.` and STOP.
 
 ---
 

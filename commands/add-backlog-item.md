@@ -221,9 +221,11 @@ The current issue's `id` was returned by `gh issue create`; capture it. For cros
 
 #### 9b. Apply "blocked by" relationships
 
-For each blocker the user named in step 1:
+For each blocker the user named in step 1, delegate to `/block-backlog-item`:
 
-- `gh api -X POST "repos/<owner>/<repo>/issues/<this-number>/dependencies/blocked_by" -f issue_id=<blocker-id>`
+```text
+/block-backlog-item #<this-number> #<blocker-number>
+```
 
 GitHub allows up to 50 blockers per direction and prevents cycles automatically. Cross-Project blockers ARE permitted — they will be flagged as a smell by `validate-backlog` but not rejected here.
 

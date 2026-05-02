@@ -246,7 +246,7 @@ For each dependency hint captured in step 1:
    ```
 
 4. **Apply only after explicit confirmation.** The user can accept all, reject all, or cherry-pick. For each accepted candidate:
-   - `blocked_by`: `gh api -X POST "repos/<o>/<r>/issues/<this-num>/dependencies/blocked_by" -f issue_id=<target-id>`
+   - `blocked_by`: delegate to `/block-backlog-item #<this-num> #<target-num>`
    - `blocking`: `gh api -X POST "repos/<o>/<r>/issues/<this-num>/dependencies/blocking" -f issue_id=<target-id>`
    - sub-issue parent: `gh api -X POST "repos/<o>/<r>/issues/<parent-num>/sub_issues" -f sub_issue_id=<this-id>`
 
