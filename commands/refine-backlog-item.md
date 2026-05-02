@@ -195,7 +195,7 @@ Apply rank changes ONLY after explicit user confirmation, via:
 If the Dependencies API is unavailable on this repo (returns `404`), skip blocker add/remove steps and emit: `Issue Dependencies API unavailable on this repo — dependency updates skipped.`
 
 - **Remove a stale blocker**: `gh api -X DELETE "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by/<blocker-id>"`
-- **Add a new blocker**: resolve the blocker's numeric `id` via `gh api "repos/<o>/<r>/issues/<blocker-number>" --jq '.id'`, then `gh api -X POST "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by" -f issue_id=<blocker-id>`
+- **Add a new blocker**: delegate to `/block-backlog-item #<n> #<blocker-number>`
 - **Change sub-issue parent**: a sub-issue can only have one parent. To re-parent, the user must remove from old parent first via `gh api -X DELETE "repos/<o>/<r>/issues/<old-parent>/sub_issues/<this-id>"`, then add to new parent via `gh api -X POST "repos/<o>/<r>/issues/<new-parent>/sub_issues" -f sub_issue_id=<this-id>`
 
 Apply ONLY after explicit user confirmation. Cross-Project / cross-repo blockers ARE permitted but should be flagged in the per-item confirmation so the user knows they exist.
