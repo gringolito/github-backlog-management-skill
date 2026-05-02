@@ -55,7 +55,7 @@ For EACH issue in the Project, verify:
 
 #### Labels (exactly-one rule)
 
-- Exactly one `type:*` label from the canonical set
+- Exactly one `type:*` label from the canonical set (`type:feature`, `type:bug`, `type:security`, `type:performance`, `type:dx`, `type:tech-debt`, `type:reliability`, `type:compliance`, `type:spike`, `type:external-blocker`)
 - Exactly one `priority:*` label from {`priority:P0`, `priority:P1`, `priority:P2`, `priority:P3`}
 - Exactly one `effort:*` label from {`effort:XS`, `effort:S`, `effort:M`, `effort:L`, `effort:XL`}
 

@@ -181,13 +181,17 @@ Every issue created by this skill follows a consistent body shape:
 ### INVEST Notes
 ```
 
-Every issue carries three label groups:
+Every backlog item carries three label groups:
 
 - **Type** — `type:feature` `type:bug` `type:security` `type:performance` `type:dx` `type:tech-debt` `type:reliability` `type:compliance` `type:spike`
 - **Priority** — `priority:P0` through `priority:P3`
 - **Effort** — `effort:XS` `effort:S` `effort:M` `effort:L` `effort:XL`
 
 Priority is severity classification. Execution order is the manual Project rank — the two are independent concepts that should stay consistent but are never conflated.
+
+#### External blocker stubs
+
+`type:external-blocker` is a special infrastructure label for lightweight stub issues that represent external constraints (API limitations, vendor issues, regulatory holds, etc.) blocking one or more backlog items. Stubs carry **only** the `type:external-blocker` label — no priority, no effort, no rank. They are created by `/add-external-blocker`, never appear as executable work in `/execute-backlog-item`, and are excluded from all milestone counts and planning scope. Close a stub with `/resolve-external-blocker` when the external constraint is lifted.
 
 ### Workflow
 
