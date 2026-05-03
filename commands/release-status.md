@@ -49,6 +49,8 @@ With the resolved milestone in hand, run these queries:
 1. **Issues assigned to the milestone**:
    `gh issue list --state all --milestone "<milestone-title>" --json number,title,labels,state,url --limit 500`
 
+   After fetching, **partition the results**: set aside any issue whose labels include `type:external-blocker` — these are infrastructure stubs and are **excluded from all milestone counts and metrics**. They are retained only to enrich the blocked-items table with stub titles as blocker context (step 3).
+
 2. **Project membership and Status**:
    `gh project item-list <project-number> --owner <owner> --format json`
    Build a lookup map: issue `number` → Project `Status` (`Todo` / `In Progress` / `Done`). Issues absent from the map are classified as "Not in Project."
@@ -85,7 +87,7 @@ Omit the `Due:` line if the milestone has no `due_on`.
 | 📋 Todo | N | N% |
 | ⚠️ Not in Project | N | — |
 
-- **% complete** = Done ÷ (all issues assigned to the milestone), rounded to the nearest integer.
+- **% complete** = Done ÷ (all non-stub issues assigned to the milestone), rounded to the nearest integer. `type:external-blocker` stubs are excluded from this denominator.
 - Omit the "Not in Project" row if its count is 0.
 
 #### Blocked Items
@@ -100,6 +102,8 @@ Otherwise:
 | Issue | Title | Blocked by |
 |-------|-------|------------|
 | [#N](\<url\>) | title | [#M](\<url\>), … |
+
+For blockers that carry `type:external-blocker`, replace the issue link with the stub's title in the "Blocked by" column (e.g. `External: Vendor API rate limit freeze`) to surface the external constraint clearly.
 
 #### Unestimated Items
 
