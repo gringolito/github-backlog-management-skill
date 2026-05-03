@@ -51,9 +51,21 @@ If structure is unclear or `gh` fails:
 
 ### 2. Structural Validation (MANDATORY)
 
-For EACH issue in the Project, verify:
+For EACH issue in the Project, first determine whether it is a `type:external-blocker` stub. Apply the appropriate check path — stubs and work items have different structural rules.
 
-#### Labels (exactly-one rule)
+#### 2a. Stub check path (issues with `type:external-blocker`)
+
+- **Type label**: verify exactly one `type:*` label is present and it is `type:external-blocker`. Flag duplicates or unknown values.
+- **Skip**: `priority:*` check, `effort:*` check, body-shape checks (`### What`, `### Why`, etc.)
+- **Reason field**: parse the body for a `### Reason` section. Flag as **Quality** if:
+  - The section is missing or absent from the body entirely
+  - The content is empty or literally `_No response_`
+  - The content is boilerplate or non-descriptive — single words, generic phrases such as "TBD", "N/A", "Unknown", "External dependency", "External constraint", or any content that does not explain the specific nature of the constraint
+- **Project Status field**: every stub MUST have a Status set (`Todo` / `In Progress` / `Done`). Flag stubs with no Status.
+
+#### 2b. Work item check path (all other issues)
+
+##### Labels (exactly-one rule)
 
 - Exactly one `type:*` label from the canonical set (`type:feature`, `type:bug`, `type:security`, `type:performance`, `type:dx`, `type:tech-debt`, `type:reliability`, `type:compliance`, `type:spike`, `type:external-blocker`)
 - Exactly one `priority:*` label from {`priority:P0`, `priority:P1`, `priority:P2`, `priority:P3`}
@@ -65,7 +77,7 @@ Flag:
 - Duplicate labels within a group (e.g. both `priority:P0` and `priority:P1`)
 - Unknown labels matching the pattern but not in the canonical set
 
-#### Issue body sections
+##### Issue body sections
 
 Issue body MUST contain (with these exact headings, in this order):
 
@@ -87,7 +99,7 @@ Flag:
 - Section heading typos (e.g. `### Acceptance criteria` vs `### Acceptance Criteria`)
 - Out-of-order sections
 
-#### Project Status field
+##### Project Status field
 
 - Every Project item MUST have a Status set (`Todo` / `In Progress` / `Done`)
 
@@ -194,9 +206,18 @@ Flag each of the following as a Quality or Consistency issue:
 - **Dangling blocker** — referenced issue does not exist (deleted / transferred without redirect). Critical.
 - **Cross-Project blocker** — a blocker that exists but is NOT in the linked Project. Permitted by design (e.g. infra issue tracked elsewhere) but flagged as a smell so the user can verify it's intentional. Consistency.
 - **Stale blocker** — a blocker in a CLOSED milestone while THIS item is in the active milestone. Suggests the dep was meant to be resolved but wasn't. Quality.
-- **Blocked active-milestone item with priority:P0** — surface as a Critical risk so the user knows their highest-severity work is gated.
+- **Blocked active-milestone item with priority:P0** — surface as a Critical risk so the user knows their highest-severity work is gated. When the blocker carries `type:external-blocker`, include the stub title alongside the blocked item so the source of the constraint is immediately visible.
 - **Items at top of Todo column that are blocked** — they look ready to pick but `execute-backlog-item` will skip them. Consistency.
 - **Apparent cycles** — defense-in-depth: walk the `blocked_by` graph and detect back-edges. GitHub prevents direct cycles (A blocked-by B and B blocked-by A) but indirect ones via transferred issues, deleted nodes, or stale state may slip through. Critical.
+
+> **Note on closed blockers:** GitHub does not remove `blocked_by` dependencies when a blocker is closed — the link persists for historical tracking and regression detection. A closed blocker is therefore **not** flagged as stale or inconsistent. `execute-backlog-item` already treats closed blockers as satisfied; `validate-backlog` does the same.
+
+#### Stub-specific dependency checks
+
+For each `type:external-blocker` stub in the Project:
+
+- **Open stub, blocking no issues** — fetch `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocking"`. If the array is empty, the stub is orphaned: it exists but gates nothing. Flag as **Quality** (suggest closing or linking it to the intended item).
+- Closed stubs are not checked for dependency hygiene — their links are retained by design (see note above).
 
 #### Per-item sub-issue checks
 
@@ -234,14 +255,14 @@ Produce a **Validation Report** with:
 
 ### A. Critical Issues (Must Fix)
 
-- Missing required labels (`type:*` / `priority:*` / `effort:*`)
-- Missing required body sections
+- Missing required labels (`type:*` / `priority:*` / `effort:*`) on work items
+- Missing required body sections on work items
 - Missing Project Status
 - Items in active milestone missing `priority:*`
 - Duplicate labels within a group
 - Dangling blockers (referenced issue does not exist)
 - Apparent dependency cycles
-- Blocked `priority:P0` items in the active milestone
+- Blocked `priority:P0` items in the active milestone (include stub title when the blocker is a `type:external-blocker` stub)
 
 ### B. Quality Issues
 
@@ -251,6 +272,8 @@ Produce a **Validation Report** with:
 - Effort issues
 - Vague or untestable criteria
 - Stale blockers (blocker in closed milestone while item is in active milestone)
+- `type:external-blocker` stub with missing, empty, or boilerplate Reason field
+- `type:external-blocker` stub that is open but blocking no issues (orphaned)
 
 ### C. Consistency Issues
 
