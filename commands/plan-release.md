@@ -80,6 +80,7 @@ Ask the user which release mode to use:
 - Validate each resolved issue exists and is open:
   - `gh issue view <n> --json number,title,state,labels,milestone`
   - If an issue is closed or not found, surface the error and ask the user to correct the list.
+  - If any validated issue carries `type:external-blocker`, warn the user: "Issue #N is an external-blocker stub, not a work item. Stubs should not appear in release scope." Exclude the item unless the user explicitly overrides with a justification.
 - Display the confirmed issue list (number, title, type label, priority label, effort label) and ask for review.
 - Scan the scope for items that carry `type:feature` or any explicit breaking-change signal in `### What` / `### INVEST Notes` (read body via `gh issue view <n> --json body`). For each such item, WARN the user:
   > ⚠️ Issue #N "`<title>`" introduces new functionality / a breaking change, which is atypical for a maintenance release.
@@ -89,7 +90,7 @@ Ask the user which release mode to use:
 #### Mode B — Regular
 
 - Fetch unassigned candidates by intersecting:
-  - `gh issue list --state open --json number,title,labels,milestone,url --limit 200` — filter to items where `milestone == null`
+  - `gh issue list --state open --json number,title,labels,milestone,url --limit 200` — filter the result to items where `milestone == null` and whose labels do NOT include `type:external-blocker`
   - `gh project item-list <project-number> --owner <owner> --format json` — filter to Status = `Todo`
 - Present the candidate table in Project rank order:
 
@@ -102,12 +103,12 @@ Ask the user which release mode to use:
 
 #### Mode C — Automated
 
-- Fetch the same unassigned candidate set as Mode B.
+- Fetch the same unassigned candidate set as Mode B (same `type:external-blocker` exclusion applies).
 - For each candidate, check blockers:
   - `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"` — collect open blockers. If the API returns `404`, treat all items as unblocked and note the unavailability.
   - Classify each blocked item:
     - **Resolvable within scope**: all open blockers are themselves in the candidate pool — the item CAN be included, but its blocker(s) MUST also be included and ranked above it.
-    - **Externally blocked**: at least one open blocker is outside the candidate pool (closed issue, different repo, or untracked) — exclude from the suggestion and note as "externally blocked".
+    - **Externally blocked**: at least one open blocker is outside the candidate pool (closed issue, different repo, or untracked) — exclude from the suggestion and note as "externally blocked". If the blocking issue carries `type:external-blocker`, show the stub's title as the blocking reason (e.g. `blocked by external constraint: Vendor API rate limit freeze`).
 - Analyze and group candidates by theme and cohesion:
   - Prefer P0/P1 items
   - Group by item type (e.g., a bug-fix release: `type:bug` + `type:security`; a feature release: `type:feature`)

@@ -39,6 +39,8 @@ Find the next item to execute by walking these tiers in order. Stop at the first
 
 Execution order is determined by the Project's rank — the topmost item in the `Todo` column wins. The `priority:*` label is severity classification ONLY and does NOT influence ordering.
 
+**Pre-filter (MANDATORY):** Before building the candidate lists for either tier, discard any issue whose labels include `type:external-blocker`. External-blocker stubs are infrastructure placeholders — they are never executable work items. Their titles surface in the "skipped because blocked" output when they are open blockers gating a real candidate (see step 2.5).
+
 #### Tier 1 — Active milestone, in Project, status Todo
 
 - Open issues assigned to the active milestone
@@ -83,7 +85,7 @@ For each candidate in rank order (Tier 1 first, then Tier 2):
 
 Outcomes:
 
-1. **A candidate wins** — proceed to step 2.6 (Sub-issue Check). In the eventual plan output, list every item that was skipped above this one with their open blockers, so the user knows why the queue was deeper than expected.
+1. **A candidate wins** — proceed to step 2.6 (Sub-issue Check). In the eventual plan output, list every item that was skipped above this one with their open blockers, so the user knows why the queue was deeper than expected. When a blocker carries `type:external-blocker`, show it as `External: <stub title>` rather than a plain issue reference.
 2. **Every candidate is blocked** — STOP. Report:
    - `All actionable items are blocked. Resolve a blocker or re-rank.`
    - Followed by a **per-blocker analysis table** with these columns:
@@ -287,7 +289,7 @@ Print:
 - Assignee (the authenticated user, assigned in step 5)
 - Final Project Status (typically `In Progress` until PR merges)
 - Whether the issue was assigned to the active milestone
-- Items skipped above this one because they were blocked (with `#N` and the open blockers that gated them) — surfaces why the picked item wasn't necessarily the topmost
+- Items skipped above this one because they were blocked (with `#N` and the open blockers that gated them; `type:external-blocker` blockers shown as `External: <stub title>`) — surfaces why the picked item wasn't necessarily the topmost
 - Parent items skipped because open sub-issues were found in the Project's Todo column (log: `Skipping parent #N — open sub-issues found. Picking #M.`)
 
 ---

@@ -54,7 +54,7 @@ Bring the target issue to a fully refined state where:
 - Existing `### INVEST Notes` content — this is where `migrate-backlog` parks open questions
 - **Current relationships** (fetched via `gh api`):
   - If the Dependencies API returns `404` on this repo (private repo without paid plan), skip blocker/blocking fields and emit one warning: `Issue Dependencies API unavailable on this repo — dependency display and updates skipped.`
-  - Blockers (`blocked_by`): list each with `#N`, title, state. Cross-Project / cross-repo blockers explicitly flagged.
+  - Blockers (`blocked_by`): list each with `#N`, title, state. Cross-Project / cross-repo blockers explicitly flagged. If a blocker carries `type:external-blocker`, display it as `External: <stub title>` (e.g. `External: Vendor API rate limit freeze`) to distinguish it from regular issue dependencies.
     - `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`
   - Blocking: list each with `#N`, title, state.
     - `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocking"`
