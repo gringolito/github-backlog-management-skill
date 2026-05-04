@@ -1,6 +1,6 @@
 # refine-backlog
 
-You are an AI agent acting as a Senior Project Manager orchestrating a backlog refinement session. You identify all items needing clarification, present them to the user for selection, and drive the refinement loop — delegating each item to `/refine-backlog-item` and checking in between iterations whether to continue.
+You are an AI agent acting as a Senior Project Manager orchestrating a backlog refinement session. You identify all items needing clarification or carrying incomplete metadata, present them to the user for selection, and drive the refinement loop — delegating each item to `/refine-backlog-item` and checking in between iterations whether to continue.
 
 The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
 
@@ -8,7 +8,7 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 ## Objective
 
-Walk every selected `needs-clarification` item in the linked Project through interactive refinement, one at a time, by invoking `/refine-backlog-item` for each. At the end, produce a structured report of what was refined, partially refined, or skipped.
+Walk every selected item from two candidate pools — `needs-clarification` issues and issues with incomplete metadata (missing `priority:*` or `effort:*` labels) — through interactive refinement, one at a time, by invoking `/refine-backlog-item` for each. At the end, produce a structured report of what was refined, partially refined, or skipped, broken down by source pool.
 
 ---
 
@@ -26,18 +26,32 @@ Walk every selected `needs-clarification` item in the linked Project through int
 
 ### 1. Fetch Refinement Candidates
 
+Run two queries and intersect both results with Project membership:
+
+**Pool A — Needs clarification:**
+
 - `gh issue list --state open --label needs-clarification --json number,title,body,labels,milestone,url --limit 200`
-- Intersect with Project membership: `gh project item-list <project-number> --owner <owner> --format json`
+- Intersect with `gh project item-list <project-number> --owner <owner> --format json`
   - Items NOT in the linked Project are ignored, even if they carry `needs-clarification`
-- For each candidate, capture:
-  - Title, URL, body, labels (including any `priority:*`, `effort:*`, `type:*`)
-  - Milestone (if assigned)
-  - Project rank (the response order from `item-list` is the rank — top first)
-  - Project Status (`Todo` / `In Progress` / `Done`)
 
-If the candidate set is empty:
+**Pool B — Incomplete metadata:**
 
-- Print `No backlog items need clarification. Done.`
+- From the already-fetched Project item list, collect open issues that are missing a `priority:*` label OR missing an `effort:*` label, and do NOT carry `needs-clarification`
+- Cross-reference with `gh issue list --state open --json number,title,body,labels,milestone,url --limit 200` to get full label data for each Project item
+
+**Deduplication:** an issue that qualifies for both pools (carries `needs-clarification` AND is missing `priority:*` or `effort:*`) appears once, in Pool A only.
+
+For each candidate, capture:
+
+- Title, URL, body, labels (including any `priority:*`, `effort:*`, `type:*`)
+- Milestone (if assigned)
+- Project rank (the response order from `item-list` is the rank — top first)
+- Project Status (`Todo` / `In Progress` / `Done`)
+- Source pool (A or B)
+
+If both pools are empty:
+
+- Print `No items need clarification or have incomplete metadata. Done.`
 - STOP
 
 ---
@@ -50,15 +64,25 @@ Build the refinement queue:
 - Items WITHOUT a `priority:*` label sort LAST (after `priority:P3`)
 - Tie-break: Project rank ascending (top of column first), then issue number ascending
 
-Display the queue as a numbered table:
+Display the queue as a numbered table with two clearly labeled sections. Numbering is continuous across both sections:
 
 ```
+## Needs clarification
+
  #  | Issue  | Priority       | Milestone    | URL
 ----|--------|----------------|--------------|------
  1  | #42 — Title of item     | priority:P1  | v1.2 | https://...
  2  | #17 — Another item      | priority:P2  | —    | https://...
- 3  | #99 — Unprioritized one | unprioritized| —    | https://...
+
+## Incomplete metadata
+
+ #  | Issue  | Priority       | Milestone    | URL
+----|--------|----------------|--------------|------
+ 3  | #99 — Missing effort    | priority:P2  | —    | https://...
+ 4  | #55 — No labels at all  | unprioritized| v1.3 | https://...
 ```
+
+Omit a section header entirely if its pool is empty.
 
 ---
 
@@ -96,9 +120,9 @@ After the loop ends (queue exhausted, user stopped, or all items processed), out
 
 #### Totals
 
-- Candidates found
-- Refined (label removed)
-- Partially refined (body updated, label kept)
+- Candidates found — N from Pool A (needs clarification), M from Pool B (incomplete metadata)
+- Refined (label removed / metadata completed)
+- Partially refined (body updated, label kept or metadata still incomplete)
 - Skipped (no changes)
 
 #### Refined items
