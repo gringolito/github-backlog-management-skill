@@ -180,8 +180,33 @@ Flag:
 
 ### 8. Milestone Hygiene
 
-- Items in CLOSED milestones with state `open`:
-  - Flag — work was deferred without re-targeting
+#### Stale Milestone Items
+
+Fetch all closed milestones: `gh api "repos/<owner>/<repo>/milestones?state=closed&per_page=100"`
+
+For each closed milestone, find open issues assigned to it that are also present in the linked Project:
+
+- `gh issue list --state open --milestone "<milestone-title>" --json number,title,url --limit 200`
+- Cross-reference against the Project item list already fetched in Step 1 (retain only issues that appear in the Project).
+
+If stale items are found, display them in "C. Consistency Issues" under a **Stale Milestone Items** heading:
+
+- Summary line: `<N> open issue(s) are assigned to closed milestones but not re-targeted.`
+- One line per item: `#<number> — <title> (closed milestone: <milestone-title>)`
+- Immediately follow with a ready-to-run `gh` script to remove the milestone assignment (NOT to reassign):
+
+  ```sh
+  # Remove stale milestone assignments — returns items to the unassigned pool
+  gh issue edit <n1> --milestone ""
+  gh issue edit <n2> --milestone ""
+  ```
+
+- If no stale items are found, **omit this subsection entirely** — do not print a heading or a "none found" line.
+
+Stale items are items where a release closed without completing all planned work. The fix is removal (not reassignment) so `/plan-release` can pick them up deliberately in a future release without polluting the current scope.
+
+#### Other milestone hygiene checks
+
 - Items with milestone but Project Status = `Done` and issue still `open`:
   - Flag — Status drifted from issue state
 - Items with milestone but NOT in the Project:
@@ -279,7 +304,8 @@ Produce a **Validation Report** with:
 
 - Project Status ↔ issue state drift
 - Closed `Done` items without linked PR
-- Milestone hygiene flags
+- **Stale Milestone Items** — open issues assigned to closed milestones that are Project members; each listed as `#N — <title> (closed milestone: <name>)` with a `gh issue edit <n> --milestone ""` snippet per item; subsection omitted if none found
+- Other milestone hygiene flags (milestone but not in Project; Status/state drift)
 - Priority skew
 - Cross-Project blockers (permitted but flagged for review)
 - Blocked items at top of Todo column (will be skipped by `execute-backlog-item`)
