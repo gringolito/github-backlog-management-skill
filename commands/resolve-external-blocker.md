@@ -73,7 +73,7 @@ Capture the list of issues returned. Filter to those with `state == "open"` — 
 
 ---
 
-### 4. Resolution Comment & Closure (STRICT)
+### 4. Resolution Comment, Closure & Project Status (STRICT)
 
 Add the resolution comment first, then close the stub:
 
@@ -83,6 +83,18 @@ gh issue close <stub>
 ```
 
 If either command fails, surface the error verbatim and STOP (do not partially apply).
+
+After closing, set the stub's Project Status to `Done`:
+
+```
+gh project item-edit \
+  --id <item-id> \
+  --project-id <project-id> \
+  --field-id <status-field-id> \
+  --single-select-option-id <done-option-id>
+```
+
+Resolve `<item-id>` via `gh project item-list <project-number> --owner <owner> --format json` if not already known. Use `project_id`, `project_number`, `status_field_id`, and `status_options.Done` from `.claude/backlog-project.json`. If the Project Status update fails (e.g. the stub was never added to the Project), surface the error as a warning but do not abort — the stub is already closed.
 
 ---
 
