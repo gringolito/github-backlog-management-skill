@@ -157,7 +157,6 @@ The remaining provisioning steps (project, labels) are NOT gated by this PR — 
 ```yaml
 name: Backlog Item
 description: Add a new item to the project backlog
-title: ""
 labels: []
 body:
   - type: textarea
