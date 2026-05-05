@@ -1,6 +1,5 @@
 name: Backlog Item
 description: Add a new item to the project backlog
-title: ""
 labels: []
 body:
   - type: textarea
