@@ -237,6 +237,17 @@ Flag each of the following as a Quality or Consistency issue:
 
 > **Note on closed blockers:** GitHub does not remove `blocked_by` dependencies when a blocker is closed — the link persists for historical tracking and regression detection. A closed blocker is therefore **not** flagged as stale or inconsistent. `execute-backlog-item` already treats closed blockers as satisfied; `validate-backlog` does the same.
 
+#### Cross-repo blocker collection
+
+While walking `blocked_by` for each Project item, collect entries where the blocker URL references a different owner or repo than the current repo. For each cross-repo blocker:
+
+- Record: blocked item `#N`, external repo (`<owner>/<repo>`), blocker issue number and title, blocker state
+- Fetch blocker state: `gh api "repos/<blocker-owner>/<blocker-repo>/issues/<blocker-number>" --jq '.state'`
+- **Include only open cross-repo blockers** — closed ones are satisfied by design (same rule as same-repo closed blockers) and require no action
+- If no open cross-repo blockers are found, the "D. External Dependencies" section is omitted entirely
+
+This collection pass uses data already fetched from `blocked_by` — no additional API calls beyond the per-blocker state lookups.
+
 #### Stub-specific dependency checks
 
 For each `type:external-blocker` stub in the Project:
@@ -312,7 +323,24 @@ Produce a **Validation Report** with:
 - Sub-issue parents not in the linked Project
 - Sub-issue milestone divergence (informational)
 
-### D. Recommendations
+### D. External Dependencies
+
+Consolidates all open cross-repo blockers into one view. Only open blockers are shown — closed cross-repo blockers are satisfied by design and require no action.
+
+If the Dependencies API returned `404` on this repo, replace this section with a single line:
+`Issue Dependencies API unavailable — external dependency audit skipped.`
+
+If no open cross-repo blockers exist, **omit this section entirely**.
+
+Otherwise, render a summary table:
+
+| Blocked item  | External repo | Blocker       | State |
+|---------------|---------------|---------------|-------|
+| #N — title    | owner/repo    | #M — title    | open  |
+
+Follow the table with a suggested action per row: `Coordinate with owning team (owner/repo) to resolve #M before #N can proceed.`
+
+### E. Recommendations
 
 - Suggested fixes (with `gh issue edit <n> --add-label ...` snippets the user can run)
 - Items to split / merge
