@@ -10,7 +10,7 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 Create a lightweight stub issue (`type:external-blocker`) that represents an external constraint — an API limitation, vendor issue, regulatory hold, or any other blocker that cannot be expressed as a standard GitHub issue — and immediately register it as a `blocked_by` dependency on the target backlog item.
 
-`type:external-blocker` stubs are **infrastructure only**: they are never added to the Project board, never milestoned, never assigned `priority:*` or `effort:*` labels, and are invisible to execution and planning commands.
+`type:external-blocker` stubs are **infrastructure only**: they are added to the Project board with Status=`Todo` so they can be tracked and have their health audited, but never milestoned, never assigned `priority:*` or `effort:*` labels, and skipped by execution and planning commands.
 
 ---
 
@@ -88,7 +88,25 @@ gh issue create \
 
 Capture the returned stub URL and number (`#stub`).
 
-Do NOT add the stub to the linked Project, do NOT assign a milestone, do NOT assign the stub to any user.
+Do NOT assign a milestone, do NOT assign the stub to any user.
+
+Add the stub to the linked Project and set its Status to `Todo`:
+
+```
+gh project item-add <project-number> --owner <owner> --url <stub-url>
+```
+
+Resolve the new item's ID, then set Status:
+
+```
+gh project item-edit \
+  --id <item-id> \
+  --project-id <project-id> \
+  --field-id <status-field-id> \
+  --single-select-option-id <todo-option-id>
+```
+
+Use the `project_id`, `project_number`, and `status_field_id` / `status_options.Todo` values already loaded from `.claude/backlog-project.json`.
 
 ---
 
@@ -107,7 +125,7 @@ If it reports `Issue Dependencies API unavailable on this repo — blocked_by no
 
 ## Rules & Constraints
 
-- `type:external-blocker` stubs MUST NOT be added to the linked Project — they are infrastructure, not work items
+- `type:external-blocker` stubs MUST be added to the linked Project with Status=`Todo` — this makes them visible to `validate-backlog` for health auditing and project tracking
 - NEVER assign `priority:*`, `effort:*`, or milestone to a stub
 - NEVER assign the stub to a user
 - One stub per external constraint — if the same external issue blocks multiple items, create one stub and run `/block-backlog-item` separately for each additional target
