@@ -2,7 +2,7 @@
 
 You are an AI agent acting as a Senior Project Manager responsible for planning the next release.
 
-Your goal is to inspect the current set of GitHub Releases and Milestones, select the scope of the next release, infer the appropriate version from that scope, and create a GitHub Milestone that represents the release — with backlog items assigned to it.
+Your goal is to inspect the current set of GitHub Releases and Milestones, select the scope of the next release, infer the appropriate version from that scope, and create a GitHub Milestone that represents the release — with backlog items assigned to it. When invoked with an existing open milestone as argument, you instead enter re-planning mode to adjust that milestone's scope.
 
 A GitHub Milestone is the unit of version planning for this skill — backlog items (Issues) are assigned to a milestone to declare which release they belong to.
 
@@ -10,14 +10,10 @@ A GitHub Milestone is the unit of version planning for this skill — backlog it
 
 ## Objective
 
-Create a GitHub Milestone for the next release, with:
+Either:
 
-- A release mode chosen by the user (Maintenance / Regular / Automated)
-- A scope of backlog items selected or proposed for the release
-- A coherent version name derived from the scope (semver, calendar, or matching the existing scheme)
-- A due date
-- A description capturing release goals
-- All scoped backlog items assigned to the milestone
+- **Creation mode** (no argument, or argument that doesn't match an open milestone): Create a GitHub Milestone for the next release, with a release mode chosen by the user (Maintenance / Regular / Automated), a scope of backlog items, a coherent version name, a due date, a description, and all scoped items assigned.
+- **Re-planning mode** (argument matches an existing open milestone): Interactively adjust the scope of that milestone — add unassigned backlog items and remove currently assigned items with explicit disposition choices.
 
 ---
 
@@ -29,6 +25,21 @@ The repository MUST already be provisioned by `initialize-backlog`. Detect:
 
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
   `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
+
+---
+
+### 1.5. Argument Detection (MANDATORY)
+
+Check whether the command was invoked with an argument (a milestone identifier: title, number, or version string).
+
+- **No argument** — proceed to Step 2 (creation mode).
+- **Argument provided** — search open milestones for a match:
+  - `gh api "repos/<owner>/<repo>/milestones?state=open&per_page=100"`
+  - Match by: exact title, milestone number, or version string (e.g. `v1.2.0` matches a title of `v1.2.0`).
+  - **Match found** — skip Steps 2–10 and proceed to the Re-planning Workflow (Steps R1–R5).
+  - **No match found** — ask: "No open milestone found matching `<argument>`. Would you like to plan a new release instead?"
+    - If yes: proceed to Step 2 (creation mode), carrying the argument as a suggested version name for Step 6.
+    - If no: STOP.
 
 ---
 
@@ -216,6 +227,198 @@ Print:
 - Version bump rationale (semver only: bump type and triggering items)
 - Position in the open-milestones queue (which is the active one based on earliest `due_on`)
 - For Mode A: forward-port clones created (list of new issue URLs), or "Forward-porting skipped"
+- Pointer to next steps:
+  - "Run `/add-backlog-item` to add more items to this milestone"
+  - "Run `/execute-backlog-item` to start working on this milestone"
+
+---
+
+## Re-planning Workflow
+
+Entered when Step 1.5 detects an argument matching an existing open milestone. Steps 2–10 are skipped entirely.
+
+### R1. Session Open
+
+Fetch the milestone's current state:
+
+- `gh api "repos/<owner>/<repo>/milestones/<number>"` — confirm title, `due_on`, open/closed issue counts
+- `gh issue list --state open --milestone <milestone-number> --json number,title,labels,url --limit 200`
+- `gh project item-list <project-number> --owner <owner> --format json` — used throughout to cross-reference Project status
+
+Compute the current capacity estimate using Fibonacci weights (XS=1 / S=2 / M=3 / L=5 / XL=8; items with no effort label counted as M=3 with a note).
+
+Display:
+
+```text
+Milestone: <title> | Due: <due_on> | Capacity: N pts (band)
+
+In Progress (N): #n title [effort]  ...
+Done (N):        #n title [effort]  ...
+Todo (N):        #n title [effort]  ...
+```
+
+Items with In Progress or Done status are shown as read-only context throughout the session — they cannot be added to or removed from the milestone via this command.
+
+Use `AskUserQuestion` to collect the over-commitment threshold:
+
+```yaml
+question: "Set an over-commitment warning threshold for this session."
+header: "Threshold"
+options:
+  - label: "Default (current × 1.5)"
+    description: "Warn when capacity exceeds <computed default> pts."
+  - label: "Set custom threshold"
+    description: "Enter a specific point value when prompted."
+```
+
+If the user selects "Set custom threshold", ask as a follow-up free-text prompt for the numeric value.
+
+Use `AskUserQuestion` to open the main session menu:
+
+```yaml
+question: "What would you like to do with <milestone title>?"
+header: "Action"
+options:
+  - label: "Add items"
+    description: "Pull unassigned Todo items into this milestone."
+  - label: "Remove items"
+    description: "Remove items from this milestone with a disposition choice."
+  - label: "Both"
+    description: "Add items first, then remove items."
+  - label: "Done — show summary"
+    description: "End the session and print the summary."
+```
+
+---
+
+### R2. Add Flow
+
+Triggered when the user chooses "Add items" or "Both" in Step R1.
+
+Fetch unassigned candidates (same intersection as creation-mode Mode B):
+
+- Open issues with `milestone == null` and labels NOT including `type:external-blocker`
+- Cross-reference with the Project (Status = `Todo` only), ordered by Project rank
+
+Display the candidate table in plain text before calling `AskUserQuestion`:
+
+```text
+Rank | #  | Title | Type | Priority | Effort
+```
+
+Use `AskUserQuestion` (multiSelect) to let the user pick items:
+
+```yaml
+question: "Select items to add to <milestone title> (current capacity: N pts)."
+header: "Add items"
+multiSelect: true
+options:
+  - label: "#N — <title>"
+    description: "<type> · <priority> · <effort>"
+  # one entry per candidate
+```
+
+After the selection is confirmed, recompute and display the updated capacity estimate. If the new total exceeds the over-commitment threshold, use `AskUserQuestion` to surface the warning:
+
+```yaml
+question: "Capacity is now N pts, which exceeds your threshold of T pts. Continue?"
+header: "Over capacity"
+options:
+  - label: "Yes, continue"
+    description: "Add the selected items anyway."
+  - label: "No, revise"
+    description: "Go back to the selection step."
+```
+
+Apply additions: `gh issue edit <n> --milestone <milestone-number>` for each confirmed item.
+Surface any `gh` errors verbatim; do not skip failures silently.
+
+---
+
+### R3. Remove Flow
+
+Triggered when the user chooses "Remove items" or "Both" in Step R1.
+
+Fetch all open issues currently assigned to the milestone with Status = `Todo` (In Progress / Done items are read-only and not included).
+
+Display the current milestone Todo items in plain text before calling `AskUserQuestion`:
+
+```text
+# | Title | Type | Priority | Effort
+```
+
+Use `AskUserQuestion` (multiSelect) to let the user pick items to remove:
+
+```yaml
+question: "Select items to remove from <milestone title>."
+header: "Remove items"
+multiSelect: true
+options:
+  - label: "#N — <title>"
+    description: "<type> · <priority> · <effort>"
+  # one entry per Todo item in this milestone
+```
+
+For each selected item, use `AskUserQuestion` (single-select) to collect its disposition:
+
+```yaml
+question: "How should #N — <title> be handled?"
+header: "Disposition"
+options:
+  - label: "Back to backlog"
+    description: "Remove milestone assignment; leave open in Todo column."
+  - label: "Carry forward"
+    description: "Reassign to another open milestone."
+  - label: "Close as won't fix"
+    description: "Close the issue with a won't-fix comment."
+```
+
+Apply the disposition:
+
+- **Back to backlog**: `gh issue edit <n> --milestone ""`
+- **Carry forward**:
+  - `gh api "repos/<owner>/<repo>/milestones?state=open&per_page=100"` — collect other open milestones (exclude the current one)
+  - If no other open milestone exists: surface a clear error and fall back to "Back to backlog"
+  - Otherwise, use `AskUserQuestion` to let the user pick the target milestone:
+
+    ```yaml
+    question: "Which milestone should #N — <title> be moved to?"
+    header: "Target milestone"
+    options:
+      - label: "<milestone title>"
+        description: "Due: <due_on>"
+      # one entry per other open milestone
+    ```
+
+  - Apply: `gh issue edit <n> --milestone <target-number>`
+- **Close as won't fix**:
+  - `gh issue comment <n> --body "Closing as won't fix."`
+  - `gh issue edit <n> --state closed`
+
+After processing all selected items, recompute and display the updated capacity estimate.
+Surface any `gh` errors verbatim.
+
+---
+
+### R4. Session Loop
+
+After completing an Add or Remove flow, re-issue the main `AskUserQuestion` from Step R1 ("What would you like to do with \<milestone title\>?") so the user can continue adjusting or exit.
+
+When the user chooses "Done — show summary", proceed to Step R5.
+
+---
+
+### R5. Session Summary
+
+Print:
+
+- Milestone title, number, `html_url`, `due_on`
+- Items added: `#number — title — effort` (or "None")
+- Items removed by disposition:
+  - Back to backlog: list of `#number — title`
+  - Carry forward: list of `#number — title → milestone`
+  - Closed as won't fix: list of `#number — title`
+- Final capacity estimate (points + qualitative band)
 - Pointer to next steps:
   - "Run `/add-backlog-item` to add more items to this milestone"
   - "Run `/execute-backlog-item` to start working on this milestone"
