@@ -1,11 +1,9 @@
 ---
 name: github-backlog-management
-description: GitHub-native backlog automation. Manage Issues + Projects v2 with AI-enforced INVEST quality, dependency tracking, and one-command execution. Create or import backlog items, prioritize work, execute tasks, audit quality, or bootstrap a workflow from scratch.
+description: Manage backlog, issues, and milestones with INVEST quality enforcement. Use for requests about backlog, issue, milestone, prioritize, INVEST, refine, audit, or clarify.
 ---
 
 # GitHub Backlog Management
-
-## Overview
 
 A set of slash commands for a fully GitHub-native backlog workflow — Issues, Projects v2, Milestones, and Labels. No external tools, no database, no webhooks.
 
@@ -36,6 +34,19 @@ initialize-backlog ─► plan-release ─► add-backlog-item / migrate-backlog
 
 `initialize-backlog` is the bootstrap. Every other command preflights for a linked Project and stops with a standard error if missing.
 
+## INVEST Quality Bar
+
+Every item must pass before entering the queue:
+
+| Letter | Criterion | What to check |
+|--------|-----------|---------------|
+| **I** | Independent | Buildable without waiting on another in-flight item |
+| **N** | Negotiable | The *what* is agreed; the *how* is open |
+| **V** | Valuable | Delivers something real to a user or the system |
+| **E** | Estimable | Team can roughly size it |
+| **S** | Small | Fits inside a single cycle of work |
+| **T** | Testable | Has acceptance criteria concrete enough to verify |
+
 ## Key Invariants (apply to all commands)
 
 **Label catalog**
@@ -48,6 +59,8 @@ initialize-backlog ─► plan-release ─► add-backlog-item / migrate-backlog
 `### What` · `### Why` · `### In Scope` · `### Out of Scope` · `### Acceptance Criteria` · `### INVEST Notes`
 
 **Metadata file**: `.claude/backlog-project.json` — written by `initialize-backlog`, read directly by all other commands.
+
+**Standard preflight stop string**: `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
 
 **Priority vs rank**: `priority:*` is severity classification. Project rank (topmost Todo item) is execution order. They should stay consistent but are independent concepts — `execute-backlog-item` sorts by rank only.
 
