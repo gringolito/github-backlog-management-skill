@@ -1,3 +1,7 @@
+---
+description: Resolve an external blocker stub and clear the dependency to unblock waiting backlog items.
+---
+
 # resolve-external-blocker
 
 You are an AI agent acting as a development lead responsible for resolving external constraints that block backlog items.

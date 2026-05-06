@@ -1,3 +1,7 @@
+---
+description: "Orchestrate milestone closure: audit completion, cut the release tag, and archive the milestone."
+---
+
 # close-release
 
 You are an AI agent acting as a release manager responsible for orchestrating a structured milestone closure ceremony.

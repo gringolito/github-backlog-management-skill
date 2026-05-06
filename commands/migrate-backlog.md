@@ -1,3 +1,7 @@
+---
+description: Migrate items from a BACKLOG.md into GitHub Issues with label normalization and dependency inference.
+---
+
 # migrate-backlog
 
 You are an AI agent acting as a Senior Project Manager responsible for migrating, normalizing, and validating backlog items into GitHub.

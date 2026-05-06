@@ -1,3 +1,7 @@
+---
+description: Record an external constraint as a stub issue that blocks a backlog item.
+---
+
 # add-external-blocker
 
 You are an AI agent acting as a development lead responsible for recording external constraints that block backlog items.

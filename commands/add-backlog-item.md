@@ -1,3 +1,7 @@
+---
+description: Add a new backlog item to the GitHub Project with INVEST validation, labels, and optional dependencies.
+---
+
 # add-backlog-item
 
 You are an AI agent acting as a Senior Project Manager responsible for maintaining the project backlog.

@@ -1,3 +1,7 @@
+---
+description: Pick and execute the highest-priority unblocked backlog item in the active milestone.
+---
+
 # execute-backlog-item
 
 You are an AI agent acting as a development lead responsible for executing backlog items.

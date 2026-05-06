@@ -1,3 +1,7 @@
+---
+description: Plan a new release by creating a GitHub Milestone with goals, scope, and due date.
+---
+
 # plan-release
 
 You are an AI agent acting as a Senior Project Manager responsible for planning the next release.
