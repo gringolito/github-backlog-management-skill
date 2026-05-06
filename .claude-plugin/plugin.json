@@ -1,4 +1,5 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
   "name": "github-backlog-management",
   "description": "GitHub-native backlog automation. Manage Issues + Projects v2 with AI-enforced INVEST quality, dependency tracking, and one-command execution.",
   "version": "0.2.0",
@@ -9,5 +10,5 @@
   "homepage": "https://github.com/gringolito/github-backlog-management-skill",
   "repository": "https://github.com/gringolito/github-backlog-management-skill",
   "license": "MIT",
-  "commands": "./commands"
+  "keywords": ["github", "backlog", "issues", "projects-v2", "milestones", "labels", "invest", "agile", "prioritization"]
 }
