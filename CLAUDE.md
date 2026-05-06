@@ -59,6 +59,7 @@ These were made deliberately — don't undo without explicit user direction:
 - **Issue Forms template ships via PR** — `initialize-backlog` opens a `chore/backlog-item-issue-template` PR; it never commits the template directly to the default branch.
 - **`validate-backlog` is strictly read-only** — never mutates issues. It surfaces `gh issue edit ...` snippets the user can run.
 - **Migration dep inference is opt-in** — `migrate-backlog` scans source prose for hints like "depends on" / "blocked by" but presents all candidates in a single review block and applies only after user confirmation.
+- **`plugin.json:version` is the update cache key** — Claude Code uses this field to decide whether `/plugin update` fetches new code from the remote. Pushing commits without bumping the version leaves all installed users on the previous version indefinitely. **Policy: version bumps happen at release closure (via `/close-release`), not per PR.** Do not bump `plugin.json:version` in feature PRs.
 
 ## When editing commands
 
