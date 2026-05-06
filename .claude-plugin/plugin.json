@@ -9,5 +9,5 @@
   "homepage": "https://github.com/gringolito/github-backlog-management-skill",
   "repository": "https://github.com/gringolito/github-backlog-management-skill",
   "license": "MIT",
-  "commands": "./commands"
+  "keywords": ["github", "backlog", "issues", "projects-v2", "milestones", "labels", "invest", "agile", "prioritization"]
 }

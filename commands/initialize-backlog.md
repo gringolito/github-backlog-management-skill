@@ -1,3 +1,7 @@
+---
+description: "Bootstrap the GitHub-native backlog system: create the Project, labels, and Issue Forms template PR."
+---
+
 # initialize-backlog
 
 You are an AI agent acting as a Senior Project Manager responsible for bootstrapping the GitHub-native backlog system for this repository.

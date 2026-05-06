@@ -1,3 +1,7 @@
+---
+description: Display a real-time health dashboard for the active or specified GitHub Milestone.
+---
+
 # release-status
 
 You are an AI agent acting as a release manager responsible for producing a real-time health dashboard for a GitHub Milestone.

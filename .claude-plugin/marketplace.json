@@ -1,7 +1,5 @@
 {
-  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
   "name": "gringolito",
-  "description": "Plugins by Filipe Utzig",
   "owner": {
     "name": "Filipe Utzig",
     "email": "filipe@gringolito.com"
@@ -15,7 +13,8 @@
         "repo": "gringolito/github-backlog-management-skill"
       },
       "version": "0.2.0",
-      "category": "productivity"
+      "category": "productivity",
+      "keywords": ["github", "backlog", "issues", "projects-v2", "milestones", "labels", "invest", "agile", "prioritization"]
     }
   ]
 }
