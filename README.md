@@ -140,6 +140,7 @@ Add one of the blocks below to `.claude/settings.json` in any repo where you use
 | `/refine-backlog` | Lists all `needs-clarification` candidates, lets you select which to refine, then loops through them one by one — asking continue/stop after each. |
 | `/refine-backlog-item` | Refines a single `needs-clarification` item: discovery dialogue, body rewrite, INVEST gate, label/rank/dep re-evaluation, and label removal after a final validation pass. |
 | `/release-status` | Read-only milestone health dashboard — issue counts by Project Status, % complete, blocked items, and unestimated items. Accepts an optional milestone argument; defaults to the active milestone. |
+| `/backlog-health` | Read-only strategic portfolio health report — open-issue distribution by type, priority, and effort; age cohorts; overdue P0/P1 items; stale In-Progress items; metadata debt. Suitable for leadership updates and retrospectives. |
 | `/validate-backlog` | Read-only audit. Emits actionable `gh issue edit ...` snippets. Never mutates anything. |
 | `/execute-backlog-item` | Picks the topmost unblocked Todo item, respects active milestone scope, skips blocked items, and walks you through to a PR. |
 
@@ -260,6 +261,14 @@ Produces a Markdown dashboard for the active milestone: issue counts by Project 
 ```
 
 The output is valid GitHub-Flavored Markdown — paste it directly into a standup document, Slack message, or GitHub comment.
+
+### Checking portfolio health
+
+```
+/backlog-health
+```
+
+Produces a Markdown strategic health report across all open Project issues: distribution tables by type, priority, and effort; age cohorts (<7d, 7–30d, 30–90d, >90d); overdue P0 (>14 days) and P1 (>30 days) items; stale In-Progress items (no update in 7+ days); and a metadata debt list of issues missing any label group. Useful for weekly leadership updates or retrospectives.
 
 ### Auditing backlog health
 

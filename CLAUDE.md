@@ -15,11 +15,12 @@ initialize-backlog   ─►  plan-release   ─►  add-backlog-item / migrate-b
                                                   │
                                                   ├─►  refine-backlog ─► refine-backlog-item   (needs-clarification)
                                                   ├─►  release-status                          (read-only dashboard)
+                                                  ├─►  backlog-health                          (read-only portfolio report)
                                                   ├─►  validate-backlog                        (read-only audit)
                                                   └─►  execute-backlog-item                    (picks topmost unblocked)
 ```
 
-`initialize-backlog` is the bootstrap. Every other command preflights for a Project linked to the repo and stops with the standard error if missing. `plan-release` creates Milestones (releases). `add-backlog-item` and `migrate-backlog` create Issues. `execute-backlog-item` picks work. `refine-backlog` orchestrates a session over items flagged `needs-clarification`, delegating each to `refine-backlog-item`. `release-status` produces a read-only milestone health dashboard. `validate-backlog` audits without mutating.
+`initialize-backlog` is the bootstrap. Every other command preflights for a Project linked to the repo and stops with the standard error if missing. `plan-release` creates Milestones (releases). `add-backlog-item` and `migrate-backlog` create Issues. `execute-backlog-item` picks work. `refine-backlog` orchestrates a session over items flagged `needs-clarification`, delegating each to `refine-backlog-item`. `release-status` produces a read-only milestone health dashboard. `backlog-health` produces a read-only strategic portfolio health report (distribution, age cohorts, overdue P0/P1, stale In-Progress, metadata debt). `validate-backlog` audits without mutating.
 
 ## Invariants that MUST be preserved across all commands
 
@@ -29,7 +30,7 @@ When editing any command, these must stay consistent across files. Most consiste
 grep -hoE "type:[a-z-]+" commands/*.md | sort -u           # 10 type labels
 grep -hoE "priority:P[0-3]" commands/*.md | sort -u         # 4 priority labels
 grep -hoE "effort:(XS|S|M|L|XL)\b" commands/*.md | sort -u  # 5 effort labels
-grep -n "No Backlog project linked" commands/*.md           # identical preflight stop string in 8 files
+grep -n "No Backlog project linked" commands/*.md           # identical preflight stop string in all consumer commands
 grep -n ".claude/backlog-project.json" commands/*.md        # metadata file referenced everywhere
 ```
 
@@ -79,4 +80,5 @@ There is no automated test suite. The end-to-end smoke is:
 5. `/execute-backlog-item` → picks topmost unblocked item, surfaces skipped-because-blocked items above it.
 6. `/release-status` → confirm Markdown dashboard renders with correct counts by Status, blocked-items section (or graceful omission on `404`), and unestimated list; run again with an explicit milestone argument and verify it resolves correctly.
 7. `/validate-backlog` → seed deliberate violations (missing `priority:*`, dangling blocker, cross-Project blocker) and confirm they appear in the Critical/Quality/Consistency report sections.
-8. `/refine-backlog` → presents the `needs-clarification` queue, user selects items, loop delegates to `/refine-backlog-item`; label removed only after pre-removal validation gate passes.
+8. `/backlog-health` → confirm Markdown report renders all six sections (summary, distribution tables, age cohorts, overdue P0/P1, stale In-Progress, metadata debt); verify stubs excluded from counts; confirm zero mutations.
+9. `/refine-backlog` → presents the `needs-clarification` queue, user selects items, loop delegates to `/refine-backlog-item`; label removed only after pre-removal validation gate passes.

@@ -18,6 +18,7 @@ A set of slash commands for a fully GitHub-native backlog workflow — Issues, P
 | `/refine-backlog` | Orchestrate a refinement session: list `needs-clarification` candidates, let user select, loop through with `/refine-backlog-item` |
 | `/refine-backlog-item` | Refine a single `needs-clarification` item — discovery dialogue, body rewrite, INVEST gate, label/rank/dep updates, label removal |
 | `/release-status` | Read-only milestone health dashboard — issue counts by Status, blocked items, unestimated items |
+| `/backlog-health` | Read-only strategic portfolio health report — distribution by type/priority/effort, age cohorts, overdue P0/P1 items, stale In-Progress, metadata debt |
 | `/validate-backlog` | Read-only audit — emits actionable `gh` commands; never mutates |
 | `/execute-backlog-item` | Pick the topmost unblocked Todo item and guide it through to a PR |
 
@@ -28,6 +29,7 @@ initialize-backlog ─► plan-release ─► add-backlog-item / migrate-backlog
                                               │
                                               ├─► refine-backlog ─► refine-backlog-item
                                               ├─► release-status (read-only)
+                                              ├─► backlog-health (read-only)
                                               ├─► validate-backlog (read-only)
                                               └─► execute-backlog-item
 ```
