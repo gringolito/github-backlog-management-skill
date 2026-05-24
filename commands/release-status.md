@@ -56,7 +56,7 @@ With the resolved milestone in hand, run these queries:
    After fetching, **partition the results**: set aside any issue whose labels include `type:external-blocker` — these are infrastructure stubs and are **excluded from all milestone counts and metrics**. They are retained only to enrich the blocked-items table with stub titles as blocker context (step 3).
 
 2. **Project membership and Status**:
-   `gh project item-list <project-number> --owner <owner> --format json`
+   `gh project item-list <project-number> --owner <owner> --query "is:issue milestone:<milestone-title>" --format json --limit 200`
    Build a lookup map: issue `number` → Project `Status` (`Todo` / `In Progress` / `Done`). Issues absent from the map are classified as "Not in Project."
 
 3. **Blocker check** (open issues only):

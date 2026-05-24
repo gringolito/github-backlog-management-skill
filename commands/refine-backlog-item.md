@@ -43,8 +43,7 @@ Bring the target issue to a fully refined state where:
   - An issue number (e.g. `/refine-backlog-item 42`) — use directly
   - A title or partial title (e.g. `/refine-backlog-item "add OAuth"`) — search with `gh issue list --search "<text>" --state open --json number,title,url --limit 10`, then present matches and ask the user to confirm which one
   - No argument — ask: "Which issue should I refine? You can provide an issue number or a title."
-- Fetch full issue data: `gh issue view <n> --json number,title,body,labels,milestone,url`
-- Verify the issue is a member of the linked Project: `gh project item-list <project-number> --owner <owner> --format json` — if the issue is NOT in the Project, STOP and output: `Issue #<n> is not in the linked Backlog project. Only Project members can be refined here.`
+- Fetch issue data and verify the issue is a member of the linked Project: `gh project item-list <project-number> --owner <owner> --format json --query "#<n>"` — if the issue is NOT in the Project, STOP and output: `Issue #<n> is not in the linked Backlog project. Only Project members can be refined here.`
 - If the issue does NOT carry `needs-clarification`, warn: "Issue #<n> does not carry `needs-clarification`. Proceed anyway? [Y/n]" and stop if the user declines.
 
 ---
@@ -164,7 +163,7 @@ If existing items appear misranked in their priority labels relative to the refi
 
 Same logic as `add-backlog-item` step 8 (8a → 8d) + step 9:
 
-- Fetch the current Todo column rank: `gh project item-list <project-number> --owner <owner> --format json`
+- Fetch the current Todo column rank: `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`
 - Determine where the refined item should sit by:
   - Impact
   - Risk

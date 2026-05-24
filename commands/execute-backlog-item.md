@@ -50,7 +50,7 @@ Execution order is determined by the Project's rank — the topmost item in the 
 - Open issues assigned to the active milestone
 - Present in the linked Project
 - Project Status = `Todo`
-- Sorted by Project rank (top of column = next). The order is the position field returned by `gh project item-list <project-number> --owner <owner> --format json` (items appear in rank order in the response).
+- Sorted by Project rank (top of column = next). The order is the position field returned by `gh project item-list` (items appear in rank order in the response).
 
 #### Tier 2 — In Project, no milestone, status Todo
 
@@ -69,8 +69,10 @@ If the picked item's `priority:*` label appears mismatched against its Project r
 
 Use these `gh` calls to gather data:
 
+- Project candidates — use targeted queries:
+  - Tier 1: `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue status:Todo milestone:<active-milestone-title>"`
+  - Tier 2: `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue status:Todo no:milestone"`
 - Issues: `gh issue list --state open --json number,title,labels,milestone,url --limit 200`
-- Project membership and status: `gh project item-list <project-number> --owner <owner> --format json`
 
 ---
 
@@ -180,7 +182,7 @@ Once the plan is approved:
 1. Self-assign the issue: `gh issue edit <n> --add-assignee @me`
 2. Set the Project Status field to `In Progress`:
    - Resolve field/option IDs: `gh project field-list <project-number> --owner <owner> --format json`
-   - Find the item ID via `gh project item-list ... --format json`
+   - Find the item ID via `gh project item-list <project-number> --owner <owner> --format json --query "#<n>"`
    - Update: `gh project item-edit --id <item-id> --project-id <project-id> --field-id <status-field-id> --single-select-option-id <in-progress-option-id>`
 
 This makes the in-flight work visible on the Project board immediately.

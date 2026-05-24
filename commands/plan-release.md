@@ -86,8 +86,7 @@ Ask the user which release mode to use:
 
 - Ask the user for: the target `major.minor` release (e.g. `1.5`) and optionally a list of issues to include (by number or title fragment).
 - If the user provides no issue list, fetch unassigned candidates with `type:bug` or `type:security` labels and present them for selection:
-  - `gh issue list --state open --json number,title,labels,milestone,url --limit 200` — filter to `milestone == null` AND label matches `type:bug` or `type:security`
-  - Intersect with Project items (Status = `Todo`) via `gh project item-list`
+  - Gather data via `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo no:milestone label:type:bug,type:security" --format json --limit 200`
   - Present the filtered table for the user to select from
 - For each item the user provided by title (not number), search for a match:
   - `gh issue list --state open --search "<title fragment>" --json number,title,labels,url --limit 10`
@@ -104,9 +103,7 @@ Ask the user which release mode to use:
 
 #### Mode B — Regular
 
-- Fetch unassigned candidates by intersecting:
-  - `gh issue list --state open --json number,title,labels,milestone,url --limit 200` — filter the result to items where `milestone == null` and whose labels do NOT include `type:external-blocker`
-  - `gh project item-list <project-number> --owner <owner> --format json` — filter to Status = `Todo`
+- Fetch unassigned candidates via `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo no:milestone -label:type:external-blocker" --format json --limit 200`
 - Present the candidate table in Project rank order:
 
   ```text
@@ -247,7 +244,7 @@ Fetch the milestone's current state:
 
 - `gh api "repos/<owner>/<repo>/milestones/<number>"` — confirm title, `due_on`, open/closed issue counts
 - `gh issue list --state open --milestone <milestone-number> --json number,title,labels,url --limit 200`
-- `gh project item-list <project-number> --owner <owner> --format json` — used throughout to cross-reference Project status
+- `gh project item-list <project-number> --owner <owner> --query "is:issue milestone:<milestone-title>" --format json --limit 200` — used throughout to cross-reference Project status for this milestone's items
 
 Compute the current capacity estimate using Fibonacci weights (XS=1 / S=2 / M=3 / L=5 / XL=8; items with no effort label counted as M=3 with a note).
 

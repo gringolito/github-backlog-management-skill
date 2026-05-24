@@ -30,20 +30,17 @@ Walk every selected item from two candidate pools — `needs-clarification` issu
 
 ### 1. Fetch Refinement Candidates
 
-Run two queries and intersect both results with Project membership:
-
 **Pool A — Needs clarification:**
 
-- `gh issue list --state open --label needs-clarification --json number,title,body,labels,milestone,url --limit 200`
-- Intersect with `gh project item-list <project-number> --owner <owner> --format json`
+- `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue label:needs-clarification"`
   - Items NOT in the linked Project are ignored, even if they carry `needs-clarification`
 
 **Pool B — Incomplete metadata:**
 
-- From the already-fetched Project item list, collect open issues that are missing a `priority:*` label OR missing an `effort:*` label, and do NOT carry `needs-clarification`
-- Cross-reference with `gh issue list --state open --json number,title,body,labels,milestone,url --limit 200` to get full label data for each Project item
-
-**Deduplication:** an issue that qualifies for both pools (carries `needs-clarification` AND is missing `priority:*` or `effort:*`) appears once, in Pool A only.
+- Collect open issues that are missing a `priority:*` OR `type:*` OR `effort:*` labels, and do NOT carry `needs-clarification`
+  - `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue -label:priority:*,needs-clarification"`
+  - `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue -label:type:*,needs-clarification"`
+  - `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue -label:effort:*,needs-clarification"`
 
 For each candidate, capture:
 
