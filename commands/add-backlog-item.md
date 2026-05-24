@@ -155,8 +155,8 @@ This command is responsible for placing the new item at the appropriate rank by 
 
 #### 8a. Fetch the current rank order
 
-- `gh project item-list <project-number> --owner <owner> --format json`
-- Filter to items with Project Status = `Todo`. The response order is the current rank (top first).
+- `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`
+- The response order is the current rank (top first).
 - For each Todo item, capture its title, `priority:*` label, and any milestone — these are the comparison set.
 
 #### 8b. Determine the new item's rank by relative analysis

@@ -42,7 +42,7 @@ Run these two queries:
    After fetching, **pre-filter**: discard any issue whose labels include `type:external-blocker` — these are infrastructure stubs, never work items, and are excluded from all counts and metrics.
 
 2. **Project membership and Status**:
-   `gh project item-list <project-number> --owner <owner> --format json`
+   `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue"`
 
    Build a lookup map: issue `number` → Project `Status` (`Todo` / `In Progress` / `Done`). Issues absent from the map are classified as "Not in Project."
 

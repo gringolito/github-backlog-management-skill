@@ -39,10 +39,10 @@ Validate that the backlog:
 Gather the audit dataset:
 
 - Project items with their Status field:
-  - `gh project item-list <project-number> --owner <owner> --format json`
+  - `gh project item-list <project-number> --owner <owner> --format json --limit 500 --query "is:issue -status:Done"`
 - Issue details for every Project item:
   - `gh issue view <n> --json number,title,body,labels,milestone,state,url,closedAt`
-  - (Or batch via `gh issue list --state all --json number,title,body,labels,milestone,state,url --limit 500` then intersect with project membership)
+  - (Or batch via `gh issue list --state open --json number,title,body,labels,milestone,state,url --limit 500` then intersect with project membership)
 - Open milestones with `due_on`:
   - `gh api "repos/<owner>/<repo>/milestones?state=all"`
 

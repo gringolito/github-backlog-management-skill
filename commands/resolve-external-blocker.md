@@ -98,7 +98,7 @@ gh project item-edit \
   --single-select-option-id <done-option-id>
 ```
 
-Resolve `<item-id>` via `gh project item-list <project-number> --owner <owner> --format json` if not already known. Use `project_id`, `project_number`, `status_field_id`, and `status_options.Done` from `.claude/backlog-project.json`. If the Project Status update fails (e.g. the stub was never added to the Project), surface the error as a warning but do not abort — the stub is already closed.
+Resolve `<item-id>` via `gh project item-list <project-number> --owner <owner> --format json --query "#<stub>"` if not already known. Use `project_id`, `project_number`, `status_field_id`, and `status_options.Done` from `.claude/backlog-project.json`. If the Project Status update fails (e.g. the stub was never added to the Project), surface the error as a warning but do not abort — the stub is already closed.
 
 ---
 
