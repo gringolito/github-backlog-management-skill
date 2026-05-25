@@ -92,6 +92,17 @@ gh auth refresh --scopes project,read:user
 
 This skill runs multi-step workflows that call `gh` and `git` many times in sequence. Without a pre-approved allowlist, Claude Code prompts for permission on every call and interrupts the workflow mid-run.
 
+When you enable the plugin, Claude Code asks for your preferred mode (`yolo`, `safe`, or `off`). To apply that choice, run:
+
+```text
+/setup-permissions
+```
+
+The command asks which settings file to write (per-project gitignored, per-project shared, or user-global) and merges the allowlist block idempotently — re-running it is safe.
+
+<details>
+<summary>Manual fallback — copy the JSON block directly</summary>
+
 Add one of the blocks below to `.claude/settings.json` in any repo where you use this skill, or to `~/.claude/settings.json` for a global default.
 
 **YOLO mode — no prompts during any multi-step command:**
@@ -127,6 +138,8 @@ Add one of the blocks below to `.claude/settings.json` in any repo where you use
 
 > **Note:** `gh api` calls used for reading milestones and issue dependencies are not listed above — the same command prefix covers both reads and writes, so they cannot be cleanly separated by pattern. In safe mode these calls will still prompt; approve them when the command starts with `gh api "repos/..."` and contains no `-X POST` or `-X DELETE` flag.
 
+</details>
+
 ---
 
 ## Features
@@ -143,6 +156,7 @@ Add one of the blocks below to `.claude/settings.json` in any repo where you use
 | `/backlog-health` | Read-only strategic portfolio health report — open-issue distribution by type, priority, and effort; age cohorts; overdue P0/P1 items; stale In-Progress items; metadata debt. Suitable for leadership updates and retrospectives. |
 | `/validate-backlog` | Read-only audit. Emits actionable `gh issue edit ...` snippets. Never mutates anything. |
 | `/execute-backlog-item` | Picks the topmost unblocked Todo item, respects active milestone scope, skips blocked items, and walks you through to a PR. |
+| `/setup-permissions` | Writes the `gh`/`git` allowlist block into your chosen Claude Code settings file. Idempotent — safe to re-run. |
 
 ### INVEST — the quality bar every backlog item must meet
 
