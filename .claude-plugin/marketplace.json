@@ -14,7 +14,7 @@
         "source": "github",
         "repo": "gringolito/github-backlog-management-skill"
       },
-      "version": "0.3.0",
+      "version": "0.3.1",
       "category": "productivity",
       "keywords": ["github", "backlog", "issues", "projects-v2", "milestones", "labels", "invest", "agile", "prioritization"]
     }
