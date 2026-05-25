@@ -10,5 +10,13 @@
   "homepage": "https://github.com/gringolito/github-backlog-management-skill",
   "repository": "https://github.com/gringolito/github-backlog-management-skill",
   "license": "MIT",
-  "keywords": ["github", "backlog", "issues", "projects-v2", "milestones", "labels", "invest", "agile", "prioritization"]
+  "keywords": ["github", "backlog", "issues", "projects-v2", "milestones", "labels", "invest", "agile", "prioritization"],
+  "userConfig": {
+    "permission_mode": {
+      "type": "string",
+      "title": "Permission mode",
+      "description": "yolo = no prompts on gh/git during multi-step commands. safe = read-only gh calls run silently, writes still prompt. off = manage permissions manually (no auto-write).",
+      "default": "off"
+    }
+  }
 }
