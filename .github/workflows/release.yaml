@@ -18,7 +18,7 @@ jobs:
         run: |
           ZIP_NAME="github-backlog-management-${GITHUB_REF_NAME}.zip"
           mkdir github-backlog-management
-          cp -r commands/ README.md SKILL.md LICENSE github-backlog-management/
+          cp -r commands/ skills/ hooks/ scripts/ .claude-plugin/ README.md LICENSE github-backlog-management/
           zip -r "${ZIP_NAME}" github-backlog-management/
           echo "ZIP_NAME=${ZIP_NAME}" >> "$GITHUB_ENV"
 
