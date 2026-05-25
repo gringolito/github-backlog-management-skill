@@ -72,7 +72,6 @@ Use these `gh` calls to gather data:
 - Project candidates — use targeted queries:
   - Tier 1: `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue status:Todo milestone:<active-milestone-title>"`
   - Tier 2: `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue status:Todo no:milestone"`
-- Issues: `gh issue list --state open --json number,title,labels,milestone,url --limit 200`
 
 ---
 
