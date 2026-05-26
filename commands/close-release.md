@@ -209,6 +209,15 @@ gh release create <milestone-title> \
 
 Capture the resulting Release URL from the command output. If the tag `<milestone-title>` already exists as a release, use **AskUserQuestion** to ask the user whether to delete the existing draft or choose a different tag.
 
+After the draft release is created, create and push an annotated git tag so that `on: push: tags:` workflows fire while the release remains in draft state:
+
+```sh
+git tag -a "<milestone-title>" -m "Release <milestone-title>"
+git push origin "<milestone-title>"
+```
+
+If the tag push fails (e.g. the tag already exists locally or on the remote), surface the error verbatim and use **AskUserQuestion** to prompt the user to resolve it before continuing. Do NOT proceed to Step 6 until the tag push succeeds.
+
 ---
 
 ### 6. Milestone Closure (MANDATORY)
@@ -232,6 +241,7 @@ Print:
   - Returned to backlog: #N list (or "none")
 - Pre-closure checklist: items performed (file PR merged, manual steps confirmed) or "no requirements found"
 - GitHub Release draft URL
+- Pushed git tag: `<milestone-title>` (annotated, triggers `on: push: tags:` workflows)
 - Next steps:
   - "Run `/plan-release` to open the next milestone"
   - "Publish the Release draft on GitHub when ready: <release-url>"
