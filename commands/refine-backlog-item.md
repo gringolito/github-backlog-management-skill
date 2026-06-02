@@ -104,12 +104,7 @@ DO NOT introduce new headings or change ordering — `validate-backlog` parses t
 
 Delegate to the `invest-gate` agent with the reconstructed body from step 4 and the issue title.
 
-If `invest-gate` returns a T violation with offending lines:
-
-- Show each offending line with its corrected `- [ ] <text>` form (as returned by `invest-gate`)
-- Require user approval before applying the body update
-
-If `invest-gate` returns `Overall: FAIL` (after incorporating any T fixes, or for non-T principle failures):
+If `invest-gate` returns `Overall: FAIL`:
 
 - Capture each `FAIL` letter's reasoning in `### INVEST Notes`
 - Apply the partial body update (step 6), but SKIP steps 7–10

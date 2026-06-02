@@ -91,12 +91,6 @@ If `invest-gate` returns `Overall: FAIL`:
 - For any `FAIL` letter, propose a corrected version of the relevant section
 - Do NOT proceed to step 5 until the user approves corrections and `invest-gate` returns `Overall: PASS`
 
-If `invest-gate` returns a T violation with offending lines:
-
-- STOP
-- Show each offending line with its corrected `- [ ] <text>` form (as returned by `invest-gate`)
-- Require user approval before proceeding
-
 ---
 
 ### 5. Priority Classification
