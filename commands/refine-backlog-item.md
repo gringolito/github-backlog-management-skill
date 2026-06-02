@@ -77,6 +77,10 @@ Reuse the discovery pattern from `add-backlog-item`:
   - User/business impact
   - Constraints, risks, edge cases
 - Revisit the displayed relationships:
+  - **Dependency scan**: delegate to the `dependency-inferrer` agent with:
+    - **Prose**: the full issue body (all sections concatenated)
+    - **Issue roster**: the list of open issues in the Project (`gh issue list --state open --json number,title --limit 200 | jq -r '.[] | "#\(.number) \"\(.title)\""'`)
+    If the agent returns any candidates, present them to the user as starting proposals for the relationship review. `UNRESOLVED` targets are surfaced as open questions for the user to clarify.
   - Are existing blockers still relevant? Should any be removed via `gh api -X DELETE "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by/<blocker-id>"`?
   - Did refinement reveal NEW blockers? (issue numbers; cross-repo allowed)
   - Should the sub-issue parent change or be removed?
