@@ -82,23 +82,14 @@ Type, Priority, and Effort are NOT in the body — they are applied as repositor
 
 ### 4. INVEST Enforcement (MANDATORY)
 
-Validate that the item is:
+Delegate to the `invest-gate` agent with the body constructed in step 3 and the issue title.
 
-- Independent → No hidden dependencies on other items
-- Negotiable → Not overly prescriptive in implementation
-- Valuable → Clear benefit to user or system
-- Estimable → Enough detail to assess complexity
-- Small → Can be delivered in a single iteration
-- Testable → Acceptance criteria are verifiable and in the correct format. **Format check (MANDATORY):** Every non-blank line in `### Acceptance Criteria` MUST begin with `- [ ]`. If any line does not match:
-  - STOP
-  - List each offending line and show its corrected `- [ ] <text>` form
-  - Propose corrected versions; require user approval before creation proceeds
-
-If any principle fails:
+If `invest-gate` returns `Overall: FAIL`:
 
 - STOP
-- Explain the issue
-- Propose a corrected version
+- Show the per-letter verdict to the user
+- For any `FAIL` letter, propose a corrected version of the relevant section
+- Do NOT proceed to step 5 until the user approves corrections and `invest-gate` returns `Overall: PASS`
 
 ---
 

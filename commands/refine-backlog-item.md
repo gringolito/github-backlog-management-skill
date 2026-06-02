@@ -102,26 +102,17 @@ DO NOT introduce new headings or change ordering — `validate-backlog` parses t
 
 ### 5. INVEST Gate (MANDATORY)
 
-Validate the refined item against:
+Delegate to the `invest-gate` agent with the reconstructed body from step 4 and the issue title.
 
-- Independent
-- Negotiable
-- Valuable
-- Estimable
-- Small
-- Testable — every non-blank line in `### Acceptance Criteria` MUST begin with `- [ ]`. If any line does not match:
-  - List each offending line and show its corrected `- [ ] <text>` form
-  - Propose corrected versions; require user approval before applying the body update
+If `invest-gate` returns `Overall: FAIL`:
 
-If any principle still fails after refinement:
-
-- Capture the violation in `### INVEST Notes`
+- Capture each `FAIL` letter's reasoning in `### INVEST Notes`
 - Apply the partial body update (step 6), but SKIP steps 7–10
 - KEEP the `needs-clarification` label
-- Output the partial-refinement result: issue URL + list of INVEST failures + what remains in `### INVEST Notes`
+- Output the partial-refinement result: issue URL + per-letter INVEST verdict from `invest-gate` + what remains in `### INVEST Notes`
 - STOP — do not continue to label/rank re-evaluation or label removal
 
-If splitting is needed (item too large to be Small):
+If splitting is needed (S letter fails):
 
 - Suggest a split via `/add-backlog-item` for the new item(s)
 - Apply the partial body update reflecting the reduced scope of the original item, OR keep the original as-is if the user prefers to handle the split manually

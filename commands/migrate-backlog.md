@@ -120,20 +120,13 @@ If unclear:
 
 ### 6. INVEST Evaluation
 
-For each item:
+For each item, delegate to the `invest-gate` agent with the normalized body and title.
 
-- Validate:
-  - Independent
-  - Negotiable
-  - Valuable
-  - Estimable
-  - Small
-  - Testable
+If `invest-gate` returns `Overall: FAIL`:
 
-If violations exist:
-
-- Capture them in `### INVEST Notes`
-- Suggest improvements (do NOT silently rewrite intent)
+- Capture each `FAIL` letter's reasoning in `### INVEST Notes`
+- Suggest improvements in the Migration Report (do NOT silently rewrite intent)
+- Apply the `needs-clarification` label to the item
 
 ---
 
