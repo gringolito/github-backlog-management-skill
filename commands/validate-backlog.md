@@ -132,19 +132,14 @@ Flag:
 
 ### 4. INVEST Validation (MANDATORY)
 
-For EACH item, evaluate:
+For EACH item, delegate to the `invest-gate` agent with the item's full body and title.
 
-- Independent → no hidden dependencies
-- Negotiable → not overly prescriptive
-- Valuable → clear benefit
-- Estimable → enough detail
-- Small → not too large for a single iteration
-- Testable → acceptance criteria are verifiable
+Collect all `FAIL` verdicts across items. For each violation:
 
-For each violation:
+- Include the per-letter reasoning returned by `invest-gate`
+- Suggest an improvement
 
-- Explain why
-- Suggest improvement
+Report all INVEST violations in section **B. Quality Issues**.
 
 ---
 
