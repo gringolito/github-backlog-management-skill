@@ -41,13 +41,6 @@ Transform ALL existing backlog items into GitHub Issues while:
 - Parse the source backlog provided by the user (markdown, plain text, or any structured form)
 - Identify individual items (even if poorly structured)
 - Preserve original intent and wording
-- **Scan for dependency hints** in each item's prose. Look for phrases such as:
-  - "depends on", "depends upon"
-  - "blocked by", "blocks", "blocking"
-  - "after X is done", "before X", "requires X first"
-  - "sub-task of", "part of", "child of", "parent: X"
-  - "requires", "prerequisite"
-- For each hint, capture: the source item, the phrase matched, and the referenced target (by source title or any explicit identifier). DO NOT apply anything yet — these are candidate dependencies for user review in step 9d.
 
 If item boundaries are unclear:
 
@@ -225,21 +218,21 @@ This map is used in 9e to resolve dependency hints to concrete issue IDs.
 
 #### 9e. Propose and apply dependencies (USER-CONFIRMED)
 
-For each dependency hint captured in step 1:
+1. **Delegate to `dependency-inferrer`.** Call the `dependency-inferrer` agent with:
+   - **Prose**: the full source text of each migrated item (from Step 1 parsing), one entry per item labeled with its source title
+   - **Issue roster**: the source-title → issue-number map from Step 9d, formatted as `#<num> "<title>"` per line
+   If the agent returns `CANDIDATES: none`, skip the rest of this step.
 
-1. **Resolve the target.** Try to match the hint's referenced title against the source-title → issue-id map.
-   - If the target is a Done item that was skipped (9a), skip the hint and note it in the Migration Report (the dep would point at nothing in GitHub)
-   - If the target can't be matched to any source item, surface as a "manual resolution needed" entry in the Migration Report — DO NOT guess
-2. **Classify the relationship type:**
-   - "depends on" / "blocked by" / "after" / "requires" / "prerequisite" → `blocked_by`
-   - "blocks" / "blocking" / "before X" → `blocking`
-   - "sub-task of" / "part of" / "child of" / "parent: X" → sub-issue parent
+2. **Resolve each candidate against the source-title → issue-id map** (from Step 9d):
+   - `UNRESOLVED` targets: surface as "manual resolution needed" in the Migration Report — DO NOT guess
+   - Candidates pointing at a Done item (skipped in 9a): skip the candidate and note it in the Migration Report
+
 3. **Present all candidates to the user in a single review block** (NOT one-by-one) so they can scan and confirm in bulk. Format:
 
    ```text
    #<this-num> "<this-title>"
-     → blocked_by #<target-num> "<target-title>" (matched phrase: "depends on the API spec")
-     → sub-issue of #<parent-num> "<parent-title>" (matched phrase: "part of API rework")
+     → blocked_by #<target-num> "<target-title>" (evidence: "depends on the API spec")
+     → sub-issue of #<parent-num> "<parent-title>" (evidence: "part of API rework")
    ```
 
 4. **Apply only after explicit confirmation.** The user can accept all, reject all, or cherry-pick. For each accepted candidate:
