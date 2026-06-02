@@ -82,3 +82,17 @@ There is no automated test suite. The end-to-end smoke is:
 7. `/validate-backlog` → seed deliberate violations (missing `priority:*`, dangling blocker, cross-Project blocker) and confirm they appear in the Critical/Quality/Consistency report sections.
 8. `/backlog-health` → confirm Markdown report renders all six sections (summary, distribution tables, age cohorts, overdue P0/P1, stale In-Progress, metadata debt); verify stubs excluded from counts; confirm zero mutations.
 9. `/refine-backlog` → presents the `needs-clarification` queue, user selects items, loop delegates to `/refine-backlog-item`; label removed only after pre-removal validation gate passes.
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues, managed via the `github-backlog-management-skill`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+This repo uses the `github-backlog-management-skill`'s own label classification (`type:*`, `priority:*`, `effort:*`) rather than the canonical triage roles. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context repo: one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
