@@ -54,7 +54,6 @@ If item boundaries are unclear:
 For EACH item, derive the GitHub-native representation:
 
 - **Title** — concise; will be issue title
-- **Labels** — delegate classification to the `label-classifier` agent using the item's normalized title and body draft; the agent returns a verdict for `type:*`, `priority:*`, and `effort:*` — use these results in steps 4 and 5; never `type:external-blocker` — stubs are infrastructure and are never migrated from backlog files
 - **Body** — delegate body authoring to the `issue-body-author` agent:
   - **Mode**: `migrate`
   - **Input**: the source prose for this item (as parsed in step 1)
@@ -62,7 +61,7 @@ For EACH item, derive the GitHub-native representation:
 - **Status mapping** (Project field):
   - Source `Todo` (or unspecified) → Project `Todo`
   - Source `In Progress` → Project `In Progress`
-  - Source `Done` / `Completed` / shipped items → **SKIPPED** (see step 9). Done items are historical and are NOT migrated to GitHub.
+  - Source `Done` / `Completed` / shipped items → **SKIPPED** (see step 8). Done items are historical and are NOT migrated to GitHub.
 
 ---
 
@@ -82,24 +81,7 @@ Additionally:
 
 ---
 
-### 4. Classification
-
-Apply the `type:*` verdict from the `label-classifier` agent called in step 2:
-
-- If `unclear: type` was returned, note the ambiguity in `### INVEST Notes` and apply the `needs-clarification` label
-
----
-
-### 5. Prioritization (RELATIVE)
-
-Apply the `priority:*` and `effort:*` verdicts from the `label-classifier` agent called in step 2:
-
-- If `unclear: priority` was returned, default to `priority:P2`, add `Priority needs validation` to `### INVEST Notes`, and apply the `needs-clarification` label
-- If `unclear: effort` was returned, add an effort question to `### INVEST Notes` and apply the `needs-clarification` label
-
----
-
-### 6. INVEST Evaluation
+### 4. INVEST Evaluation
 
 For each item, delegate to the `invest-gate` agent with the normalized body and title.
 
@@ -111,7 +93,24 @@ If `invest-gate` returns `Overall: FAIL`:
 
 ---
 
-### 7. Deduplication & Structuring
+### 5. Label Application
+
+Delegate classification to the `label-classifier` agent:
+
+- **Input**: the normalized title and the body finalized in steps 3–4
+- The agent returns a verdict for each of the three label groups (`type:*`, `priority:*`, `effort:*`) with one-line reasoning
+
+Apply the returned verdicts:
+
+- `type:*` — if `unclear: type` was returned, note the ambiguity in `### INVEST Notes` and apply the `needs-clarification` label
+- `priority:*` — if `unclear: priority` was returned, default to `priority:P2`, add `Priority needs validation` to `### INVEST Notes`, and apply the `needs-clarification` label
+- `effort:*` — if `unclear: effort` was returned, add an effort question to `### INVEST Notes` and apply the `needs-clarification` label
+
+Never assign `type:external-blocker` — stubs are infrastructure and are never migrated from backlog files.
+
+---
+
+### 6. Deduplication & Structuring
 
 - Detect duplicates or overlaps across the source backlog
 - DO NOT auto-merge or auto-split
@@ -119,7 +118,7 @@ If `invest-gate` returns `Overall: FAIL`:
 
 ---
 
-### 8. VALIDATION STEP (HARD GATE)
+### 7. VALIDATION STEP (HARD GATE)
 
 Before any issue is created, verify:
 
@@ -138,9 +137,9 @@ If any check fails:
 
 ---
 
-### 9. Migration Execution
+### 8. Migration Execution
 
-#### 9a. Filter out Done items
+#### 8a. Filter out Done items
 
 Before any GitHub mutation, partition the validated items:
 
@@ -149,7 +148,7 @@ Before any GitHub mutation, partition the validated items:
 
 Done items are historical and would only clutter the Project. Their PR shipped references stay in the original BACKLOG.md as a record.
 
-#### 9b. Resolve active milestone
+#### 8b. Resolve active milestone
 
 - `gh api "repos/<owner>/<repo>/milestones?state=open&per_page=100"`
 - Primary sort: `due_on` ascending (milestones without a `due_on` are sorted last)
@@ -158,7 +157,7 @@ Done items are historical and would only clutter the Project. Their PR shipped r
 - If an active milestone is found, ask the user once (before any issue is created) whether to assign all migrated items to it. Record the answer — it applies to all items uniformly.
 - If no active milestone exists, skip milestone assignment entirely and note it in the Migration Report.
 
-#### 9c. Create issues
+#### 8c. Create issues
 
 For each non-Done item, in priority order (P0 → P3):
 
@@ -195,7 +194,7 @@ For each non-Done item, in priority order (P0 → P3):
 6. If the user confirmed milestone assignment in 9b:
    - `gh issue edit <n> --milestone <milestone-number>`
 
-#### 9d. Build the source-title → issue-id lookup
+#### 8d. Build the source-title → issue-id lookup
 
 After all issues are created, build a mapping from source title (and any explicit identifiers used in the source) to the new issue's numeric `id` (database ID, not number):
 
@@ -204,7 +203,7 @@ After all issues are created, build a mapping from source title (and any explici
 
 This map is used in 9e to resolve dependency hints to concrete issue IDs.
 
-#### 9e. Propose and apply dependencies (USER-CONFIRMED)
+#### 8e. Propose and apply dependencies (USER-CONFIRMED)
 
 1. **Delegate to `dependency-inferrer`.** Call the `dependency-inferrer` agent with:
    - **Prose**: the full source text of each migrated item (from Step 1 parsing), one entry per item labeled with its source title
@@ -234,7 +233,7 @@ If the Dependencies API is unavailable on this repo (private repo without paid p
 
 ---
 
-### 10. Migration Report (MANDATORY)
+### 9. Migration Report (MANDATORY)
 
 After all items are processed, output a Migration Report containing:
 
