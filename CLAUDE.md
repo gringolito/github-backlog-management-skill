@@ -10,7 +10,7 @@ There is **no source code, no build, no tests, no lint**. Each command file is a
 
 ## The commands and their workflow
 
-```
+```text
 initialize-backlog   ─►  plan-release   ─►  add-backlog-item / migrate-backlog
                                                   │
                                                   ├─►  refine-backlog ─► refine-backlog-item   (needs-clarification)
@@ -61,6 +61,16 @@ These were made deliberately — don't undo without explicit user direction:
 - **`validate-backlog` is strictly read-only** — never mutates issues. It surfaces `gh issue edit ...` snippets the user can run.
 - **Migration dep inference is opt-in** — `migrate-backlog` scans source prose for hints like "depends on" / "blocked by" but presents all candidates in a single review block and applies only after user confirmation.
 - **`plugin.json:version` is the update cache key** — Claude Code uses this field to decide whether `/plugin update` fetches new code from the remote. Pushing commits without bumping the version leaves all installed users on the previous version indefinitely. **Policy: version bumps happen at release closure (via `/close-release`), not per PR.** Do not bump `plugin.json:version` in feature PRs.
+
+## Commit requirements
+
+All commits to this repository MUST be both **signed** (`-S`, GPG/SSH signature) and **signed-off** (`-s`, Developer Certificate of Origin). Use:
+
+```bash
+git commit -S -s -m "..."
+```
+
+Never skip signing or the DCO sign-off (`--no-gpg-sign`, omitting `-s`).
 
 ## When editing commands
 
