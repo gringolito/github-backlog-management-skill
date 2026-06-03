@@ -61,14 +61,14 @@ Before any item work, verify the repository is provisioned:
 
 ### 3. Definition (STRICT)
 
-Construct the issue body matching the canonical Issue Forms template (`.github/ISSUE_TEMPLATE/backlog-item.yml`). Section headings MUST be exactly:
+Delegate body authoring to the `issue-body-author` agent:
 
-- `### What` — clear and specific description of the work
-- `### Why` — business value, user impact, or technical justification
-- `### In Scope` — explicit list of what is included
-- `### Out of Scope` — explicit list of what is excluded (when relevant; omit section if not)
-- `### Acceptance Criteria` — checklist (`- [ ] ...`) of concrete, testable, unambiguous conditions
-- `### INVEST Notes` — leave blank if fully specified
+- **Mode**: `create`
+- **Input**: the title and all context gathered in step 1 (desired outcome, user/business impact, constraints, risks, edge cases, scope inclusions and exclusions, acceptance criteria, and classification notes)
+
+The agent returns a fully structured body with canonical sections in strict order: `### What` → `### Why` → `### In Scope` → `### Out of Scope` → `### Acceptance Criteria` → `### INVEST Notes`.
+
+If the agent marks any section with `<!-- TODO: ... -->`, STOP and resolve those gaps with the user before proceeding to step 4.
 
 Issue title: concise and descriptive.
 

@@ -91,14 +91,13 @@ Reuse the discovery pattern from `add-backlog-item`:
 
 ### 4. Reconstruct Body
 
-Build the updated body matching the canonical Issue Forms template (`.github/ISSUE_TEMPLATE/backlog-item.yml`). Section headings MUST be exactly:
+Delegate body authoring to the `issue-body-author` agent:
 
-- `### What`
-- `### Why`
-- `### In Scope`
-- `### Out of Scope` (omit section if not applicable)
-- `### Acceptance Criteria` (formatted as `- [ ]` checklist)
-- `### INVEST Notes` — empty if everything is now specified, OR a smaller list of remaining questions
+- **Mode**: `refine`
+- **Input**: the existing issue body (as fetched in step 2) plus all corrections and answers discovered in step 3
+- **Existing body**: pass the full current body so the agent can preserve unchanged sections
+
+The agent returns an updated body with all `UNKNOWN` / `NEEDS CLARIFICATION` / `_No response_` markers replaced by the discovered content. Any sections where information is still missing will be marked with `<!-- TODO: ... -->` — those remain as open questions in `### INVEST Notes`.
 
 DO NOT introduce new headings or change ordering — `validate-backlog` parses these section headings.
 
