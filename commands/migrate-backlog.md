@@ -188,10 +188,10 @@ For each non-Done item, in priority order (P0 → P3):
 3. Capture the returned issue URL and number
 4. Add to the Project:
    - `gh project item-add <project-number> --owner <owner> --url <issue-url>`
-5. Set the Project `Status` field to the mapped value (`Todo` or `In Progress` only — Done items were skipped in 9a):
+5. Set the Project `Status` field to the mapped value (`Todo` or `In Progress` only — Done items were skipped in 8a):
    - Resolve field/option IDs via `gh project field-list <project-number> --owner <owner> --format json`
    - `gh project item-edit --id <item-id> --project-id <project-id> --field-id <status-field-id> --single-select-option-id <option-id>`
-6. If the user confirmed milestone assignment in 9b:
+6. If the user confirmed milestone assignment in 8b:
    - `gh issue edit <n> --milestone <milestone-number>`
 
 #### 8d. Build the source-title → issue-id lookup
@@ -201,18 +201,18 @@ After all issues are created, build a mapping from source title (and any explici
 - For each created issue, capture `id` from the `gh issue create` response (or via `gh api "repos/<o>/<r>/issues/<n>" --jq '.id'`)
 - Skipped Done items are NOT in this map (they have no GitHub issue)
 
-This map is used in 9e to resolve dependency hints to concrete issue IDs.
+This map is used in 8e to resolve dependency hints to concrete issue IDs.
 
 #### 8e. Propose and apply dependencies (USER-CONFIRMED)
 
 1. **Delegate to `dependency-inferrer`.** Call the `dependency-inferrer` agent with:
    - **Prose**: the full source text of each migrated item (from Step 1 parsing), one entry per item labeled with its source title
-   - **Issue roster**: the source-title → issue-number map from Step 9d, formatted as `#<num> "<title>"` per line
+   - **Issue roster**: the source-title → issue-number map from Step 8d, formatted as `#<num> "<title>"` per line
    If the agent returns `CANDIDATES: none`, skip the rest of this step.
 
-2. **Resolve each candidate against the source-title → issue-id map** (from Step 9d):
+2. **Resolve each candidate against the source-title → issue-id map** (from Step 8d):
    - `UNRESOLVED` targets: surface as "manual resolution needed" in the Migration Report — DO NOT guess
-   - Candidates pointing at a Done item (skipped in 9a): skip the candidate and note it in the Migration Report
+   - Candidates pointing at a Done item (skipped in 8a): skip the candidate and note it in the Migration Report
 
 3. **Present all candidates to the user in a single review block** (NOT one-by-one) so they can scan and confirm in bulk. Format:
 
