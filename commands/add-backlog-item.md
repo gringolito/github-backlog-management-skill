@@ -33,7 +33,7 @@ Before any item work, verify the repository is provisioned:
   - Desired outcome
   - User/business impact
   - Constraints, risks, and edge cases
-- Ask about relationships to existing items (used in step 9):
+- Ask about relationships to existing items (used in step 8):
   - **Blocked by**: Is this item blocked by any open issue that must be done first? (provide issue numbers; cross-Project blockers are allowed — e.g. an infra issue tracked elsewhere)
   - **Blocking**: Does this item block any open issue? (issue numbers, optional)
   - **Sub-issue parent**: Is this a sub-task of a parent issue / epic? (issue number, optional — sub-issues stay independent: they do NOT inherit the parent's milestone, priority, or rank)
@@ -42,26 +42,7 @@ Before any item work, verify the repository is provisioned:
 
 ---
 
-### 2. Classification
-
-Delegate classification to the `label-classifier` agent:
-
-- **Input**: the issue title and all context gathered in step 1
-- The agent returns a verdict for each of the three label groups (`type:*`, `priority:*`, `effort:*`) with one-line reasoning
-
-Handle the returned verdict:
-
-- `type:*` — if the agent returns `unclear: type`, STOP and ask the user for clarification before proceeding
-- `priority:*` — if the agent returns `unclear: priority`, present the reasoning and ask the user to decide; default to `priority:P2` only if the user explicitly accepts
-- `effort:*` — if the agent returns `unclear: effort`, present the reasoning and ask the user to resolve before proceeding
-
-`type:external-blocker` is reserved for infrastructure stubs created by `/add-external-blocker` — DO NOT classify work items with this type; if the agent returns it or the user attempts to, STOP and redirect them to `/add-external-blocker`.
-
-Carry the `label-classifier` verdict forward to step 5 for label application.
-
----
-
-### 3. Definition (STRICT)
+### 2. Definition (STRICT)
 
 Delegate body authoring to the `issue-body-author` agent:
 
@@ -70,7 +51,7 @@ Delegate body authoring to the `issue-body-author` agent:
 
 The agent returns a fully structured body with canonical sections in strict order: `### What` → `### Why` → `### In Scope` → `### Out of Scope` → `### Acceptance Criteria` → `### INVEST Notes`.
 
-If the agent marks any section with `<!-- TODO: ... -->`, STOP and resolve those gaps with the user before proceeding to step 4.
+If the agent marks any section with `<!-- TODO: ... -->`, STOP and resolve those gaps with the user before proceeding to step 3.
 
 Issue title: concise and descriptive.
 
@@ -82,28 +63,39 @@ Type, Priority, and Effort are NOT in the body — they are applied as repositor
 
 ---
 
-### 4. INVEST Enforcement (MANDATORY)
+### 3. INVEST Enforcement (MANDATORY)
 
-Delegate to the `invest-gate` agent with the body constructed in step 3 and the issue title.
+Delegate to the `invest-gate` agent with the body constructed in step 2 and the issue title.
 
 If `invest-gate` returns `Overall: FAIL`:
 
 - STOP
 - Show the per-letter verdict to the user
 - For any `FAIL` letter, propose a corrected version of the relevant section
-- Do NOT proceed to step 5 until the user approves corrections and `invest-gate` returns `Overall: PASS`
+- Do NOT proceed to step 4 until the user approves corrections and `invest-gate` returns `Overall: PASS`
 
 ---
 
-### 5. Label Application
+### 4. Classification + Label Application
 
-Apply the `type:*`, `priority:*`, and `effort:*` labels returned by `label-classifier` in step 2 (they will be passed as `--label` flags when creating the issue in step 7).
+Delegate classification to the `label-classifier` agent:
 
-The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next — execution order is set by position on the Project board (see step 8 below). Severity and rank are tracked independently but should be **kept consistent** by this command's relative analysis: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
+- **Input**: the issue title and the body produced in step 2
+- The agent returns a verdict for each of the three label groups (`type:*`, `priority:*`, `effort:*`) with one-line reasoning
+
+Handle the returned verdict:
+
+- `type:*` — if the agent returns `unclear: type`, STOP and ask the user for clarification before proceeding
+- `priority:*` — if the agent returns `unclear: priority`, present the reasoning and ask the user to decide; default to `priority:P2` only if the user explicitly accepts
+- `effort:*` — if the agent returns `unclear: effort`, present the reasoning and ask the user to resolve before proceeding
+
+`type:external-blocker` is reserved for infrastructure stubs created by `/add-external-blocker` — DO NOT classify work items with this type; if the agent returns it or the user attempts to, STOP and redirect them to `/add-external-blocker`.
+
+These labels will be passed as `--label` flags when creating the issue in step 6.
 
 ---
 
-### 6. Validation
+### 5. Validation
 
 Ensure:
 
@@ -117,7 +109,7 @@ If too vague → request clarification
 
 ---
 
-### 7. Issue Creation (MANDATORY)
+### 6. Issue Creation (MANDATORY)
 
 After validation passes:
 
@@ -128,7 +120,7 @@ After validation passes:
 
 ---
 
-### 8. Project Assignment & Execution Rank (MANDATORY, RELATIVE)
+### 7. Project Assignment & Execution Rank (MANDATORY, RELATIVE)
 
 Add the issue to the linked Project and set its initial Status:
 
@@ -141,13 +133,15 @@ Add the issue to the linked Project and set its initial Status:
 
 This command is responsible for placing the new item at the appropriate rank by RELATIVE analysis against existing Todo items, NOT defaulting to bottom-of-column.
 
-#### 8a. Fetch the current rank order
+The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next — execution order is set by position on the Project board. Severity and rank are tracked independently but should be **kept consistent** by this command's relative analysis: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
+
+#### 7a. Fetch the current rank order
 
 - `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`
 - The response order is the current rank (top first).
 - For each Todo item, capture its title, `priority:*` label, and any milestone — these are the comparison set.
 
-#### 8b. Determine the new item's rank by relative analysis
+#### 7b. Determine the new item's rank by relative analysis
 
 Compare the new item against each existing Todo item based on:
 
@@ -156,7 +150,7 @@ Compare the new item against each existing Todo item based on:
 - Urgency
 - Frequency
 - Dependencies (does this item block or depend on others?)
-- Consistency with the priority label set in step 5 (a `priority:P0` item should generally rank above all non-P0 items; flag any divergence for user confirmation)
+- Consistency with the priority label set in step 4 (a `priority:P0` item should generally rank above all non-P0 items; flag any divergence for user confirmation)
 
 Propose a concrete rank position:
 
@@ -165,11 +159,11 @@ Propose a concrete rank position:
 - Below a specific existing item
 - Bottom (only if genuinely lowest among current Todos)
 
-#### 8c. Surface re-rank suggestions for existing items
+#### 7c. Surface re-rank suggestions for existing items
 
 If the analysis reveals existing items that appear misranked relative to the new item OR relative to each other (e.g. a `priority:P3` sitting above a `priority:P1`), list each suggested move with rationale. DO NOT apply them silently.
 
-#### 8d. Apply rank changes (USER-CONFIRMED ONLY)
+#### 7d. Apply rank changes (USER-CONFIRMED ONLY)
 
 After the user confirms the proposed positions:
 
@@ -195,7 +189,7 @@ The command MUST NOT apply rank changes without explicit confirmation. Always pr
 
 ---
 
-### 9. Dependencies & Sub-issue Linkage
+### 8. Dependencies & Sub-issue Linkage
 
 Apply the relationships gathered in step 1 (Discovery). All linkages use GitHub's native APIs — they are NOT mirrored in the issue body.
 
@@ -249,7 +243,7 @@ Print the resolved relationships so the user can confirm before continuing to mi
 
 ---
 
-### 10. Milestone Assignment (OPTIONAL, RECOMMENDED)
+### 9. Milestone Assignment (OPTIONAL, RECOMMENDED)
 
 The active milestone is determined as follows:
 
@@ -267,7 +261,7 @@ If no active milestone exists, suggest the user run `/plan-release` after.
 
 ---
 
-### 11. Output
+### 10. Output
 
 Print:
 
