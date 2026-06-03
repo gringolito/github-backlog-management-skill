@@ -57,13 +57,10 @@ For EACH item, derive the GitHub-native representation:
 - **Type** — exactly one type label (`type:feature`, `type:bug`, `type:security`, `type:performance`, `type:dx`, `type:tech-debt`, `type:reliability`, `type:compliance`, `type:spike`); never `type:external-blocker` — stubs are infrastructure and are never migrated from backlog files
 - **Priority** — exactly one priority label (`priority:P0` / `priority:P1` / `priority:P2` / `priority:P3`)
 - **Effort** — exactly one effort label (`effort:XS` / `effort:S` / `effort:M` / `effort:L` / `effort:XL`) — complexity-based, NOT time
-- **Body sections** (matching the Issue Forms template at `.github/ISSUE_TEMPLATE/backlog-item.yml`):
-  - `### What`
-  - `### Why`
-  - `### In Scope`
-  - `### Out of Scope` (omit if not applicable)
-  - `### Acceptance Criteria` (formatted as `- [ ]` checklist)
-  - `### INVEST Notes` (may include `NEEDS CLARIFICATION` markers)
+- **Body** — delegate body authoring to the `issue-body-author` agent:
+  - **Mode**: `migrate`
+  - **Input**: the source prose for this item (as parsed in step 1)
+  - If the agent marks a section with `<!-- TODO: ... -->`, treat it as a `NEEDS CLARIFICATION` gap: retain the TODO comment in the relevant section, add a corresponding question to `### INVEST Notes`, and apply the `needs-clarification` label (per step 3)
 - **Status mapping** (Project field):
   - Source `Todo` (or unspecified) → Project `Todo`
   - Source `In Progress` → Project `In Progress`
