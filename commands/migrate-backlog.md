@@ -54,9 +54,7 @@ If item boundaries are unclear:
 For EACH item, derive the GitHub-native representation:
 
 - **Title** — concise; will be issue title
-- **Type** — exactly one type label (`type:feature`, `type:bug`, `type:security`, `type:performance`, `type:dx`, `type:tech-debt`, `type:reliability`, `type:compliance`, `type:spike`); never `type:external-blocker` — stubs are infrastructure and are never migrated from backlog files
-- **Priority** — exactly one priority label (`priority:P0` / `priority:P1` / `priority:P2` / `priority:P3`)
-- **Effort** — exactly one effort label (`effort:XS` / `effort:S` / `effort:M` / `effort:L` / `effort:XL`) — complexity-based, NOT time
+- **Labels** — delegate classification to the `label-classifier` agent using the item's normalized title and body draft; the agent returns a verdict for `type:*`, `priority:*`, and `effort:*` — use these results in steps 4 and 5; never `type:external-blocker` — stubs are infrastructure and are never migrated from backlog files
 - **Body** — delegate body authoring to the `issue-body-author` agent:
   - **Mode**: `migrate`
   - **Input**: the source prose for this item (as parsed in step 1)
@@ -86,25 +84,18 @@ Additionally:
 
 ### 4. Classification
 
-- Assign exactly ONE type
-- If ambiguous:
-  - Choose best fit
-  - Note the justification in `### INVEST Notes`
+Apply the `type:*` verdict from the `label-classifier` agent called in step 2:
+
+- If `unclear: type` was returned, note the ambiguity in `### INVEST Notes` and apply the `needs-clarification` label
 
 ---
 
 ### 5. Prioritization (RELATIVE)
 
-- Infer based on:
-  - Urgency language
-  - Impact
-  - Risk
+Apply the `priority:*` and `effort:*` verdicts from the `label-classifier` agent called in step 2:
 
-If unclear:
-
-- Default to `priority:P2`
-- Add `Priority needs validation` to `### INVEST Notes`
-- Apply `needs-clarification` label
+- If `unclear: priority` was returned, default to `priority:P2`, add `Priority needs validation` to `### INVEST Notes`, and apply the `needs-clarification` label
+- If `unclear: effort` was returned, add an effort question to `### INVEST Notes` and apply the `needs-clarification` label
 
 ---
 

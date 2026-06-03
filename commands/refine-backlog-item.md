@@ -134,20 +134,22 @@ If INVEST passes (or partial — per step 5):
 
 ### 7. Re-evaluate Labels (RELATIVE)
 
-Refinement frequently reveals different severity, effort, or type than `migrate-backlog` inferred. Re-run the same relative analysis used by `add-backlog-item` step 5:
+Refinement frequently reveals different severity, effort, or type than `migrate-backlog` inferred. Delegate re-classification to the `label-classifier` agent:
 
-- Fetch open Project items with their labels: `gh issue list --state open --json number,title,labels --limit 200`
-- Compare the refined item against existing items based on:
-  - Impact
-  - Risk
-  - Urgency
-  - Frequency
-- Propose changes (independently for each label group):
-  - `priority:*` (severity classification)
-  - `effort:*` (complexity, NOT time)
-  - `type:*` (if classification is now clearer)
-- Apply changes ONLY after explicit user confirmation:
-  - `gh issue edit <n> --remove-label <old> --add-label <new>`
+- **Input**: the refined issue title and the reconstructed body from step 4
+- The agent returns a verdict for each of the three label groups (`type:*`, `priority:*`, `effort:*`) with one-line reasoning
+
+Compare the agent's verdict against the currently applied labels and propose changes (independently for each group):
+
+- `priority:*` (severity classification)
+- `effort:*` (complexity, NOT time)
+- `type:*` (if classification is now clearer)
+
+If the agent returns `unclear` for a group, surface the reasoning and ask the user to decide.
+
+Apply changes ONLY after explicit user confirmation:
+
+- `gh issue edit <n> --remove-label <old> --add-label <new>`
 
 If existing items appear misranked in their priority labels relative to the refined item, surface the discrepancy and recommend label changes for those existing items. Apply ONLY after confirmation.
 

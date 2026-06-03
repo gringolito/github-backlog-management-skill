@@ -44,18 +44,20 @@ Before any item work, verify the repository is provisioned:
 
 ### 2. Classification
 
-- Assign the item to exactly ONE type:
-  - Feature (`type:feature`)
-  - Bug (`type:bug`)
-  - Security (`type:security`)
-  - Performance & Scalability (`type:performance`)
-  - Developer Experience (`type:dx`)
-  - Tech Debt (`type:tech-debt`)
-  - Reliability (`type:reliability`)
-  - Compliance (`type:compliance`)
-  - Spike (`type:spike`)
-- `type:external-blocker` is reserved for infrastructure stubs created by `/add-external-blocker` — DO NOT classify work items with this type; if the user attempts to, STOP and redirect them to `/add-external-blocker`
-- If classification is unclear → STOP and ask for clarification
+Delegate classification to the `label-classifier` agent:
+
+- **Input**: the issue title and all context gathered in step 1
+- The agent returns a verdict for each of the three label groups (`type:*`, `priority:*`, `effort:*`) with one-line reasoning
+
+Handle the returned verdict:
+
+- `type:*` — if the agent returns `unclear: type`, STOP and ask the user for clarification before proceeding
+- `priority:*` — if the agent returns `unclear: priority`, present the reasoning and ask the user to decide; default to `priority:P2` only if the user explicitly accepts
+- `effort:*` — if the agent returns `unclear: effort`, present the reasoning and ask the user to resolve before proceeding
+
+`type:external-blocker` is reserved for infrastructure stubs created by `/add-external-blocker` — DO NOT classify work items with this type; if the agent returns it or the user attempts to, STOP and redirect them to `/add-external-blocker`.
+
+Carry the `label-classifier` verdict forward to step 5 for label application.
 
 ---
 
@@ -93,14 +95,9 @@ If `invest-gate` returns `Overall: FAIL`:
 
 ---
 
-### 5. Priority Classification
+### 5. Label Application
 
-Apply exactly one `priority:*` label that reflects intrinsic severity:
-
-- `priority:P0` — Critical: system broken, security risk, no workaround
-- `priority:P1` — High: major impact, should be addressed soon
-- `priority:P2` — Medium: planned work
-- `priority:P3` — Low: optional or nice-to-have
+Apply the `type:*`, `priority:*`, and `effort:*` labels returned by `label-classifier` in step 2 (they will be passed as `--label` flags when creating the issue in step 7).
 
 The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next — execution order is set by position on the Project board (see step 8 below). Severity and rank are tracked independently but should be **kept consistent** by this command's relative analysis: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
 
@@ -300,15 +297,6 @@ Print:
 - Dependencies and sub-issue parent are NOT mirrored in the issue body — GitHub's native API is the only source of truth for these relationships
 - Cross-Project / cross-repo blockers ARE permitted but will be flagged as a smell by `validate-backlog`
 - Sub-issues stay independent — assigning a parent does NOT inherit the parent's milestone, priority, effort, type, or Project rank
-
----
-
-## Priority Reference
-
-- P0 — Critical: system broken, security risk, no workaround
-- P1 — High: major impact, should be addressed soon
-- P2 — Medium: planned work
-- P3 — Low: optional or nice-to-have
 
 ---
 
