@@ -237,18 +237,18 @@ After all issues are created and dependencies are applied, set the execution ord
 
 1. **Fetch the full current Todo column** (existing items plus newly migrated items):
    `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`
-   Capture each item's title and `priority:*` label; the response order is the current rank (top first).
+   Capture each item's title and `type:*`, `priority:*`, `effort:*` labels; the response order is the current rank (top first).
 
 2. **Call `rank-recommender` for each migrated item** (one agent call per item, in P0→P3 order) using:
-   - **Candidate item**: the migrated issue title, one-line `### What` summary, and its `priority:*` label
+   - **Candidate item**: the migrated issue title, one-line `### What` summary, and its `type:*`, `priority:*`, `effort:*` labels
    - **Current Todo column**: the ordered list from the most recent `item-list` fetch (update after each confirmed repositioning)
    Collect all recommendations before presenting them to the user.
 
 3. **Present the full proposed ordering** in a single block so the user can review and adjust:
    ```text
    Proposed Todo column order (top → bottom):
-     1. <title> [priority:Px] — rank-recommender: top (existing)
-     2. <title> [priority:Py] — rank-recommender: above "<title>" (migrated)
+     1. <title> [type:bug | priority:P0 | effort:S] — rank-recommender: top (existing)
+     2. <title> [type:feature | priority:P1 | effort:M] — rank-recommender: above "<title>" (migrated)
      ...
    ```
    Do NOT apply any position changes before the user confirms.

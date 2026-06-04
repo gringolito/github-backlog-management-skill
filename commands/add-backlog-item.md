@@ -144,8 +144,8 @@ The priority label classifies severity for filtering and reporting. It does NOT 
 #### 7b. Determine the new item's rank by delegating to `rank-recommender`
 
 Call the `rank-recommender` agent with:
-- **Candidate item**: the issue title, one-line `### What` summary, and the `priority:*` label from step 4
-- **Current Todo column**: the ordered list (top-to-bottom) from step 7a — each item's title and `priority:*` label
+- **Candidate item**: the issue title, one-line `### What` summary, and the `type:*`, `priority:*`, `effort:*` labels from step 4
+- **Current Todo column**: the ordered list (top-to-bottom) from step 7a — each item's title and `type:*`, `priority:*`, `effort:*` labels
 
 The agent returns:
 - `position:` — `top` | `above: <item title>` | `below: <item title>` | `bottom`

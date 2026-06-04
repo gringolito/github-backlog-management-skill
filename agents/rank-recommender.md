@@ -21,12 +21,16 @@ You receive:
 - **Candidate item** (required):
   - `title` — the concise issue title
   - `what` — one-line summary from the `### What` section
+  - `type` — the assigned `type:*` label
   - `priority` — the assigned `priority:*` label (P0–P3)
+  - `effort` — the assigned `effort:*` label (XS–XL)
 
 - **Current Todo column** (required):
   - Ordered list (top-to-bottom = highest to lowest execution priority) of existing items, each with:
     - `title` — the issue title
+    - `type` — the `type:*` label
     - `priority` — the `priority:*` label
+    - `effort` — the `effort:*` label
 
 ---
 
@@ -90,8 +94,8 @@ Use the **exact** title of the neighboring item as written in the input — do n
 - Return ONLY the structured output — no headers, no preamble, no summaries
 - If the Todo column is empty, always return `position: top`
 - If the candidate is a `priority:P0` item, it should rank above all non-P0 items unless a dependency prevents it — in that case, emit a `divergence_flag`
-- Do NOT consider milestone, effort, or type labels in ranking decisions — only priority, title, what summary, and the five dimensions
+- Do NOT consider milestone in ranking decisions
 - Do NOT fetch any external data — evaluate only what is provided
 - Do NOT write or edit any files
 - Each rationale line must be one sentence; do not use bullet points within rationale lines
-- If input is missing `what` for the candidate, evaluate using only title and priority
+- If input is missing `what` for the candidate, evaluate using only title and labels

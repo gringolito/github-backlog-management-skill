@@ -158,11 +158,11 @@ If existing items appear misranked in their priority labels relative to the refi
 ### 8. Re-evaluate Project Rank + Dependencies (RELATIVE)
 
 - Fetch the current Todo column rank: `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`
-- The response order is the current rank (top first). For each Todo item, capture its title and `priority:*` label.
+- The response order is the current rank (top first). For each Todo item, capture its title and `type:*`, `priority:*`, `effort:*` labels.
 
 Delegate rank analysis to the `rank-recommender` agent:
-- **Candidate item**: the refined issue title, one-line `### What` summary, and the current (or updated) `priority:*` label from step 7
-- **Current Todo column**: the ordered list (top-to-bottom) from the `item-list` response — each item's title and `priority:*` label
+- **Candidate item**: the refined issue title, one-line `### What` summary, and the current (or updated) `type:*`, `priority:*`, `effort:*` labels from step 7
+- **Current Todo column**: the ordered list (top-to-bottom) from the `item-list` response — each item's title and `type:*`, `priority:*`, `effort:*` labels
 
 The agent returns:
 - `position:` — `top` | `above: <item title>` | `below: <item title>` | `bottom`
