@@ -157,18 +157,19 @@ If existing items appear misranked in their priority labels relative to the refi
 
 ### 8. Re-evaluate Project Rank + Dependencies (RELATIVE)
 
-Same logic as `add-backlog-item` step 8 (8a → 8d) + step 9:
-
 - Fetch the current Todo column rank: `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`
-- Determine where the refined item should sit by:
-  - Impact
-  - Risk
-  - Urgency
-  - Frequency
-  - Dependencies (does this item block or depend on others?)
-  - Consistency with the (possibly updated) `priority:*` label — flag divergences for user confirmation
-- Propose a concrete rank position (top, above/below specific items, or bottom)
-- If existing items appear misranked relative to the refined item, surface those re-rank suggestions too
+- The response order is the current rank (top first). For each Todo item, capture its title and `type:*`, `priority:*`, `effort:*` labels.
+
+Delegate rank analysis to the `rank-recommender` agent:
+- **Candidate item**: the refined issue title, one-line `### What` summary, and the current (or updated) `type:*`, `priority:*`, `effort:*` labels from step 7
+- **Current Todo column**: the ordered list (top-to-bottom) from the `item-list` response — each item's title and `type:*`, `priority:*`, `effort:*` labels
+
+The agent returns:
+- `position:` — `top` | `above: <item title>` | `below: <item title>` | `bottom`
+- `rationale:` — per-dimension Impact / Risk / Urgency / Frequency / Dependencies
+- `divergence_flag:` (if present) — surface to the user and ask them to confirm or override the divergence
+
+If the analysis reveals existing items that appear misranked relative to the refined item (e.g. a `priority:P3` sitting above a `priority:P1`), list each suggested move with rationale. DO NOT apply them silently.
 
 Apply rank changes ONLY after explicit user confirmation, via:
 
