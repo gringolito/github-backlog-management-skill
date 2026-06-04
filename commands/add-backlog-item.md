@@ -141,23 +141,18 @@ The priority label classifies severity for filtering and reporting. It does NOT 
 - The response order is the current rank (top first).
 - For each Todo item, capture its title, `priority:*` label, and any milestone — these are the comparison set.
 
-#### 7b. Determine the new item's rank by relative analysis
+#### 7b. Determine the new item's rank by delegating to `rank-recommender`
 
-Compare the new item against each existing Todo item based on:
+Call the `rank-recommender` agent with:
+- **Candidate item**: the issue title, one-line `### What` summary, and the `priority:*` label from step 4
+- **Current Todo column**: the ordered list (top-to-bottom) from step 7a — each item's title and `priority:*` label
 
-- Impact
-- Risk
-- Urgency
-- Frequency
-- Dependencies (does this item block or depend on others?)
-- Consistency with the priority label set in step 4 (a `priority:P0` item should generally rank above all non-P0 items; flag any divergence for user confirmation)
+The agent returns:
+- `position:` — `top` | `above: <item title>` | `below: <item title>` | `bottom`
+- `rationale:` — per-dimension Impact / Risk / Urgency / Frequency / Dependencies
+- `divergence_flag:` (if present) — the agent detected a priority/rank conflict; surface this to the user and ask them to confirm or override
 
-Propose a concrete rank position:
-
-- Top of the column (work next)
-- Above a specific existing item
-- Below a specific existing item
-- Bottom (only if genuinely lowest among current Todos)
+Present the agent's recommendation and rationale to the user before applying any rank change.
 
 #### 7c. Surface re-rank suggestions for existing items
 
