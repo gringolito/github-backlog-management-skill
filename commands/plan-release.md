@@ -195,7 +195,7 @@ Create the milestone via the GitHub API:
 
 Assign every item in the confirmed scope to the new milestone:
 
-- For each scoped issue: `gh issue edit <n> --milestone <milestone-number>`
+- For each scoped issue: `gh issue edit <n> --milestone "<milestone-title>"`
 - Surface any `gh` errors verbatim; do not silently skip failures.
 
 #### Forward-port prompt (Mode A only)
@@ -331,7 +331,7 @@ options:
     description: "Go back to the selection step."
 ```
 
-Apply additions: `gh issue edit <n> --milestone <milestone-number>` for each confirmed item.
+Apply additions: `gh issue edit <n> --milestone "<milestone-title>"` for each confirmed item.
 Surface any `gh` errors verbatim; do not skip failures silently.
 
 ---
@@ -391,7 +391,7 @@ Apply the disposition:
       # one entry per other open milestone
     ```
 
-  - Apply: `gh issue edit <n> --milestone <target-number>`
+  - Apply: `gh issue edit <n> --milestone "<target-milestone-title>"`
 - **Close as won't fix**:
   - `gh issue comment <n> --body "Closing as won't fix."`
   - `gh issue edit <n> --state closed`

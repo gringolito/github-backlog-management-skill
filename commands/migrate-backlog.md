@@ -192,7 +192,7 @@ For each non-Done item, in priority order (P0 → P3):
    - Resolve field/option IDs via `gh project field-list <project-number> --owner <owner> --format json`
    - `gh project item-edit --id <item-id> --project-id <project-id> --field-id <status-field-id> --single-select-option-id <option-id>`
 6. If the user confirmed milestone assignment in 8b:
-   - `gh issue edit <n> --milestone <milestone-number>`
+   - `gh issue edit <n> --milestone "<milestone-title>"`
 
 #### 8d. Build the source-title → issue-id lookup
 

@@ -249,7 +249,7 @@ The active milestone is determined as follows:
 
 Ask the user whether to assign this item to the active milestone:
 
-- If yes: `gh issue edit <n> --milestone <milestone-number>`
+- If yes: `gh issue edit <n> --milestone "<milestone-title>"`
 - If no: leave unassigned (will be picked up by `execute-backlog-item` only after items in the active milestone are exhausted)
 
 If no active milestone exists, suggest the user run `/plan-release` after.
