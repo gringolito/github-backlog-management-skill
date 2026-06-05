@@ -37,6 +37,33 @@ The active milestone is determined as follows:
 
 ---
 
+### 1.5. In-Progress Resume Check (STRICT)
+
+Before picking a new item, check whether the authenticated user already has work in flight.
+
+1. Get the current username: `gh api user --jq '.login'`
+2. Query the full project item list and filter for `status == "In Progress"`
+   AND `assignees` contains the current user.
+3. **For each matching item**, classify using the `linked pull requests` field from the
+   project item payload:
+   - **Linked PR found** → "near complete — PR open, likely waiting for review"
+   - **No linked PR** → "in progress — work started, no PR yet"
+4. **If one or more matching items exist**, present each as:
+
+   | # | Title | Milestone | Labels | PR Status |
+   |---|-------|-----------|--------|-----------|
+   | #N | ... | v0.x.x | type:... | ✅ PR #M open (waiting review) |
+   | #N | ... | — | type:... | 🔧 No PR yet (work in progress) |
+
+   Then ask: "You have N in-progress item(s) — resume one, or pick a new item?"
+   - **Resume chosen:** selected item becomes winner. Skip Steps 2, 2.5, 2.6, 3, 5, and 6.
+     Advise the user to check out the existing branch (`<type>/<slug>-<n>`).
+     If a linked PR exists, skip Step 9 as well. Proceed to Step 4.
+   - **New item chosen:** proceed to Step 2 normally.
+5. **If no matching In-Progress items:** proceed to Step 2 normally.
+
+---
+
 ### 2. Candidate Selection (PRIORITIZED)
 
 Find the next item to execute by walking these tiers in order. Stop at the first tier that yields candidates.
@@ -296,6 +323,7 @@ Print:
 - Whether the issue was assigned to the active milestone
 - Items skipped above this one because they were blocked (with `#N` and the open blockers that gated them; `type:external-blocker` blockers shown as `External: <stub title>`) — surfaces why the picked item wasn't necessarily the topmost
 - Parent items skipped because open sub-issues were found in the Project's Todo column (log: `Skipping parent #N — open sub-issues found. Picking #M.`)
+- Whether this item was **resumed** (was already In Progress) or **newly picked** (was Todo)
 
 ---
 
