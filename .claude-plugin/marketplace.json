@@ -10,7 +10,7 @@
     {
       "name": "github-backlog-management",
       "description": "GitHub-native backlog automation. Manage Issues + Projects v2 with AI-enforced INVEST quality, dependency tracking, and one-command execution.",
-      "source": "./.claude-plugin/plugin.json",
+      "source": "./",
       "version": "0.4.0",
       "category": "productivity",
       "keywords": ["github", "backlog", "issues", "projects-v2", "milestones", "labels", "invest", "agile", "prioritization"]
