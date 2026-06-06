@@ -1,4 +1,5 @@
 ---
+name: close-release
 description: "Orchestrate milestone closure: audit completion, cut the release tag, and archive the milestone."
 ---
 
@@ -21,13 +22,13 @@ Close a GitHub Milestone cleanly: resolve every open issue interactively, satisf
 ### 0. Preflight (MANDATORY)
 
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
+  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
 
 ---
 
 ### 1. Milestone Resolution (MANDATORY)
 
-The command accepts an optional milestone argument (title substring, number, or version string).
+The skill accepts an optional milestone argument (title substring, number, or version string).
 
 **With argument** — resolve from open milestones via `gh api "repos/<owner>/<repo>/milestones?state=open&per_page=100"`:
 
@@ -207,7 +208,7 @@ gh release create <milestone-title> \
   --target <default-branch>
 ```
 
-Capture the resulting Release URL from the command output. If the tag `<milestone-title>` already exists as a release, use **AskUserQuestion** to ask the user whether to delete the existing draft or choose a different tag.
+Capture the resulting Release URL from the skill output. If the tag `<milestone-title>` already exists as a release, use **AskUserQuestion** to ask the user whether to delete the existing draft or choose a different tag.
 
 After the draft release is created, create and push an annotated git tag so that `on: push: tags:` workflows fire while the release remains in draft state:
 

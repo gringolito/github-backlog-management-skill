@@ -1,4 +1,5 @@
 ---
+name: resolve-external-blocker
 description: Resolve an external blocker stub and clear the dependency to unblock waiting backlog items.
 ---
 
@@ -25,8 +26,8 @@ Before any work, verify the repository is provisioned:
 - `gh auth status` — if unauthenticated, STOP and output: `gh auth status failed. Run gh auth login and retry.`
 - Parse `<owner>` and `<repo>` from `gh repo view --json owner,name`
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
-- Verify the `type:external-blocker` label exists: `gh label list --limit 100`. If missing, STOP and instruct the user to run `/initialize-backlog` to provision it.
+  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
+- Verify the `type:external-blocker` label exists: `gh label list --limit 100`. If missing, STOP and instruct the user to run `/initialize` to provision it.
 
 ---
 
@@ -56,7 +57,7 @@ Validate:
 3. If the `type:external-blocker` label is NOT present on the stub, STOP and output:
    `#<stub> does not carry the type:external-blocker label — refusing to close. Use gh issue close <stub> directly if you intend to close a non-stub issue.`
 
-This guard prevents accidentally closing a real backlog item via this command.
+This guard prevents accidentally closing a real backlog item via this skill.
 
 ---
 
@@ -136,5 +137,5 @@ gh api "repos/<owner>/<repo>/issues/<N>/dependencies/blocked_by" \
 - **Still blocked** section — issues from step 3 that still have open blockers:
   - List each as `#N — <title> — still blocked by: #A, #B, ...`
   - If none: omit section
-- Reminder for newly unblocked items: `Re-run /execute-backlog-item to pick the next actionable item.`
+- Reminder for newly unblocked items: `Re-run /execute-item to pick the next actionable item.`
 - All `gh` errors surfaced verbatim

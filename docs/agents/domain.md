@@ -20,7 +20,7 @@ Single-context repo:
 ├── docs/adr/
 │   ├── 0001-example-decision.md
 │   └── ...
-└── commands/
+└── skills/
 ```
 
 ## Use the glossary's vocabulary

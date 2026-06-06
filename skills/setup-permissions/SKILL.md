@@ -1,4 +1,5 @@
 ---
+name: setup-permissions
 description: Write the Claude Code permissions allowlist for this skill into the target settings file.
 ---
 
@@ -10,7 +11,7 @@ You are an AI agent acting as an installation assistant responsible for configur
 
 ## Objective
 
-Write the correct `permissions.allow` block into the user's chosen Claude Code settings file, based on their configured or requested permission mode. This command is idempotent — re-running with the same mode and target is a safe no-op.
+Write the correct `permissions.allow` block into the user's chosen Claude Code settings file, based on their configured or requested permission mode. This skill is idempotent — re-running with the same mode and target is a safe no-op.
 
 ---
 
@@ -18,7 +19,7 @@ Write the correct `permissions.allow` block into the user's chosen Claude Code s
 
 These are the canonical allowlist blocks for each mode:
 
-**yolo** — no prompts during any multi-step command:
+**yolo** — no prompts during any multi-step skill:
 ```json
 ["Bash(gh *)", "Bash(git *)"]
 ```
@@ -54,7 +55,7 @@ These are the canonical allowlist blocks for each mode:
 
 Determine the effective permission mode using this precedence:
 
-1. **Explicit argument** — if the user passed a mode as an argument to this command (e.g. `/setup-permissions safe`), use it. This overrides the configured value for this invocation only; it does not change the stored `userConfig`.
+1. **Explicit argument** — if the user passed a mode as an argument to this skill (e.g. `/setup-permissions safe`), use it. This overrides the configured value for this invocation only; it does not change the stored `userConfig`.
 2. **`${CLAUDE_PLUGIN_OPTION_PERMISSION_MODE}`** — the value set at plugin enable time via `userConfig`.
 3. **Fallback** — treat as `off` if neither is set.
 

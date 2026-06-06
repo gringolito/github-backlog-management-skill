@@ -5,36 +5,36 @@ description: Manage backlog, issues, and milestones with INVEST quality enforcem
 
 # GitHub Backlog Management
 
-A set of slash commands for a fully GitHub-native backlog workflow — Issues, Projects v2, Milestones, and Labels. No external tools, no database, no webhooks.
+A set of skills for a fully GitHub-native backlog workflow — Issues, Projects v2, Milestones, and Labels. No external tools, no database, no webhooks.
 
-## Command Routing
+## Skill Routing
 
-| Command | When to use |
+| Skill | When to use |
 |---------|-------------|
-| `/initialize-backlog` | First-time setup: provisions Project, labels, Issue Forms template. Idempotent. Run this first. |
+| `/initialize` | First-time setup: provisions Project, labels, Issue Forms template. Idempotent. Run this first. |
 | `/plan-release` | Create a Milestone with a due date — choose Maintenance, Regular, or Automated mode; semver version inferred from scope |
-| `/add-backlog-item` | Interactively create and rank a single backlog item (enforces INVEST) |
-| `/migrate-backlog` | Bulk-import an existing backlog file; skips Done items; dep inference opt-in |
-| `/refine-backlog` | Orchestrate a refinement session: list `needs-clarification` candidates, let user select, loop through with `/refine-backlog-item` |
-| `/refine-backlog-item` | Refine a single `needs-clarification` item — discovery dialogue, body rewrite, INVEST gate, label/rank/dep updates, label removal |
+| `/add-item` | Interactively create and rank a single backlog item (enforces INVEST) |
+| `/migrate` | Bulk-import an existing backlog file; skips Done items; dep inference opt-in |
+| `/refine` | Orchestrate a refinement session: list `needs-clarification` candidates, let user select, loop through with `/refine-item` |
+| `/refine-item` | Refine a single `needs-clarification` item — discovery dialogue, body rewrite, INVEST gate, label/rank/dep updates, label removal |
 | `/release-status` | Read-only milestone health dashboard — issue counts by Status, blocked items, unestimated items |
-| `/backlog-health` | Read-only strategic portfolio health report — distribution by type/priority/effort, age cohorts, overdue P0/P1 items, stale In-Progress, metadata debt |
-| `/validate-backlog` | Read-only audit — emits actionable `gh` commands; never mutates |
-| `/execute-backlog-item` | Pick the topmost unblocked Todo item and guide it through to a PR |
+| `/health` | Read-only strategic portfolio health report — distribution by type/priority/effort, age cohorts, overdue P0/P1 items, stale In-Progress, metadata debt |
+| `/audit` | Read-only audit — emits actionable `gh` commands; never mutates |
+| `/execute-item` | Pick the topmost unblocked Todo item and guide it through to a PR |
 
 ## Workflow
 
 ```
-initialize-backlog ─► plan-release ─► add-backlog-item / migrate-backlog
-                                              │
-                                              ├─► refine-backlog ─► refine-backlog-item
-                                              ├─► release-status (read-only)
-                                              ├─► backlog-health (read-only)
-                                              ├─► validate-backlog (read-only)
-                                              └─► execute-backlog-item
+initialize ─► plan-release ─► add-item / migrate
+                                      │
+                                      ├─► refine ─► refine-item
+                                      ├─► release-status (read-only)
+                                      ├─► health (read-only)
+                                      ├─► audit (read-only)
+                                      └─► execute-item
 ```
 
-`initialize-backlog` is the bootstrap. Every other command preflights for a linked Project and stops with a standard error if missing.
+`initialize` is the bootstrap. Every other skill preflights for a linked Project and stops with a standard error if missing.
 
 ## INVEST Quality Bar
 
@@ -49,7 +49,7 @@ Every item must pass before entering the queue:
 | **S** | Small | Fits inside a single cycle of work |
 | **T** | Testable | Has acceptance criteria concrete enough to verify |
 
-## Key Invariants (apply to all commands)
+## Key Invariants (apply to all skills)
 
 **Label catalog**
 - `type:` — `feature` `bug` `security` `performance` `dx` `tech-debt` `reliability` `compliance` `spike` `external-blocker`
@@ -60,12 +60,12 @@ Every item must pass before entering the queue:
 **Issue body sections** (exact headings, this order):
 `### What` · `### Why` · `### In Scope` · `### Out of Scope` · `### Acceptance Criteria` · `### INVEST Notes`
 
-**Metadata file**: `.claude/backlog-project.json` — written by `initialize-backlog`, read directly by all other commands.
+**Metadata file**: `.claude/backlog-project.json` — written by `initialize`, read directly by all other skills.
 
-**Standard preflight stop string**: `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
+**Standard preflight stop string**: `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
 
-**Priority vs rank**: `priority:*` is severity classification. Project rank (topmost Todo item) is execution order. They should stay consistent but are independent concepts — `execute-backlog-item` sorts by rank only.
+**Priority vs rank**: `priority:*` is severity classification. Project rank (topmost Todo item) is execution order. They should stay consistent but are independent concepts — `execute-item` sorts by rank only.
 
-## Command Specs
+## Skill Specs
 
-See [commands/](commands/) for full per-command specs including exact `gh` CLI calls, workflow steps, and edge-case handling.
+See [skills/](skills/) for full per-skill specs including exact `gh` CLI calls, workflow steps, and edge-case handling.

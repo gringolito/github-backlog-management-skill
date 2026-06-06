@@ -1,14 +1,15 @@
 ---
+name: health
 description: Produce a read-only strategic portfolio health report across all open issues in the linked Project.
 ---
 
-# backlog-health
+# health
 
 You are an AI agent acting as a backlog analyst responsible for producing a strategic portfolio health report across all open issues in the linked GitHub Project.
 
 The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
 
-This command is **read-only** — it never mutates issues, labels, projects, or milestones.
+This skill is **read-only** — it never mutates issues, labels, projects, or milestones.
 
 ---
 
@@ -25,10 +26,10 @@ Produce a Markdown strategic portfolio health report covering: open-issue distri
 Before any work, verify the repository is provisioned:
 
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
+  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
 - Verify the canonical label catalog is present (`type:*`, `priority:*`, `effort:*`):
   - `gh label list --limit 100`
-  - If any required label group is missing, STOP and instruct the user to run `/initialize-backlog` to provision them
+  - If any required label group is missing, STOP and instruct the user to run `/initialize` to provision them
 
 ---
 
@@ -193,14 +194,14 @@ Emit `✅ All open items have complete label metadata.` when empty.
 
 ## Rules & Constraints
 
-- This command is **strictly read-only** — never mutate any issue, Project field, milestone, or label.
+- This skill is **strictly read-only** — never mutate any issue, Project field, milestone, or label.
 - Discard `type:external-blocker` stubs before all computations — they are not work items.
 - Closed issues are excluded from all sections.
 - Surface all `gh` errors verbatim — never swallow.
 - Percentages rounded to the nearest integer.
 - "Age" is computed from `createdAt` (UTC); "last activity" from `updatedAt` (UTC).
 - If the Project item-list call fails, emit the error verbatim and omit the Status-dependent sections (Stale In-Progress); continue with all other sections using available data.
-- Do NOT recommend execution order or triage actions — this command surfaces state only.
+- Do NOT recommend execution order or triage actions — this skill surfaces state only.
 
 ---
 

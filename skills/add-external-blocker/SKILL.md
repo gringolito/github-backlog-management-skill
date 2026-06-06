@@ -1,4 +1,5 @@
 ---
+name: add-external-blocker
 description: Record an external constraint as a stub issue that blocks a backlog item.
 ---
 
@@ -14,7 +15,7 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 Create a lightweight stub issue (`type:external-blocker`) that represents an external constraint — an API limitation, vendor issue, regulatory hold, or any other blocker that cannot be expressed as a standard GitHub issue — and immediately register it as a `blocked_by` dependency on the target backlog item.
 
-`type:external-blocker` stubs are **infrastructure only**: they are added to the Project board with Status=`Todo` so they can be tracked and have their health audited, but never milestoned, never assigned `priority:*` or `effort:*` labels, and skipped by execution and planning commands.
+`type:external-blocker` stubs are **infrastructure only**: they are added to the Project board with Status=`Todo` so they can be tracked and have their health audited, but never milestoned, never assigned `priority:*` or `effort:*` labels, and skipped by execution and planning skills.
 
 ---
 
@@ -27,8 +28,8 @@ Before any work, verify the repository is provisioned:
 - `gh auth status` — if unauthenticated, STOP and output: `gh auth status failed. Run gh auth login and retry.`
 - Parse `<owner>` and `<repo>` from `gh repo view --json owner,name`
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
-- Verify the `type:external-blocker` label exists: `gh label list --limit 100`. If missing, STOP and instruct the user to run `/initialize-backlog` to provision it.
+  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
+- Verify the `type:external-blocker` label exists: `gh label list --limit 100`. If missing, STOP and instruct the user to run `/initialize` to provision it.
 
 ---
 
@@ -116,10 +117,10 @@ Use the `project_id`, `project_number`, and `status_field_id` / `status_options.
 
 ### 4. Dependency Registration (STRICT)
 
-Delegate to `/block-backlog-item` to register the stub as a blocker of `#N`:
+Delegate to `/block-item` to register the stub as a blocker of `#N`:
 
 ```
-/block-backlog-item #<N> #<stub>
+/block-item #<N> #<stub>
 ```
 
 
@@ -129,11 +130,11 @@ If it reports `Issue Dependencies API unavailable on this repo — blocked_by no
 
 ## Rules & Constraints
 
-- `type:external-blocker` stubs MUST be added to the linked Project with Status=`Todo` — this makes them visible to `validate-backlog` for health auditing and project tracking
+- `type:external-blocker` stubs MUST be added to the linked Project with Status=`Todo` — this makes them visible to `audit` for health auditing and project tracking
 - NEVER assign `priority:*`, `effort:*`, or milestone to a stub
 - NEVER assign the stub to a user
-- One stub per external constraint — if the same external issue blocks multiple items, create one stub and run `/block-backlog-item` separately for each additional target
-- If the user wants to block an item with an existing stub (already created), direct them to `/block-backlog-item #N #stub` instead of creating a duplicate
+- One stub per external constraint — if the same external issue blocks multiple items, create one stub and run `/block-item` separately for each additional target
+- If the user wants to block an item with an existing stub (already created), direct them to `/block-item #N #stub` instead of creating a duplicate
 - Stubs are resolved (closed) via `/resolve-external-blocker` — never close them manually
 - Surface all `gh` errors verbatim — never swallow
 

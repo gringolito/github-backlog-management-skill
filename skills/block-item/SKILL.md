@@ -1,8 +1,9 @@
 ---
+name: block-item
 description: Set a blocked_by dependency between a backlog item and its blocker issue.
 ---
 
-# block-backlog-item
+# block-item
 
 You are an AI agent acting as a development lead responsible for managing issue dependencies in the project backlog.
 
@@ -25,8 +26,8 @@ Before any dependency work, verify the repository is provisioned:
 - `gh auth status` — if unauthenticated, STOP and output: `gh auth status failed. Run gh auth login and retry.`
 - Parse `<owner>` and `<repo>` from `gh repo view --json owner,name`
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
-- Verify the canonical label catalog is present: `gh label list --limit 100`. If any required `type:*`, `priority:*`, or `effort:*` label is missing, STOP and instruct the user to run `/initialize-backlog`.
+  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
+- Verify the canonical label catalog is present: `gh label list --limit 100`. If any required `type:*`, `priority:*`, or `effort:*` label is missing, STOP and instruct the user to run `/initialize`.
 
 ---
 
@@ -86,7 +87,7 @@ If the API returns `404`:
 
 If the API returns any other error, surface it verbatim and STOP.
 
-Cross-repo blockers are permitted — GitHub accepts blockers from other repos. `validate-backlog` will flag them as a smell for visibility, but they are not rejected here.
+Cross-repo blockers are permitted — GitHub accepts blockers from other repos. `audit` will flag them as a smell for visibility, but they are not rejected here.
 
 ---
 
@@ -105,11 +106,11 @@ Confirm `<M>` appears in the response.
 
 ## Rules & Constraints
 
-- NEVER create the dependency in reverse (`#N` blocking `#M`) unless the user explicitly requests it — run `/block-backlog-item #M #N` for the reverse direction
+- NEVER create the dependency in reverse (`#N` blocking `#M`) unless the user explicitly requests it — run `/block-item #M #N` for the reverse direction
 - NEVER create a self-referencing dependency (`#N` blocked by `#N`)
 - Do NOT attempt to infer which issue is the blocker vs. the blocked if the user's intent is ambiguous — ask
-- Cross-Project / cross-repo blockers are permitted and will be flagged (not rejected) by `validate-backlog`
-- A closed blocker is technically valid — surface a warning but allow it (stale deps are cleaned up by `validate-backlog`)
+- Cross-Project / cross-repo blockers are permitted and will be flagged (not rejected) by `audit`
+- A closed blocker is technically valid — surface a warning but allow it (stale deps are cleaned up by `audit`)
 - Surface all `gh` errors verbatim — never swallow
 
 ---
@@ -118,7 +119,7 @@ Confirm `<M>` appears in the response.
 
 - Both issue titles, numbers, URLs, and states
 - Confirmation: `#N "<title>" is now blocked by #M "<title>".`
-- Warning if `#M` is already closed: `Note: #M is closed — this dependency may be stale. Run /validate-backlog to audit.`
-- Warning if cross-repo: `Note: cross-repo blocker applied — validate-backlog will flag this for review.`
+- Warning if `#M` is already closed: `Note: #M is closed — this dependency may be stale. Run /audit to audit.`
+- Warning if cross-repo: `Note: cross-repo blocker applied — audit will flag this for review.`
 - The `gh` API command used (for auditability)
 - All `gh` errors surfaced verbatim

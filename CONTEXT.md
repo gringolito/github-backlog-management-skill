@@ -1,8 +1,8 @@
 # Backlog Management
 
-The domain of this skill: managing a software backlog entirely through GitHub-native
+The domain of this plugin: managing a software backlog entirely through GitHub-native
 primitives (Issues, Projects v2, Milestones, Labels). The language below is the shared
-vocabulary every command, agent, and doc in this repo must speak.
+vocabulary every skill, agent, and doc in this repo must speak.
 
 ## Language
 
@@ -38,7 +38,7 @@ here too.
 **Stub**:
 The one current kind of Non-Workable Item: the encapsulation of an **External Blocker** — an
 out-of-team-control constraint recorded so it can block Workable Items. Carries
-`type:external-blocker` and is created only by `/add-external-blocker`.
+`type:external-blocker` and is created only by `/add-external-blocker` (cleared by `/resolve-external-blocker`).
 _Avoid_: using "Stub" as a synonym for the whole Non-Workable Item category — it is one kind of it
 
 ### Classification
@@ -131,7 +131,7 @@ proceed. May be a Workable Item or a Stub.
 
 **External Blocker**:
 A Blocker that is a Stub — an out-of-team-control constraint. The role a `type:external-blocker`
-Stub plays. Created and cleared via `/add-external-blocker` and `/resolve-external-blocker`.
+Stub plays. Created by `/add-external-blocker`; cleared by `/resolve-external-blocker`.
 
 **Sub-issue** / **Parent**:
 Hierarchical decomposition recorded via GitHub `sub_issues`. A sub-issue does NOT inherit its
@@ -144,41 +144,40 @@ _Avoid_: epic (for the parent), task (for the sub-issue) unless independently de
 **Audit**:
 The read-only, portfolio-wide quality sweep: checks INVEST compliance, required labels,
 dangling Dependencies, and cross-Project smells, then emits `gh` fix snippets the user can run
-— it never mutates. Performed by `/validate-backlog` (engine: the backlog-auditor).
-_Avoid_: validate, validation as the name of the *activity* (the `/validate-backlog` command
-name is a legacy exception)
+— it never mutates. Performed by `/audit` (engine: the backlog-auditor).
+_Avoid_: validate, validation as the name of the activity
 
 **Health**:
 The read-only strategic portfolio report: distribution by Type / Priority / Effort, age
 cohorts, overdue P0/P1, stale In-Progress items, and metadata debt. The "is the portfolio
-balanced?" lens, across all open items. Produced by `/backlog-health`.
+balanced?" lens, across all open items. Produced by `/health`.
 
 **Release Status**:
 The read-only operational dashboard for a single Release: item counts by Status, blocked
-items, and unestimated items. The "how is this Release tracking?" lens. Produced by
+items, and items without an Effort estimate. The "how is this Release tracking?" lens. Produced by
 `/release-status`.
 
 **Refinement**:
 The mutating act of bringing an ambiguous Backlog Item up to standard — discovery dialogue,
 body rewrite, INVEST gate, label/Rank/Dependency fixes, and clearing `needs-clarification`.
-Run by `/refine-backlog` (session over many items) and `/refine-backlog-item` (a single item).
+Run by `/refine` (session over many items) and `/refine-item` (a single item).
 _Avoid_: grooming
 
 **Execution**:
 Picking the topmost unblocked Workable Item from the Queue and carrying it through to a PR.
-Obeys Rank, skips blocked items, and descends into sub-issues. Run by `/execute-backlog-item`.
+Obeys Rank, skips blocked items, and descends into sub-issues. Run by `/execute-item`.
 
 **Migration**:
 The one-time bulk import of an existing `BACKLOG.md` into Issues — normalizes labels, skips
 Done items (historical work is not migrated), and offers opt-in Dependency inference. Run by
-`/migrate-backlog`.
+`/migrate`.
 _Avoid_: import (acceptable informally; "Migration" is the named activity)
 
 ## Flagged ambiguities
 
 **Priority vs Rank** — these are independent and must never be conflated. Priority is a
 severity *label* (P0–P3); Rank is the *queue order* in the Todo column. A P0 can sit below
-a P2 in Rank if that's the deliberate order of work. Commands recommend keeping them roughly
+a P2 in Rank if that's the deliberate order of work. Skills recommend keeping them roughly
 consistent, but execution obeys Rank alone.
 
 **Dependency vs Sub-issue** — a Dependency *blocks*: a blocked item is skipped in execution
