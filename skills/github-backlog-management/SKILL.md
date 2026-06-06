@@ -38,16 +38,7 @@ initialize ─► plan-release ─► add-item / migrate
 
 ## INVEST Quality Bar
 
-Every item must pass before entering the queue:
-
-| Letter | Criterion | What to check |
-|--------|-----------|---------------|
-| **I** | Independent | Buildable without waiting on another in-flight item |
-| **N** | Negotiable | The *what* is agreed; the *how* is open |
-| **V** | Valuable | Delivers something real to a user or the system |
-| **E** | Estimable | Team can roughly size it |
-| **S** | Small | Fits inside a single cycle of work |
-| **T** | Testable | Has acceptance criteria concrete enough to verify |
+Every Workable Item passes INVEST (Independent, Negotiable, Valuable, Estimable, Small, Testable) before entering the queue — enforced by the `invest-gate` agent.
 
 ## Key Invariants (apply to all skills)
 

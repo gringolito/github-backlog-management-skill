@@ -206,8 +206,6 @@ This map is used in 8e to resolve dependency hints to concrete issue IDs.
 
 #### 8e. Propose and apply dependencies (USER-CONFIRMED)
 
-See [`reference.md`](reference.md) for the dependency-inference pattern library and confidence levels.
-
 1. **Delegate to `dependency-inferrer`.** Call the `dependency-inferrer` agent with:
    - **Prose**: the full source text of each migrated item (from Step 1 parsing), one entry per item labeled with its source title
    - **Issue roster**: the source-title → issue-number map from Step 8d, formatted as `#<num> "<title>"` per line

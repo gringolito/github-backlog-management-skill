@@ -17,8 +17,6 @@ Your role is to run a read-only audit by delegating to the `backlog-auditor` age
 
 Validate that the backlog meets all defined quality, consistency, and integrity standards before it is used for execution.
 
-See [`reference.md`](reference.md) for the full audit rubric — label rules, body shape, stub rules, and report structure.
-
 ---
 
 ## Workflow

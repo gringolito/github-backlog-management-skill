@@ -66,8 +66,6 @@ Type, Priority, and Effort are NOT in the body — they are applied as repositor
 
 ### 3. INVEST Enforcement (MANDATORY)
 
-See [`reference.md`](reference.md) for the full INVEST rubric and effort scale.
-
 Delegate to the `invest-gate` agent with the body constructed in step 2 and the issue title.
 
 If `invest-gate` returns `Overall: FAIL`:
