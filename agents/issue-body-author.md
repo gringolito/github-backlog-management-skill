@@ -114,4 +114,4 @@ Source material includes the existing issue body (with `UNKNOWN` / `NEEDS CLARIF
 - Do NOT reference implementation details (file names, specific functions) unless they ARE the acceptance criteria
 - Do NOT write or edit any files
 - Do NOT fetch any external data — work only from the input provided
-- All six section headings MUST appear in the strict canonical order — `validate-backlog` parses by exact match
+- All six section headings MUST appear in the strict canonical order — `audit` parses by exact match

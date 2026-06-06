@@ -1,10 +1,11 @@
 ---
+name: refine
 description: Orchestrate a refinement session over all backlog items flagged needs-clarification or missing metadata.
 ---
 
-# refine-backlog
+# refine
 
-You are an AI agent acting as a Senior Project Manager orchestrating a backlog refinement session. You identify all items needing clarification or carrying incomplete metadata, present them to the user for selection, and drive the refinement loop — delegating each item to `/refine-backlog-item` and checking in between iterations whether to continue.
+You are an AI agent acting as a Senior Project Manager orchestrating a backlog refinement session. You identify all items needing clarification or carrying incomplete metadata, present them to the user for selection, and drive the refinement loop — delegating each item to `/refine-item` and checking in between iterations whether to continue.
 
 The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
 
@@ -12,7 +13,7 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 ## Objective
 
-Walk every selected item from two candidate pools — `needs-clarification` issues and issues with incomplete metadata (missing `priority:*` or `effort:*` labels) — through interactive refinement, one at a time, by invoking `/refine-backlog-item` for each. At the end, produce a structured report of what was refined, partially refined, or skipped, broken down by source pool.
+Walk every selected item from two candidate pools — `needs-clarification` issues and issues with incomplete metadata (missing `priority:*` or `effort:*` labels) — through interactive refinement, one at a time, by invoking `/refine-item` for each. At the end, produce a structured report of what was refined, partially refined, or skipped, broken down by source pool.
 
 ---
 
@@ -21,10 +22,10 @@ Walk every selected item from two candidate pools — `needs-clarification` issu
 ### 0. Preflight (MANDATORY)
 
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
+  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
 - Verify the canonical label catalog is present (`type:*`, `priority:*`, `effort:*`, `needs-clarification`):
   - `gh label list --limit 100`
-  - If any required label is missing, STOP and instruct the user to run `/initialize-backlog`
+  - If any required label is missing, STOP and instruct the user to run `/initialize`
 
 ---
 
@@ -106,12 +107,12 @@ Build the ordered work list from the user's answer, preserving queue order.
 For each selected item in work-list order:
 
 1. Print: `--- Refining item N of M: #<issue-number> — <title> ---`
-2. Invoke `/refine-backlog-item <issue-number>`
-3. After the single-item command completes, ask:
+2. Invoke `/refine-item <issue-number>`
+3. After the single-item skill completes, ask:
    > Continue to the next item? [Y = yes / S = stop / Enter = yes]
 4. If the user answers S (or any equivalent like "stop", "no", "done"), break the loop and jump to step 5.
 
-The loop is safe to interrupt at any point — re-running `/refine-backlog` will rebuild the queue from scratch, and already-refined items (label removed) will drop out automatically.
+The loop is safe to interrupt at any point — re-running `/refine` will rebuild the queue from scratch, and already-refined items (label removed) will drop out automatically.
 
 ---
 
@@ -140,17 +141,17 @@ For each: issue URL, reason (user skipped, too ambiguous to refine, etc.).
 
 #### Recommendations
 
-Items that emerged during refinement as candidates for split / merge / duplicate (NOT auto-applied — surface for follow-up via `/add-backlog-item` or manual triage).
+Items that emerged during refinement as candidates for split / merge / duplicate (NOT auto-applied — surface for follow-up via `/add-item` or manual triage).
 
 If the loop ended before the full queue was processed, add:
 
-> Re-run `/refine-backlog` to continue — already-refined items drop out of the queue automatically.
+> Re-run `/refine` to continue — already-refined items drop out of the queue automatically.
 
 ---
 
 ## Rules & Constraints
 
-- Do NOT perform any issue mutations directly — delegate all per-item work to `/refine-backlog-item`
+- Do NOT perform any issue mutations directly — delegate all per-item work to `/refine-item`
 - Do NOT operate on issues outside the linked Project, even if they carry `needs-clarification`
 - The loop is safe to interrupt and resume — the sort is deterministic and idempotent on already-refined items
 - All `gh` errors surfaced verbatim

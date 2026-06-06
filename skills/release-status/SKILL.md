@@ -1,4 +1,5 @@
 ---
+name: release-status
 description: Display a real-time health dashboard for the active or specified GitHub Milestone.
 ---
 
@@ -8,13 +9,13 @@ You are an AI agent acting as a release manager responsible for producing a real
 
 The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
 
-This command is **read-only** — it never mutates issues, labels, projects, or milestones.
+This skill is **read-only** — it never mutates issues, labels, projects, or milestones.
 
 ---
 
 ## Objective
 
-Produce a Markdown release health dashboard for a target milestone: issue counts by Project Status, percentage complete, blocked items, and unestimated items — aggregated from a single command with zero manual querying.
+Produce a Markdown release health dashboard for a target milestone: issue counts by Project Status, percentage complete, blocked items, and unestimated items — aggregated with zero manual querying with zero manual querying.
 
 ---
 
@@ -23,13 +24,13 @@ Produce a Markdown release health dashboard for a target milestone: issue counts
 ### 0. Preflight (MANDATORY)
 
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
+  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
 
 ---
 
 ### 1. Milestone Resolution (MANDATORY)
 
-The command accepts an optional milestone argument (title substring, number, or version string).
+The skill accepts an optional milestone argument (title substring, number, or version string).
 
 **With argument** — resolve from open milestones via `gh api "repos/<owner>/<repo>/milestones?state=open&per_page=100"`:
 
@@ -138,11 +139,11 @@ Issues grouped by Status:
 
 ## Rules & Constraints
 
-- This command is **strictly read-only** — never mutate any issue, Project field, milestone, or label.
+- This skill is **strictly read-only** — never mutate any issue, Project field, milestone, or label.
 - Surface all `gh` errors verbatim — never swallow.
 - Issue Dependencies API `404` must emit one warning line and gracefully skip the blocked-items section; it must not abort the rest of the report.
 - % complete is always computed over ALL issues assigned to the milestone, not just those in the Project.
-- Do NOT pick or recommend execution order — this command surfaces state only.
+- Do NOT pick or recommend execution order — this skill surfaces state only.
 
 ---
 

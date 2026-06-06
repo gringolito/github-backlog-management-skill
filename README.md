@@ -4,11 +4,35 @@
 
 ---
 
+## Migration to skills layout (v0.4.x → v0.5.0)
+
+Skills moved from `commands/*.md` to `skills/<name>/SKILL.md` and were renamed in two ways:
+
+| Old slash command | New skill |
+|---|---|
+| `/initialize-backlog` | `/initialize` |
+| `/add-backlog-item` | `/add-item` |
+| `/migrate-backlog` | `/migrate` |
+| `/refine-backlog` | `/refine` |
+| `/refine-backlog-item` | `/refine-item` |
+| `/validate-backlog` | `/audit` |
+| `/execute-backlog-item` | `/execute-item` |
+| `/backlog-health` | `/health` |
+| `/block-backlog-item` | `/block-item` |
+| `/plan-release` | `/plan-release` _(unchanged)_ |
+| `/release-status` | `/release-status` _(unchanged)_ |
+| `/close-release` | `/close-release` _(unchanged)_ |
+| `/add-external-blocker` | `/add-external-blocker` _(unchanged)_ |
+| `/resolve-external-blocker` | `/resolve-external-blocker` _(unchanged)_ |
+| `/setup-permissions` | `/setup-permissions` _(unchanged)_ |
+
+---
+
 ## Motivation
 
 Backlogs rot. Items accumulate without acceptance criteria, blockers go unrecorded, priorities drift from execution order, and eventually the backlog stops reflecting reality — so people stop trusting it.
 
-This skill keeps a GitHub backlog honest. Every item is INVEST-validated before it lands in the queue. Blockers are tracked with GitHub's native dependency API, not buried in comments. `/execute-backlog-item` picks the topmost unblocked work automatically, so "what do I do next?" has a deterministic answer.
+This skill keeps a GitHub backlog honest. Every item is INVEST-validated before it lands in the queue. Blockers are tracked with GitHub's native dependency API, not buried in comments. `/execute-item` picks the topmost unblocked work automatically, so "what do I do next?" has a deterministic answer.
 
 Everything stays in GitHub — Issues, Projects v2, Milestones, Labels. No extra tools, no database, no webhooks.
 
@@ -19,11 +43,11 @@ Claude enforces structure; it doesn't set your priorities. Specifically:
 - **INVEST gate** — flags items with vague scope or missing acceptance criteria before they enter the queue
 - **Dependency inference** — reads prose ("depends on X"), surfaces candidates for you to confirm
 - **Next-item selection** — picks the topmost unblocked work; you decide whether to execute it
-- **Audit** — `/validate-backlog` is read-only and surfaces problems as ready-to-run `gh` commands
+- **Audit** — `/audit` is read-only and surfaces problems as ready-to-run `gh` commands
 
 ### Already have a `TODO.md`, `BACKLOG.md`, or some other list?
 
-Run `/migrate-backlog`, point Claude at the file, and it imports everything into GitHub Issues — skipping done items, inferring dependencies from your own prose, and letting you review before anything is applied.
+Run `/migrate`, point Claude at the file, and it imports everything into GitHub Issues — skipping done items, inferring dependencies from your own prose, and letting you review before anything is applied.
 
 ---
 
@@ -47,7 +71,7 @@ Add the marketplace and install the plugin with two Claude Code commands:
 /plugin install github-backlog-management@gringolito
 ```
 
-Restart Claude Code if it was already running. All commands below are then available in any repository you open with Claude Code.
+Restart Claude Code if it was already running. All skills below are then available in any repository you open with Claude Code.
 
 > **Note:** If plugin installation fails with an SSH authentication error, see [Plugin install fails with SSH authentication error](#plugin-install-fails-with-ssh-authentication-error).
 
@@ -100,7 +124,7 @@ When you enable the plugin, Claude Code asks for your preferred mode (`yolo`, `s
 /setup-permissions
 ```
 
-The command asks which settings file to write (per-project gitignored, per-project shared, or user-global) and merges the allowlist block idempotently — re-running it is safe.
+The skill asks which settings file to write (per-project gitignored, per-project shared, or user-global) and merges the allowlist block idempotently — re-running it is safe.
 
 <details>
 <summary>Manual fallback — copy the JSON block directly</summary>
@@ -117,7 +141,7 @@ Add one of the blocks below to `.claude/settings.json` in any repo where you use
 }
 ```
 
-**Safe / read-only mode — `/validate-backlog` and read queries run silently; write commands still ask for confirmation:**
+**Safe / read-only mode — `/audit` and read queries run silently; write commands still ask for confirmation:**
 
 ```json
 {
@@ -146,18 +170,18 @@ Add one of the blocks below to `.claude/settings.json` in any repo where you use
 
 ## Features
 
-| Command | What it does |
+| Skill | What it does |
 |---|---|
-| `/initialize-backlog` | One-time bootstrap: provisions the GitHub Project v2, the full label catalog, and the Issue Forms template. Idempotent — safe to re-run. |
+| `/initialize` | One-time bootstrap: provisions the GitHub Project v2, the full label catalog, and the Issue Forms template. Idempotent — safe to re-run. |
 | `/plan-release` | Creates a Milestone with a due date. Tie-breaks and active-milestone resolution are automatic. |
-| `/add-backlog-item` | Interactively authors a single backlog item. Enforces INVEST, recommends rank and priority, wires up native GitHub dependencies. |
-| `/migrate-backlog` | Bulk-imports an existing `BACKLOG.md`. Skips Done items. Dependency inference is opt-in — candidates are reviewed before anything is applied. |
-| `/refine-backlog` | Lists all `needs-clarification` candidates, lets you select which to refine, then loops through them one by one — asking continue/stop after each. |
-| `/refine-backlog-item` | Refines a single `needs-clarification` item: discovery dialogue, body rewrite, INVEST gate, label/rank/dep re-evaluation, and label removal after a final validation pass. |
+| `/add-item` | Interactively authors a single backlog item. Enforces INVEST, recommends rank and priority, wires up native GitHub dependencies. |
+| `/migrate` | Bulk-imports an existing `BACKLOG.md`. Skips Done items. Dependency inference is opt-in — candidates are reviewed before anything is applied. |
+| `/refine` | Lists all `needs-clarification` candidates, lets you select which to refine, then loops through them one by one — asking continue/stop after each. |
+| `/refine-item` | Refines a single `needs-clarification` item: discovery dialogue, body rewrite, INVEST gate, label/rank/dep re-evaluation, and label removal after a final validation pass. |
 | `/release-status` | Read-only milestone health dashboard — issue counts by Project Status, % complete, blocked items, and unestimated items. Accepts an optional milestone argument; defaults to the active milestone. |
-| `/backlog-health` | Read-only strategic portfolio health report — open-issue distribution by type, priority, and effort; age cohorts; overdue P0/P1 items; stale In-Progress items; metadata debt. Suitable for leadership updates and retrospectives. |
-| `/validate-backlog` | Read-only audit. Emits actionable `gh issue edit ...` snippets. Never mutates anything. |
-| `/execute-backlog-item` | Picks the topmost unblocked Todo item, respects active milestone scope, skips blocked items, and walks you through to a PR. |
+| `/health` | Read-only strategic portfolio health report — open-issue distribution by type, priority, and effort; age cohorts; overdue P0/P1 items; stale In-Progress items; metadata debt. Suitable for leadership updates and retrospectives. |
+| `/audit` | Read-only audit. Emits actionable `gh issue edit ...` snippets. Never mutates anything. |
+| `/execute-item` | Picks the topmost unblocked Todo item, respects active milestone scope, skips blocked items, and walks you through to a PR. |
 | `/setup-permissions` | Writes the `gh`/`git` allowlist block into your chosen Claude Code settings file. Idempotent — safe to re-run. |
 
 ### INVEST — the quality bar every backlog item must meet
@@ -173,7 +197,7 @@ INVEST is a checklist for deciding whether a backlog item is ready to be worked 
 | **S** | Small | Fits inside a single cycle of work. Large items hide risk and delay feedback. |
 | **T** | Testable | Has acceptance criteria concrete enough to write a test or a manual check against. "Works correctly" doesn't count. |
 
-This skill enforces INVEST at creation time (`/add-backlog-item`) and during refinement (`/refine-backlog-item`). Items that don't pass get the `needs-clarification` label instead of landing in the queue — because a vague item at the top of your backlog is just a polite way of not knowing what you're doing next.
+This skill enforces INVEST at creation time (`/add-item`) and during refinement (`/refine-item`). Items that don't pass get the `needs-clarification` label instead of landing in the queue — because a vague item at the top of your backlog is just a polite way of not knowing what you're doing next.
 
 ### Backlog structure
 
@@ -198,21 +222,22 @@ Priority is severity classification. Execution order is the manual Project rank 
 
 #### External blocker stubs
 
-`type:external-blocker` is a special infrastructure label for lightweight stub issues that represent external constraints (API limitations, vendor issues, regulatory holds, etc.) blocking one or more backlog items. Stubs carry **only** the `type:external-blocker` label — no priority, no effort, no rank. They are created by `/add-external-blocker`, never appear as executable work in `/execute-backlog-item`, and are excluded from all milestone counts and planning scope. Close a stub with `/resolve-external-blocker` when the external constraint is lifted.
+`type:external-blocker` is a special infrastructure label for lightweight stub issues that represent external constraints (API limitations, vendor issues, regulatory holds, etc.) blocking one or more backlog items. Stubs carry **only** the `type:external-blocker` label — no priority, no effort, no rank. They are created by `/add-external-blocker`, never appear as executable work in `/execute-item`, and are excluded from all milestone counts and planning scope. Close a stub with `/resolve-external-blocker` when the external constraint is lifted. Create stubs with `/add-external-blocker` and link items with `/block-item`.
 
 ### Workflow
 
 ```
-/initialize-backlog ──► /plan-release ──► /add-backlog-item
-                                          /migrate-backlog
-                                                │
-                                                ├──► /refine-backlog ──► /refine-backlog-item
-                                                ├──► /release-status    (read-only)
-                                                ├──► /validate-backlog  (read-only)
-                                                └──► /execute-backlog-item
+/initialize ──► /plan-release ──► /add-item
+                                  /migrate
+                                        │
+                                        ├──► /refine ──► /refine-item
+                                        ├──► /release-status    (read-only)
+                                        ├──► /health            (read-only)
+                                        ├──► /audit             (read-only)
+                                        └──► /execute-item
 ```
 
-Run `/initialize-backlog` once. Every other command preflights for the linked Project and stops with a clear error if it is missing.
+Run `/initialize` once. Every other skill preflights for the linked Project and stops with a clear error if it is missing.
 
 ---
 
@@ -221,7 +246,7 @@ Run `/initialize-backlog` once. Every other command preflights for the linked Pr
 ### Starting from scratch
 
 ```
-/initialize-backlog
+/initialize
 ```
 
 This provisions the GitHub Project v2, creates all labels, opens a PR with the Issue Forms template, and writes `.claude/backlog-project.json`. Run it once per repo.
@@ -237,7 +262,7 @@ Claude presents three release modes — **Maintenance** (patch an existing miles
 ### Adding a backlog item
 
 ```
-/add-backlog-item
+/add-item
 ```
 
 Claude asks clarifying questions, authors the issue body, recommends a rank in the Project, and links any declared blockers using GitHub's native dependency API.
@@ -245,7 +270,7 @@ Claude asks clarifying questions, authors the issue body, recommends a rank in t
 ### Importing an existing backlog
 
 ```
-/migrate-backlog
+/migrate
 ```
 
 Point Claude at your existing `BACKLOG.md`. Done items are skipped. Dependency hints in prose (`"depends on"`, `"blocked by"`) are surfaced for your review before anything is applied.
@@ -253,13 +278,13 @@ Point Claude at your existing `BACKLOG.md`. Done items are skipped. Dependency h
 ### Refining unclear items
 
 ```
-/refine-backlog
+/refine
 ```
 
-Lists all `needs-clarification` items sorted by priority, lets you select which ones to work on, then calls `/refine-backlog-item` for each — asking whether to continue after every iteration.
+Lists all `needs-clarification` items sorted by priority, lets you select which ones to work on, then calls `/refine-item` for each — asking whether to continue after every iteration.
 
 ```
-/refine-backlog-item 42
+/refine-item 42
 ```
 
 Refines a single item directly (useful when you know exactly which issue needs attention). Guides a discovery dialogue, rewrites the body, re-evaluates labels and rank, runs a validation gate, and removes `needs-clarification` only when everything checks out.
@@ -281,7 +306,7 @@ The output is valid GitHub-Flavored Markdown — paste it directly into a standu
 ### Checking portfolio health
 
 ```
-/backlog-health
+/health
 ```
 
 Produces a Markdown strategic health report across all open Project issues: distribution tables by type, priority, and effort; age cohorts (<7d, 7–30d, 30–90d, >90d); overdue P0 (>14 days) and P1 (>30 days) items; stale In-Progress items (no update in 7+ days); and a metadata debt list of issues missing any label group. Useful for weekly leadership updates or retrospectives.
@@ -289,7 +314,7 @@ Produces a Markdown strategic health report across all open Project issues: dist
 ### Auditing backlog health
 
 ```
-/validate-backlog
+/audit
 ```
 
 A read-only pass that surfaces missing labels, malformed issue bodies, dangling blockers, and cross-Project dependency smells. Outputs copy-pasteable `gh` commands — never applies fixes itself.
@@ -297,7 +322,7 @@ A read-only pass that surfaces missing labels, malformed issue bodies, dangling 
 ### Executing next work
 
 ```
-/execute-backlog-item
+/execute-item
 ```
 
 Picks the topmost unblocked Todo item (active milestone first, unmilestoned fallback), reports which items were skipped and why, and walks you through implementation to a PR.
@@ -348,22 +373,22 @@ ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts
 Issues, improvement suggestions, and pull requests are all welcome.
 
 **Found a bug or unexpected behavior?**
-Open a GitHub Issue describing what command you ran, what you expected, and what actually happened. Include the relevant `gh` output if you have it.
+Open a GitHub Issue describing what skill you ran, what you expected, and what actually happened. Include the relevant `gh` output if you have it.
 
-**Have an idea for a new feature or command?**
+**Have an idea for a new feature or skill?**
 Open an Issue with the `type:feature` label and describe the problem it solves. The best feature requests explain the workflow gap, not just the proposed solution.
 
 **Want to contribute a fix or improvement?**
 
 1. Fork the repository
 2. Create a branch
-3. Make your changes — each command spec lives in `commands/*.md`
-4. Verify cross-command invariants still hold (see the consistency greps in [CLAUDE.md](CLAUDE.md))
+3. Make your changes — each skill spec lives in `skills/<name>/SKILL.md`
+4. Verify cross-skill invariants still hold (see the consistency greps in [CLAUDE.md](CLAUDE.md))
 5. Open a PR with a clear description of what changed and why
 
-This repository uses [Conventional Commits](https://www.conventionalcommits.org/). Commit messages must follow the `<type>: <description>` format. Common types: `feat` for new behavior, `fix` for corrections, `docs` for README/comment changes, `refactor` for rewrites that don't change behavior, `chore` for maintenance. Example: `feat: add needs-refinement label to validate-backlog report`.
+This repository uses [Conventional Commits](https://www.conventionalcommits.org/). Commit messages must follow the `<type>: <description>` format. Common types: `feat` for new behavior, `fix` for corrections, `docs` for README/comment changes, `refactor` for rewrites that don't change behavior, `chore` for maintenance. Example: `feat: add needs-refinement label to audit report`.
 
-When editing command specs, preserve the existing style: numbered workflow sections with `(MANDATORY)` / `(STRICT)` / `(RELATIVE)` flags, opening prose in the `You are an AI agent acting as...` form, and the standard preflight block. Label catalog, preflight stop string, and issue body section headings must stay consistent across all command files.
+When editing skill specs, preserve the existing style: numbered workflow sections with `(MANDATORY)` / `(STRICT)` / `(RELATIVE)` flags, opening prose in the `You are an AI agent acting as...` form, and the standard preflight block. Label catalog, preflight stop string, and issue body section headings must stay consistent across all skill files.
 
 ---
 

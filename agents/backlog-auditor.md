@@ -218,7 +218,7 @@ Stale items are items where a release closed without completing all planned work
 - Items with milestone but Project Status = `Done` and issue still `open`:
   - Flag — Status drifted from issue state
 - Items with milestone but NOT in the Project:
-  - Flag — they will be invisible to `execute-backlog-item`
+  - Flag — they will be invisible to `execute-item`
 
 ---
 
@@ -242,10 +242,10 @@ Flag each of the following as a Quality or Consistency issue:
 - **Cross-Project blocker** — a blocker that exists but is NOT in the linked Project. Permitted by design (e.g. infra issue tracked elsewhere) but flagged as a smell so the user can verify it's intentional. Consistency.
 - **Stale blocker** — a blocker in a CLOSED milestone while THIS item is in the active milestone. Suggests the dep was meant to be resolved but wasn't. Quality.
 - **Blocked active-milestone item with priority:P0** — surface as a Critical risk so the user knows their highest-severity work is gated. When the blocker carries `type:external-blocker`, include the stub title alongside the blocked item so the source of the constraint is immediately visible.
-- **Items at top of Todo column that are blocked** — they look ready to pick but `execute-backlog-item` will skip them. Consistency.
+- **Items at top of Todo column that are blocked** — they look ready to pick but `execute-item` will skip them. Consistency.
 - **Apparent cycles** — defense-in-depth: walk the `blocked_by` graph and detect back-edges. GitHub prevents direct cycles (A blocked-by B and B blocked-by A) but indirect ones via transferred issues, deleted nodes, or stale state may slip through. Critical.
 
-> **Note on closed blockers:** GitHub does not remove `blocked_by` dependencies when a blocker is closed — the link persists for historical tracking and regression detection. A closed blocker is therefore **not** flagged as stale or inconsistent. `execute-backlog-item` already treats closed blockers as satisfied; `validate-backlog` does the same.
+> **Note on closed blockers:** GitHub does not remove `blocked_by` dependencies when a blocker is closed — the link persists for historical tracking and regression detection. A closed blocker is therefore **not** flagged as stale or inconsistent. `execute-item` already treats closed blockers as satisfied; `audit` does the same.
 
 #### Cross-repo blocker collection
 
@@ -329,7 +329,7 @@ Produce a **Validation Report** with:
 - Other milestone hygiene flags (milestone but not in Project; Status/state drift)
 - Priority skew
 - Cross-Project blockers (permitted but flagged for review)
-- Blocked items at top of Todo column (will be skipped by `execute-backlog-item`)
+- Blocked items at top of Todo column (will be skipped by `execute-item`)
 - Sub-issue parents not in the linked Project
 - Sub-issue milestone divergence (informational)
 

@@ -1,8 +1,9 @@
 ---
+name: add-item
 description: Add a new backlog item to the GitHub Project with INVEST validation, labels, and optional dependencies.
 ---
 
-# add-backlog-item
+# add-item
 
 You are an AI agent acting as a Senior Project Manager responsible for maintaining the project backlog.
 
@@ -19,10 +20,10 @@ Your goal is to define, refine, prioritize, and add high-quality backlog items t
 Before any item work, verify the repository is provisioned:
 
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
+  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
 - Verify the canonical label catalog is present (`type:*`, `priority:*`, `effort:*`):
   - `gh label list --limit 100`
-  - If any required label is missing, STOP and instruct the user to run `/initialize-backlog` to provision them
+  - If any required label is missing, STOP and instruct the user to run `/initialize` to provision them
 
 ---
 
@@ -129,11 +130,11 @@ Add the issue to the linked Project and set its initial Status:
   - `gh project item-edit --id <item-id> --project-id <project-id> --field-id <status-field-id> --single-select-option-id <todo-option-id>`
 - The exact field/option IDs can be retrieved via `gh project field-list <project-number> --owner <owner> --format json`
 
-**Execution rank:** the order items are executed is determined by their position in the Project's `Todo` column — `execute-backlog-item` always picks the topmost item.
+**Execution rank:** the order items are executed is determined by their position in the Project's `Todo` column — `execute-item` always picks the topmost item.
 
-This command is responsible for placing the new item at the appropriate rank by RELATIVE analysis against existing Todo items, NOT defaulting to bottom-of-column.
+This skill is responsible for placing the new item at the appropriate rank by RELATIVE analysis against existing Todo items, NOT defaulting to bottom-of-column.
 
-The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next — execution order is set by position on the Project board. Severity and rank are tracked independently but should be **kept consistent** by this command's relative analysis: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
+The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next — execution order is set by position on the Project board. Severity and rank are tracked independently but should be **kept consistent** by this skill's relative analysis: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
 
 #### 7a. Fetch the current rank order
 
@@ -180,7 +181,7 @@ After the user confirms the proposed positions:
 
 - Alternatively, instruct the user to drag-drop in the Project's web UI if they prefer to apply moves manually.
 
-The command MUST NOT apply rank changes without explicit confirmation. Always present the full proposed ordering before mutating.
+The skill MUST NOT apply rank changes without explicit confirmation. Always present the full proposed ordering before mutating.
 
 ---
 
@@ -202,13 +203,13 @@ The current issue's `id` was returned by `gh issue create`; capture it. For cros
 
 #### 9b. Apply "blocked by" relationships
 
-For each blocker the user named in step 1, delegate to `/block-backlog-item`:
+For each blocker the user named in step 1, delegate to `/block-item`:
 
 ```text
-/block-backlog-item #<this-number> #<blocker-number>
+/block-item #<this-number> #<blocker-number>
 ```
 
-GitHub allows up to 50 blockers per direction and prevents cycles automatically. Cross-Project blockers ARE permitted — they will be flagged as a smell by `validate-backlog` but not rejected here.
+GitHub allows up to 50 blockers per direction and prevents cycles automatically. Cross-Project blockers ARE permitted — they will be flagged as a smell by `audit` but not rejected here.
 
 #### 9c. Apply "blocking" relationships
 
@@ -250,7 +251,7 @@ The active milestone is determined as follows:
 Ask the user whether to assign this item to the active milestone:
 
 - If yes: `gh issue edit <n> --milestone "<milestone-title>"`
-- If no: leave unassigned (will be picked up by `execute-backlog-item` only after items in the active milestone are exhausted)
+- If no: leave unassigned (will be picked up by `execute-item` only after items in the active milestone are exhausted)
 
 If no active milestone exists, suggest the user run `/plan-release` after.
 
@@ -281,10 +282,10 @@ Print:
 - Prefer clarity over brevity
 - If exploratory → classify as Spike (`type:spike`)
 - Effort must NEVER be measured in time (no hours/days)
-- Issue body section headings MUST match the Issue Forms template exactly (case + ordering) so `validate-backlog` can parse them
+- Issue body section headings MUST match the Issue Forms template exactly (case + ordering) so `audit` can parse them
 - Never apply more than one label per group (one type, one priority, one effort)
 - Dependencies and sub-issue parent are NOT mirrored in the issue body — GitHub's native API is the only source of truth for these relationships
-- Cross-Project / cross-repo blockers ARE permitted but will be flagged as a smell by `validate-backlog`
+- Cross-Project / cross-repo blockers ARE permitted but will be flagged as a smell by `audit`
 - Sub-issues stay independent — assigning a parent does NOT inherit the parent's milestone, priority, effort, type, or Project rank
 
 ---

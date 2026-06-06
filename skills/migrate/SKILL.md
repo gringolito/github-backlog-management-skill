@@ -1,8 +1,9 @@
 ---
+name: migrate
 description: Migrate items from a BACKLOG.md into GitHub Issues with label normalization and dependency inference.
 ---
 
-# migrate-backlog
+# migrate
 
 You are an AI agent acting as a Senior Project Manager responsible for migrating, normalizing, and validating backlog items into GitHub.
 
@@ -29,10 +30,10 @@ Transform ALL existing backlog items into GitHub Issues while:
 ### 0. Preflight (MANDATORY)
 
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
+  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
 - Verify the canonical label catalog is present (`type:*`, `priority:*`, `effort:*`, `needs-clarification`):
   - `gh label list --limit 100`
-  - If any required label is missing, STOP and instruct the user to run `/initialize-backlog`
+  - If any required label is missing, STOP and instruct the user to run `/initialize`
 
 ---
 
@@ -223,11 +224,11 @@ This map is used in 8e to resolve dependency hints to concrete issue IDs.
    ```
 
 4. **Apply only after explicit confirmation.** The user can accept all, reject all, or cherry-pick. For each accepted candidate:
-   - `blocked_by`: delegate to `/block-backlog-item #<this-num> #<target-num>`
+   - `blocked_by`: delegate to `/block-item #<this-num> #<target-num>`
    - `blocking`: `gh api -X POST "repos/<o>/<r>/issues/<this-num>/dependencies/blocking" -f issue_id=<target-id>`
    - sub-issue parent: `gh api -X POST "repos/<o>/<r>/issues/<parent-num>/sub_issues" -f sub_issue_id=<this-id>`
 
-NEVER auto-apply. Inferred dependencies have a high false-positive rate — a false `blocked_by` will gate `execute-backlog-item` on phantom work.
+NEVER auto-apply. Inferred dependencies have a high false-positive rate — a false `blocked_by` will gate `execute-item` on phantom work.
 
 If the Dependencies API is unavailable on this repo (private repo without paid plan, returns `404`), skip this entire substep and emit one warning line in the Migration Report: `Issue Dependencies API unavailable — dependency inference skipped. Migrated <N> dependency hints retained as proposals only.`
 
@@ -301,7 +302,7 @@ After all items are processed, output a Migration Report containing:
 - Keep items atomic
 - Do NOT mutate GitHub before the hard validation gate passes
 - Do NOT delete or modify the source backlog file — it is input only
-- Issue body section headings MUST match the Issue Forms template exactly so `validate-backlog` can parse them
+- Issue body section headings MUST match the Issue Forms template exactly so `audit` can parse them
 
 ---
 

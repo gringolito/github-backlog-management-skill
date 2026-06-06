@@ -1,14 +1,15 @@
 ---
+name: initialize
 description: "Bootstrap the GitHub-native backlog system: create the Project, labels, and Issue Forms template PR."
 ---
 
-# initialize-backlog
+# initialize
 
 You are an AI agent acting as a Senior Project Manager responsible for bootstrapping the GitHub-native backlog system for this repository.
 
-Your goal is to provision the GitHub primitives the other backlog commands depend on: a GitHub Project (v2) linked to this repo, the standard label catalog, and the Issue Forms template that defines the canonical backlog-item shape.
+Your goal is to provision the GitHub primitives the other backlog skills depend on: a GitHub Project (v2) linked to this repo, the standard label catalog, and the Issue Forms template that defines the canonical backlog-item shape.
 
-This command is **idempotent**: re-running it on a repo where the project already exists must not duplicate or destroy anything.
+This skill is **idempotent**: re-running it on a repo where the project already exists must not duplicate or destroy anything.
 
 ---
 
@@ -16,8 +17,8 @@ This command is **idempotent**: re-running it on a repo where the project alread
 
 Make the repository ready to host backlog items as GitHub Issues, prioritized inside a linked GitHub Project (v2), so that:
 
-- All other commands can all read project metadata from `.claude/backlog-project.json`
-- Issues created by any command share the same body shape (driven by the Issue Forms template)
+- All other skills can all read project metadata from `.claude/backlog-project.json`
+- Issues created by any skill share the same body shape (driven by the Issue Forms template)
 - Labels are uniform across `type:*`, `priority:*`, and `effort:*`
 
 ---
@@ -31,7 +32,7 @@ Verify the local environment can talk to GitHub:
 - Parse `<owner>/<repo>` from the origin URL (support both `git@github.com:owner/repo.git` and `https://github.com/owner/repo.git` forms)
 - Confirm Issues are enabled: `gh repo view <owner>/<repo> --json hasIssuesEnabled --jq '.hasIssuesEnabled'`. If `false`, STOP and instruct the user to enable Issues in repository settings.
 - Confirm Projects are enabled: `gh repo view <owner>/<repo> --json hasProjectsEnabled --jq '.hasProjectsEnabled'`. If `false`, STOP and instruct the user to enable Projects in repository settings.
-- Confirm the GitHub Issue Dependencies API is reachable on this repo (used by `add-backlog-item`, `execute-backlog-item`, `validate-backlog`, `refine-backlog-item`, `migrate-backlog`):
+- Confirm the GitHub Issue Dependencies API is reachable on this repo (used by `add-item`, `execute-item`, `audit`, `refine-item`, `migrate`):
 
 If any required preflight step fails:
 
@@ -114,7 +115,7 @@ Effort label descriptions MUST NOT include time estimates (e.g. "2 hours", "1 da
 
 #### Operational labels
 
-- `needs-clarification` — applied by `migrate-backlog` to items missing critical info
+- `needs-clarification` — applied by `migrate` to items missing critical info
 
 Apply distinct color groupings (e.g. priority shades from red→grey, effort shades light→dark, type using semantic colors).
 
@@ -122,7 +123,7 @@ Apply distinct color groupings (e.g. priority shades from red→grey, effort sha
 
 ### 5. Issue Forms Template (CANONICAL BODY SHAPE — VIA PR)
 
-The Issue Forms template at `.github/ISSUE_TEMPLATE/backlog-item.yml` is the **single source of truth for the backlog-item issue body shape** — every command MUST construct issue bodies whose section headings match this template exactly.
+The Issue Forms template at `.github/ISSUE_TEMPLATE/backlog-item.yml` is the **single source of truth for the backlog-item issue body shape** — every skill MUST construct issue bodies whose section headings match this template exactly.
 
 This file MUST be added to the repository through a Pull Request, not committed directly to the default branch. The PR is the gate for review and adoption of the canonical body shape.
 
@@ -149,12 +150,12 @@ If the file is missing or the user approved replacement:
   - `git commit -m "chore: add backlog-item and external-blocker issue forms templates"`
 - Push the branch: `git push -u origin chore/backlog-item-issue-template`
 - Open a PR via `gh pr create --title "chore: add backlog-item and external-blocker issue forms templates" --body "<body>"` where the body explains:
-  - `backlog-item.yml` is the canonical body shape for backlog items — all commands depend on its section headings
+  - `backlog-item.yml` is the canonical body shape for backlog items — all skills depend on its section headings
   - `external-blocker.yml` is the template for infrastructure stub issues created by `/add-external-blocker`
-  - `validate-backlog` parses `backlog-item.yml` sections — changing them will break parsing
+  - `audit` parses `backlog-item.yml` sections — changing them will break parsing
 - Print the PR URL
 
-The remaining provisioning steps (project, labels) are NOT gated by this PR — they are direct API calls. The template only takes effect on the default branch after the PR is merged. Until then, `add-backlog-item` and `migrate-backlog` will still emit issue bodies in the canonical shape (the template is for human use in the GitHub UI).
+The remaining provisioning steps (project, labels) are NOT gated by this PR — they are direct API calls. The template only takes effect on the default branch after the PR is merged. Until then, `add-item` and `migrate` will still emit issue bodies in the canonical shape (the template is for human use in the GitHub UI).
 
 #### 5c. Canonical contents
 
@@ -218,7 +219,7 @@ body:
       required: false
 ```
 
-The rendered issue body produced by GitHub for this template uses `### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes` headings. All other commands MUST emit bodies that use these exact headings (case + ordering preserved).
+The rendered issue body produced by GitHub for this template uses `### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes` headings. All other skills MUST emit bodies that use these exact headings (case + ordering preserved).
 
 #### 5d. Canonical contents — external-blocker.yml
 
@@ -260,7 +261,7 @@ This template pre-applies the `type:external-blocker` label. There is no "Blocke
 
 ### 6. Persist Project Metadata
 
-Persist project metadata to `.claude/backlog-project.json` so other commands can read it without any live GitHub queries.
+Persist project metadata to `.claude/backlog-project.json` so other skills can read it without any live GitHub queries.
 
 Resolve the metadata via:
 
@@ -289,8 +290,8 @@ Write the file:
 
 Schema notes:
 
-- This file is the single source of truth for project metadata — all other commands read it directly with no fallback
-- Re-running `initialize-backlog` on a fully-provisioned repo MUST refresh this file
+- This file is the single source of truth for project metadata — all other skills read it directly with no fallback
+- Re-running `initialize` on a fully-provisioned repo MUST refresh this file
 
 ---
 
@@ -299,7 +300,7 @@ Schema notes:
 Print a structured summary so the user can verify provisioning:
 
 - Project URL (`https://github.com/users/<owner>/projects/<n>` or `https://github.com/orgs/<owner>/projects/<n>`)
-- Project number (used by other commands)
+- Project number (used by other skills)
 - Repository (`<owner>/<repo>`)
 - Labels created or updated (count, with full list)
 - Issue Forms template PR URL (or "already present, no PR needed")
@@ -310,7 +311,7 @@ Print a structured summary so the user can verify provisioning:
 
 ## Rules & Constraints
 
-- Re-running this command on a fully-provisioned repo MUST be a no-op except for printing the summary
+- Re-running this skill on a fully-provisioned repo MUST be a no-op except for printing the summary
 - NEVER delete pre-existing labels, projects, or templates the user may have customized
 - NEVER skip the `gh auth status` and `git remote get-url origin` preflight checks
 - Stop and ask before opening a PR that would replace a pre-existing `.github/ISSUE_TEMPLATE/backlog-item.yml`
@@ -323,4 +324,4 @@ Print a structured summary so the user can verify provisioning:
 
 - Clear summary of provisioned resources with URLs
 - Any skipped steps (because resources already existed) explicitly listed
-- Next-step pointer: "Run `/plan-release` to create your first milestone, then `/add-backlog-item` or `/migrate-backlog`."
+- Next-step pointer: "Run `/plan-release` to create your first milestone, then `/add-item` or `/migrate`."

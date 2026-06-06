@@ -1,14 +1,15 @@
 ---
+name: refine-item
 description: Refine a single ambiguous backlog item through guided INVEST validation and label correction.
 ---
 
-# refine-backlog-item
+# refine-item
 
 You are an AI agent acting as a Senior Project Manager refining a single ambiguous backlog item.
 
 The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
 
-Items carrying the `needs-clarification` label were created by `migrate-backlog` (or flagged later) because they are missing critical detail — typically with `UNKNOWN` / `NEEDS CLARIFICATION` markers in body sections and open questions parked in `### INVEST Notes`. Your goal is to walk this one item through interactive discovery, fill the gaps, re-evaluate severity / effort / type / Project rank using full relative analysis, and remove the `needs-clarification` label once validation passes.
+Items carrying the `needs-clarification` label were created by `migrate` (or flagged later) because they are missing critical detail — typically with `UNKNOWN` / `NEEDS CLARIFICATION` markers in body sections and open questions parked in `### INVEST Notes`. Your goal is to walk this one item through interactive discovery, fill the gaps, re-evaluate severity / effort / type / Project rank using full relative analysis, and remove the `needs-clarification` label once validation passes.
 
 ---
 
@@ -30,18 +31,18 @@ Bring the target issue to a fully refined state where:
 ### 0. Preflight (MANDATORY)
 
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
+  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
 - Verify the canonical label catalog is present (`type:*`, `priority:*`, `effort:*`, `needs-clarification`):
   - `gh label list --limit 100`
-  - If any required label is missing, STOP and instruct the user to run `/initialize-backlog`
+  - If any required label is missing, STOP and instruct the user to run `/initialize`
 
 ---
 
 ### 1. Resolve Target Issue
 
-- Read the argument passed to the command. It may be:
-  - An issue number (e.g. `/refine-backlog-item 42`) — use directly
-  - A title or partial title (e.g. `/refine-backlog-item "add OAuth"`) — search with `gh issue list --search "<text>" --state open --json number,title,url --limit 10`, then present matches and ask the user to confirm which one
+- Read the argument passed to the skill. It may be:
+  - An issue number (e.g. `/refine-item 42`) — use directly
+  - A title or partial title (e.g. `/refine-item "add OAuth"`) — search with `gh issue list --search "<text>" --state open --json number,title,url --limit 10`, then present matches and ask the user to confirm which one
   - No argument — ask: "Which issue should I refine? You can provide an issue number or a title."
 - Fetch issue data and verify the issue is a member of the linked Project: `gh project item-list <project-number> --owner <owner> --format json --query "#<n>"` — if the issue is NOT in the Project, STOP and output: `Issue #<n> is not in the linked Backlog project. Only Project members can be refined here.`
 - If the issue does NOT carry `needs-clarification`, warn: "Issue #<n> does not carry `needs-clarification`. Proceed anyway? [Y/n]" and stop if the user declines.
@@ -54,7 +55,7 @@ Bring the target issue to a fully refined state where:
 - Current labels: `type:*` / `priority:*` / `effort:*` (highlight any missing groups)
 - Milestone, Project Status
 - Full body sections, with every `UNKNOWN` / `NEEDS CLARIFICATION` marker highlighted
-- Existing `### INVEST Notes` content — this is where `migrate-backlog` parks open questions
+- Existing `### INVEST Notes` content — this is where `migrate` parks open questions
 - **Current relationships** (fetched via `gh api`):
   - If the Dependencies API returns `404` on this repo (private repo without paid plan), skip blocker/blocking fields and emit one warning: `Issue Dependencies API unavailable on this repo — dependency display and updates skipped.`
   - Blockers (`blocked_by`):
@@ -70,7 +71,7 @@ Bring the target issue to a fully refined state where:
 
 ### 3. Discovery Dialogue (MANDATORY)
 
-Reuse the discovery pattern from `add-backlog-item`:
+Reuse the discovery pattern from `add-item`:
 
 - Ask clarifying questions to resolve EVERY `UNKNOWN` / `NEEDS CLARIFICATION` marker in `### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`
 - Walk through the open questions in `### INVEST Notes` one by one
@@ -101,7 +102,7 @@ Delegate body authoring to the `issue-body-author` agent:
 
 The agent returns an updated body with all `UNKNOWN` / `NEEDS CLARIFICATION` / `_No response_` markers replaced by the discovered content. Any sections where information is still missing will be marked with `<!-- TODO: ... -->` — those remain as open questions in `### INVEST Notes`.
 
-DO NOT introduce new headings or change ordering — `validate-backlog` parses these section headings.
+DO NOT introduce new headings or change ordering — `audit` parses these section headings.
 
 ---
 
@@ -119,7 +120,7 @@ If `invest-gate` returns `Overall: FAIL`:
 
 If splitting is needed (S letter fails):
 
-- Suggest a split via `/add-backlog-item` for the new item(s)
+- Suggest a split via `/add-item` for the new item(s)
 - Apply the partial body update reflecting the reduced scope of the original item, OR keep the original as-is if the user prefers to handle the split manually
 - KEEP the `needs-clarification` label until the split is resolved
 
@@ -136,7 +137,7 @@ If INVEST passes (or partial — per step 5):
 
 ### 7. Re-evaluate Labels (RELATIVE)
 
-Refinement frequently reveals different severity, effort, or type than `migrate-backlog` inferred. Delegate re-classification to the `label-classifier` agent:
+Refinement frequently reveals different severity, effort, or type than `migrate` inferred. Delegate re-classification to the `label-classifier` agent:
 
 - **Input**: the refined issue title and the reconstructed body from step 4
 - The agent returns a verdict for each of the three label groups (`type:*`, `priority:*`, `effort:*`) with one-line reasoning
@@ -192,12 +193,12 @@ Apply rank changes ONLY after explicit user confirmation, via:
 
   Use the `id` fields from the `item-list` response. To move an item to the very top, omit `afterId` (or set it to `null`).
 
-**Dependency / Sub-issue changes** — apply the relationship changes the user agreed to in step 3. Same API patterns as `add-backlog-item` step 9:
+**Dependency / Sub-issue changes** — apply the relationship changes the user agreed to in step 3. Same API patterns as `add-item` step 9:
 
 If the Dependencies API is unavailable on this repo (returns `404`), skip blocker add/remove steps and emit: `Issue Dependencies API unavailable on this repo — dependency updates skipped.`
 
 - **Remove a stale blocker**: `gh api -X DELETE "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by/<blocker-id>"`
-- **Add a new blocker**: delegate to `/block-backlog-item #<n> #<blocker-number>`
+- **Add a new blocker**: delegate to `/block-item #<n> #<blocker-number>`
 - **Change sub-issue parent**: a sub-issue can only have one parent. To re-parent, the user must remove from old parent first via `gh api -X DELETE "repos/<o>/<r>/issues/<old-parent>/sub_issues/<this-id>"`, then add to new parent via `gh api -X POST "repos/<o>/<r>/issues/<new-parent>/sub_issues" -f sub_issue_id=<this-id>`
 
 Apply ONLY after explicit user confirmation. Cross-Project / cross-repo blockers ARE permitted but should be flagged in the per-item confirmation so the user knows they exist.
@@ -251,10 +252,10 @@ Only after the pre-removal validation gate passes:
 - Do NOT silently mutate labels or rank — every change requires explicit confirmation
 - Do NOT operate on issues outside the linked Project
 - Do NOT reset milestone assignments unless the user explicitly asks
-- Do NOT introduce new body section headings — keep them aligned with the canonical Issue Forms template so `validate-backlog` can parse them
+- Do NOT introduce new body section headings — keep them aligned with the canonical Issue Forms template so `audit` can parse them
 - Effort must NEVER be expressed in time (no hours/days)
 - All `gh` errors surfaced verbatim
-- This command operates on exactly one issue. Use `/refine-backlog` to drive a multi-item session.
+- This skill operates on exactly one issue. Use `/refine` to drive a multi-item session.
 
 ---
 

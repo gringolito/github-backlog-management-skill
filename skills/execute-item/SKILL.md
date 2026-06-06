@@ -1,8 +1,9 @@
 ---
+name: execute-item
 description: Pick and execute the highest-priority unblocked backlog item in the active milestone.
 ---
 
-# execute-backlog-item
+# execute-item
 
 You are an AI agent acting as a development lead responsible for executing backlog items.
 
@@ -21,7 +22,7 @@ Select and execute the highest-priority actionable backlog item, scoped to the a
 ### 0. Preflight (MANDATORY)
 
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
+  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
 
 ---
 
@@ -134,7 +135,7 @@ Outcomes:
      - Blocker `open`, has assignee → `In Progress — monitor`
      - Blocker `open`, no assignee → `Unassigned — assign or re-plan`
    - Close with a summary line: `N of M blockers may be resolvable without new work` (count stale + in-progress blockers as resolvable)
-   - DO NOT pick a blocked item even with user confirmation — re-running `execute-backlog-item` after the user resolves a blocker is the correct loop.
+   - DO NOT pick a blocked item even with user confirmation — re-running `execute-item` after the user resolves a blocker is the correct loop.
 
 The Issue Dependencies API is GA on public repos and on paid plans for private repos. If the API returns `404` (feature unavailable), treat all items as unblocked and emit a one-time warning: `Issue Dependencies API unavailable on this repo — block-skipping disabled.`
 
@@ -177,9 +178,9 @@ If any principle fails:
 
 - STOP
 - Explain the specific INVEST violation(s)
-- Ask: "Would you like to refine this item now? Run `/refine-backlog-item <n>` to walk through a guided refinement session, then re-run `/execute-backlog-item` when it is ready."
+- Ask: "Would you like to refine this item now? Run `/refine-item <n>` to walk through a guided refinement session, then re-run `/execute-item` when it is ready."
 
-If priority or effort labels are missing or duplicated, STOP and direct the user to run `/validate-backlog`.
+If priority or effort labels are missing or duplicated, STOP and direct the user to run `/audit`.
 
 ---
 
@@ -196,8 +197,8 @@ If priority or effort labels are missing or duplicated, STOP and direct the user
 - If the item is too large for a single iteration (based on `effort:*`):
   - Draft a split proposal: list each sub-issue with a title, What/Why/Acceptance Criteria, suggested type/priority/effort labels, and how they map to the parent's Acceptance Criteria
   - Present the proposal and wait for explicit approval
-  - After approval, invoke `/add-backlog-item` for each sub-issue in sequence, passing the parent issue number so it handles the sub-issue relationship
-  - STOP after the sub-issues are created — re-run `/execute-backlog-item` to pick the first sub-issue
+  - After approval, invoke `/add-item` for each sub-issue in sequence, passing the parent issue number so it handles the sub-issue relationship
+  - STOP after the sub-issues are created — re-run `/execute-item` to pick the first sub-issue
 
 - Wait for explicit approval before proceeding
 
@@ -261,7 +262,7 @@ A spike's deliverable is **knowledge** — a findings document plus the follow-o
 3. **Present the findings summary to the user** for confirmation/edits before the document is finalized. Do NOT proceed until the user signs off on the findings.
 4. **Determine parent context**: check whether the spike is itself a sub-issue of a parent. Use `gh api "repos/<owner>/<repo>/issues/<n>/parent"` (returns `404` if the spike has no parent — treat as standalone). Record the parent issue number if present.
 5. **Propose follow-on backlog items** for each piece of surfaced work — one per item — with title, What, Why, draft Acceptance Criteria, and suggested `type:*` / `priority:*` / `effort:*` labels. Present the full list to the user and wait for explicit approval per item (some may be discarded).
-6. **Create the approved follow-ons** by invoking `/add-backlog-item` for each in sequence:
+6. **Create the approved follow-ons** by invoking `/add-item` for each in sequence:
    - If the spike has NO parent → create as **standalone top-level items** (do NOT pass a parent number; the new items are NOT sub-issues of the spike)
    - If the spike HAS a parent → pass the **spike's parent issue number** so the new items become **peer sub-issues of the spike** (children of the same parent), NOT children of the spike itself
    - Record the resulting issue numbers and update the `## Follow-on Work` section of the findings document with `#<n>` references

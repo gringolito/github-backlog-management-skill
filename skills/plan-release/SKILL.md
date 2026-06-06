@@ -1,4 +1,5 @@
 ---
+name: plan-release
 description: Plan a new release by creating a GitHub Milestone with goals, scope, and due date.
 ---
 
@@ -25,16 +26,16 @@ Either:
 
 ### 1. Preflight (MANDATORY)
 
-The repository MUST already be provisioned by `initialize-backlog`. Detect:
+The repository MUST already be provisioned by `initialize`. Detect:
 
 - Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize-backlog first.`
+  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
 
 ---
 
 ### 1.5. Argument Detection (MANDATORY)
 
-Check whether the command was invoked with an argument (a milestone identifier: title, number, or version string).
+Check whether the skill was invoked with an argument (a milestone identifier: title, number, or version string).
 
 - **No argument** — proceed to Step 2 (creation mode).
 - **Argument provided** — search open milestones for a match:
@@ -173,7 +174,7 @@ Wait for explicit user confirmation of the version name before proceeding.
 Collect from the user (with sensible defaults):
 
 - **Title** — confirmed in step 6
-- **Due date** (`due_on`) — Used by `execute-backlog-item` to determine the active milestone (earliest `due_on` wins). Format: `YYYY-MM-DDTHH:MM:SSZ`.
+- **Due date** (`due_on`) — Used by `execute-item` to determine the active milestone (earliest `due_on` wins). Format: `YYYY-MM-DDTHH:MM:SSZ`.
 - **Description** — if the user does not provide one, generate a suggested description from the confirmed scope:
   - Summarize the release theme (e.g. "Bug-fix and security hardening release", "Feature release: …", "Maintenance patch for v1.5.x")
   - List the top goals derived from the scoped items' `### Why` sections
@@ -229,8 +230,8 @@ Print:
 - Position in the open-milestones queue (which is the active one based on earliest `due_on`)
 - For Mode A: forward-port clones created (list of new issue URLs), or "Forward-porting skipped"
 - Pointer to next steps:
-  - "Run `/add-backlog-item` to add more items to this milestone"
-  - "Run `/execute-backlog-item` to start working on this milestone"
+  - "Run `/add-item` to add more items to this milestone"
+  - "Run `/execute-item` to start working on this milestone"
 
 ---
 
@@ -258,7 +259,7 @@ Done (N):        #n title [effort]  ...
 Todo (N):        #n title [effort]  ...
 ```
 
-Items with In Progress or Done status are shown as read-only context throughout the session — they cannot be added to or removed from the milestone via this command.
+Items with In Progress or Done status are shown as read-only context throughout the session — they cannot be added to or removed from the milestone via this skill.
 
 Use `AskUserQuestion` to collect the over-commitment threshold:
 
@@ -421,15 +422,15 @@ Print:
   - Closed as won't fix: list of `#number — title`
 - Final capacity estimate (points + qualitative band)
 - Pointer to next steps:
-  - "Run `/add-backlog-item` to add more items to this milestone"
-  - "Run `/execute-backlog-item` to start working on this milestone"
+  - "Run `/add-item` to add more items to this milestone"
+  - "Run `/execute-item` to start working on this milestone"
 
 ---
 
 ## Rules & Constraints
 
 - Always ask before creating a duplicate milestone name (open or closed)
-- Always require a `due_on` — without one, the milestone cannot win the active-milestone race in `execute-backlog-item`
+- Always require a `due_on` — without one, the milestone cannot win the active-milestone race in `execute-item`
 - Never close an existing milestone without explicit user confirmation
 - Never publish a GitHub Release — only create the planning Milestone
 - Preserve existing release/milestone naming conventions; do NOT silently change scheme
