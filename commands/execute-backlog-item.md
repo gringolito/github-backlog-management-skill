@@ -108,12 +108,14 @@ Before declaring a winner, walk the rank-ordered candidate list and skip any ite
 
 For each candidate in rank order (Tier 1 first, then Tier 2):
 
-- Fetch its blockers: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`
-- For each blocker:
+- **Active-blocker pre-check**: fetch `gh api "repos/<owner>/<repo>/issues/<n>" --jq '.issue_dependencies_summary.blocked_by'`.
+  - If the count is `0` → the item has no active blockers. Treat it as unblocked and skip the `blocked_by` list fetch entirely.
+  - If the count is `> 0` → fetch the blocker list: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"` and apply the checks below.
+- For each blocker in the list:
   - If `state == "open"`, the candidate is BLOCKED. Skip it. Record the candidate + its open blockers in a "skipped because blocked" list.
   - If `state == "closed"`, the blocker is satisfied (regardless of how it was closed — merged PR, manual close, transferred, deleted)
   - **Cross-Project / cross-repo blockers are permitted.** If the blocker lives in a different repo, query it via `gh api "repos/<blocker-owner>/<blocker-repo>/issues/<blocker-number>" --jq '.state'`. The blocker URL on the dependency response includes the full repo reference.
-- If a candidate has no blockers OR every blocker is closed, it is the winner. Stop walking.
+- If a candidate has no active blockers (pre-check count is 0) OR every fetched blocker is closed, it is the winner. Stop walking.
 
 Outcomes:
 

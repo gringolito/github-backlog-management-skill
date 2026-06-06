@@ -226,9 +226,11 @@ Stale items are items where a release closed without completing all planned work
 
 For every Project item, fetch its relationships:
 
-- Blockers: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`
-- Blocking: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocking"`
-- Sub-issue parent: `gh issue view <n> --json parent --jq '.parent'`
+1. **Dependency pre-check**: fetch the item's dependency summary: `gh api "repos/<owner>/<repo>/issues/<n>" --jq '.issue_dependencies_summary'`
+   - If `issue_dependencies_summary.blocked_by == 0` → the item has no active blockers. Skip the `blocked_by` list fetch entirely for this item.
+   - If `issue_dependencies_summary.blocked_by > 0` → fetch the blocker list: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`. When iterating this list, skip any entry where `state == "closed"` — closed blockers are satisfied by design (see policy note below). Apply per-item dependency checks only to `state == "open"` entries and to entries that return `404` (dangling).
+2. Blocking: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocking"`
+3. Sub-issue parent: `gh issue view <n> --json parent --jq '.parent'`
 
 If the Dependencies API returns `404` on this repo (feature unavailable on the current plan), skip this section and emit one informational line: `Issue Dependencies API unavailable — dependency audit skipped.`
 
@@ -236,7 +238,7 @@ If the Dependencies API returns `404` on this repo (feature unavailable on the c
 
 Flag each of the following as a Quality or Consistency issue:
 
-- **Dangling blocker** — referenced issue does not exist (deleted / transferred without redirect). Critical.
+- **Dangling blocker** — an open or unresolvable entry in the `blocked_by` list where fetching the blocker returns `404` (deleted / transferred without redirect). A `closed` blocker is satisfied by design and is never flagged as dangling. Critical.
 - **Cross-Project blocker** — a blocker that exists but is NOT in the linked Project. Permitted by design (e.g. infra issue tracked elsewhere) but flagged as a smell so the user can verify it's intentional. Consistency.
 - **Stale blocker** — a blocker in a CLOSED milestone while THIS item is in the active milestone. Suggests the dep was meant to be resolved but wasn't. Quality.
 - **Blocked active-milestone item with priority:P0** — surface as a Critical risk so the user knows their highest-severity work is gated. When the blocker carries `type:external-blocker`, include the stub title alongside the blocked item so the source of the constraint is immediately visible.
