@@ -27,7 +27,15 @@ Make the repository ready to host backlog items as GitHub Issues, prioritized in
 
 ### 1. Preflight (MANDATORY)
 
-Verify the local environment can talk to GitHub:
+**Re-run / idempotent case** — if `.claude/backlog-project.json` already exists, delegate to the shared preflight script:
+
+```sh
+bin/backlog-preflight
+```
+
+If it exits non-zero, STOP and surface the error verbatim. If it exits zero, continue to step 5.
+
+**Fresh bootstrap** — if `.claude/backlog-project.json` does not yet exist, verify the local environment can talk to GitHub:
 
 - Parse `<owner>/<repo>` from the origin URL (support both `git@github.com:owner/repo.git` and `https://github.com/owner/repo.git` forms)
 - Confirm Issues are enabled: `gh repo view <owner>/<repo> --json hasIssuesEnabled --jq '.hasIssuesEnabled'`. If `false`, STOP and instruct the user to enable Issues in repository settings.
