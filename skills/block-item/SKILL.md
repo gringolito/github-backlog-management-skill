@@ -21,13 +21,7 @@ Register a `blocked_by` dependency between two GitHub issues: mark issue `#N` as
 
 ### 0. Preflight (MANDATORY)
 
-Before any dependency work, verify the repository is provisioned:
-
-- `gh auth status` — if unauthenticated, STOP and output: `gh auth status failed. Run gh auth login and retry.`
-- Parse `<owner>` and `<repo>` from `gh repo view --json owner,name`
-- Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
-- Verify the canonical label catalog is present: `gh label list --limit 100`. If any required `type:*`, `priority:*`, or `effort:*` label is missing, STOP and instruct the user to run `/initialize`.
+Run `bin/backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON it prints to stdout — this is the metadata used throughout the workflow (owner, repo, projectNumber, projectId, statusFieldId, statusOptions).
 
 ---
 

@@ -24,16 +24,13 @@ Either:
 
 ## Workflow
 
-### 1. Preflight (MANDATORY)
+### 0. Preflight (MANDATORY)
 
-The repository MUST already be provisioned by `initialize`. Detect:
-
-- Read `.claude/backlog-project.json`. If the file does not exist, STOP and output exactly:
-  `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
+Run `bin/backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON it prints to stdout — this is the metadata used throughout the workflow (owner, repo, projectNumber, projectId, statusFieldId, statusOptions).
 
 ---
 
-### 1.5. Argument Detection (MANDATORY)
+### 1. Argument Detection (MANDATORY)
 
 Check whether the skill was invoked with an argument (a milestone identifier: title, number, or version string).
 
