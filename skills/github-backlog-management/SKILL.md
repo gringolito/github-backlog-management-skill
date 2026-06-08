@@ -53,7 +53,7 @@ Every Workable Item passes INVEST (Independent, Negotiable, Valuable, Estimable,
 
 **Metadata file**: `.claude/backlog-project.json` — written by `initialize`, read directly by all other skills.
 
-**Standard preflight stop string**: `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
+**Standard preflight**: all consumer skills run `bin/backlog-preflight` (a shared executable in `bin/`) as Step 0. On success it emits the metadata JSON; on failure it prints the canonical stop string and exits non-zero. The canonical stop string is: `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
 
 **Priority vs rank**: `priority:*` is severity classification. Project rank (topmost Todo item) is execution order. They should stay consistent but are independent concepts — `execute-item` sorts by rank only.
 

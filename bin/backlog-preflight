@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+# 1. Parse remote URL (no network call — needed to select gh profile before auth)
+remote_url=$(git remote get-url origin 2>/dev/null) || {
+  echo "Cannot determine repo origin. Run from a git repository with an 'origin' remote." >&2
+  exit 1
+}
+
+# 2. Auth check
+if ! gh auth status >/dev/null 2>&1; then
+  echo "gh auth status failed. Run gh auth login and retry." >&2
+  exit 1
+fi
+
+# 3. Parse owner/repo from SSH or HTTPS remote URL
+if [[ "$remote_url" =~ git@[^:]+:([^/]+)/([^/.]+)(\.git)?$ ]]; then
+  owner="${BASH_REMATCH[1]}"
+  repo="${BASH_REMATCH[2]}"
+elif [[ "$remote_url" =~ https://[^/]+/([^/]+)/([^/.]+)(\.git)?$ ]]; then
+  owner="${BASH_REMATCH[1]}"
+  repo="${BASH_REMATCH[2]}"
+else
+  echo "Cannot parse owner/repo from remote URL: $remote_url" >&2
+  exit 1
+fi
+
+# 4. Read metadata file
+metadata_file=".claude/backlog-project.json"
+if [[ ! -f "$metadata_file" ]]; then
+  echo "No Backlog project linked to ${owner}/${repo}. Run /initialize first."
+  exit 1
+fi
+metadata=$(cat "$metadata_file")
+
+# 5. Schema validation — required top-level keys
+for key in "owner" "repo" "projectNumber" "projectId" "statusFieldId" "statusOptions"; do
+  if ! echo "$metadata" | jq -e --arg k "$key" 'has($k)' >/dev/null 2>&1; then
+    echo "backlog-project.json is missing required key: $key" >&2
+    exit 1
+  fi
+done
+# Required statusOptions sub-keys
+for subkey in "todo" "inProgress" "done"; do
+  if ! echo "$metadata" | jq -e --arg k "$subkey" '.statusOptions | has($k)' >/dev/null 2>&1; then
+    echo "backlog-project.json is missing required statusOptions.$subkey" >&2
+    exit 1
+  fi
+done
+
+# 6. Project existence — verify the linked project is reachable and ID matches
+proj_number=$(echo "$metadata" | jq -r '.projectNumber')
+proj_id=$(echo "$metadata" | jq -r '.projectId')
+proj_owner=$(echo "$metadata" | jq -r '.owner')
+
+actual_id=$(gh project view "$proj_number" --owner "$proj_owner" --format json 2>/dev/null | jq -r '.id // empty' 2>/dev/null) || true
+if [[ -z "$actual_id" ]]; then
+  echo "Project #${proj_number} not found or inaccessible for owner ${proj_owner}. Re-run /initialize to re-link the project." >&2
+  exit 1
+fi
+if [[ "$actual_id" != "$proj_id" ]]; then
+  echo "Project ID mismatch: expected $proj_id but found $actual_id. Re-run /initialize to re-link the project." >&2
+  exit 1
+fi
+
+# 7. Label catalog — verify all canonical labels are present
+labels=$(gh label list --limit 100 --json name 2>/dev/null | jq -r '.[].name' 2>/dev/null) || {
+  echo "Failed to fetch label catalog. Check gh authentication and repository access." >&2
+  exit 1
+}
+
+missing_labels=()
+for label in \
+  "type:feature" "type:bug" "type:security" "type:performance" "type:dx" \
+  "type:tech-debt" "type:reliability" "type:compliance" "type:spike" "type:external-blocker" \
+  "priority:P0" "priority:P1" "priority:P2" "priority:P3" \
+  "effort:XS" "effort:S" "effort:M" "effort:L" "effort:XL" \
+  "needs-clarification"; do
+  if ! echo "$labels" | grep -qxF "$label"; then
+    missing_labels+=("$label")
+  fi
+done
+
+if [[ ${#missing_labels[@]} -gt 0 ]]; then
+  echo "Missing canonical labels: ${missing_labels[*]}. Run /initialize to provision missing labels." >&2
+  exit 1
+fi
+
+# 8. Success — emit metadata JSON to stdout for caller to capture
+cat "$metadata_file"
