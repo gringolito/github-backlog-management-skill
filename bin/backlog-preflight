@@ -1,31 +1,21 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-# 1. Parse remote URL (no network call — needed to select gh profile before auth)
-remote_url=$(git remote get-url origin 2>/dev/null) || {
-  echo "Cannot determine repo origin. Run from a git repository with an 'origin' remote." >&2
-  exit 1
-}
-
-# 2. Auth check
+# 1. Auth check
 if ! gh auth status >/dev/null 2>&1; then
   echo "gh auth status failed. Run gh auth login and retry." >&2
   exit 1
 fi
 
-# 3. Parse owner/repo from SSH or HTTPS remote URL
-if [[ "$remote_url" =~ git@[^:]+:([^/]+)/([^/.]+)(\.git)?$ ]]; then
-  owner="${BASH_REMATCH[1]}"
-  repo="${BASH_REMATCH[2]}"
-elif [[ "$remote_url" =~ https://[^/]+/([^/]+)/([^/.]+)(\.git)?$ ]]; then
-  owner="${BASH_REMATCH[1]}"
-  repo="${BASH_REMATCH[2]}"
-else
-  echo "Cannot parse owner/repo from remote URL: $remote_url" >&2
+# 2. Get owner/repo via gh CLI
+nameWithOwner=$(gh repo view --json nameWithOwner --jq '.nameWithOwner' 2>/dev/null) || {
+  echo "Cannot determine repo. Run from a git repository linked to a GitHub remote." >&2
   exit 1
-fi
+}
+owner="${nameWithOwner%%/*}"
+repo="${nameWithOwner##*/}"
 
-# 4. Read metadata file
+# 3. Read metadata file
 metadata_file=".claude/backlog-project.json"
 if [[ ! -f "$metadata_file" ]]; then
   echo "No Backlog project linked to ${owner}/${repo}. Run /initialize first."
@@ -33,7 +23,7 @@ if [[ ! -f "$metadata_file" ]]; then
 fi
 metadata=$(cat "$metadata_file")
 
-# 5. Schema validation — required top-level keys
+# 4. Schema validation — required top-level keys
 for key in "owner" "repo" "projectNumber" "projectId" "statusFieldId" "statusOptions"; do
   if ! echo "$metadata" | jq -e --arg k "$key" 'has($k)' >/dev/null 2>&1; then
     echo "backlog-project.json is missing required key: $key" >&2
@@ -48,7 +38,7 @@ for subkey in "todo" "inProgress" "done"; do
   fi
 done
 
-# 6. Project existence — verify the linked project is reachable and ID matches
+# 5. Project existence — verify the linked project is reachable and ID matches
 proj_number=$(echo "$metadata" | jq -r '.projectNumber')
 proj_id=$(echo "$metadata" | jq -r '.projectId')
 proj_owner=$(echo "$metadata" | jq -r '.owner')
@@ -63,8 +53,13 @@ if [[ "$actual_id" != "$proj_id" ]]; then
   exit 1
 fi
 
-# 7. Label catalog — verify all canonical labels are present
-labels=$(gh label list --limit 100 --json name 2>/dev/null | jq -r '.[].name' 2>/dev/null) || {
+# 6. Label catalog — verify all canonical labels are present
+labels=$({
+  gh label list --search "type:" --limit 100 --json name | jq -r '.[].name'
+  gh label list --search "priority:" --limit 100 --json name | jq -r '.[].name'
+  gh label list --search "effort:" --limit 100 --json name | jq -r '.[].name'
+  gh label list --search "needs-clarification" --limit 100 --json name | jq -r '.[].name'
+} 2>/dev/null) || {
   echo "Failed to fetch label catalog. Check gh authentication and repository access." >&2
   exit 1
 }
@@ -86,5 +81,5 @@ if [[ ${#missing_labels[@]} -gt 0 ]]; then
   exit 1
 fi
 
-# 8. Success — emit metadata JSON to stdout for caller to capture
+# 7. Success — emit metadata JSON to stdout for caller to capture
 cat "$metadata_file"
