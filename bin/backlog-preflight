@@ -24,23 +24,23 @@ fi
 metadata=$(cat "$metadata_file")
 
 # 4. Schema validation — required top-level keys
-for key in "owner" "repo" "projectNumber" "projectId" "statusFieldId" "statusOptions"; do
+for key in "owner" "repo" "project_number" "project_id" "status_field_id" "status_options"; do
   if ! echo "$metadata" | jq -e --arg k "$key" 'has($k)' >/dev/null 2>&1; then
     echo "backlog-project.json is missing required key: $key" >&2
     exit 1
   fi
 done
-# Required statusOptions sub-keys
-for subkey in "todo" "inProgress" "done"; do
-  if ! echo "$metadata" | jq -e --arg k "$subkey" '.statusOptions | has($k)' >/dev/null 2>&1; then
-    echo "backlog-project.json is missing required statusOptions.$subkey" >&2
+# Required status_options sub-keys
+for subkey in "Todo" "In Progress" "Done"; do
+  if ! echo "$metadata" | jq -e --arg k "$subkey" '.status_options | has($k)' >/dev/null 2>&1; then
+    echo "backlog-project.json is missing required status_options.$subkey" >&2
     exit 1
   fi
 done
 
 # 5. Project existence — verify the linked project is reachable and ID matches
-proj_number=$(echo "$metadata" | jq -r '.projectNumber')
-proj_id=$(echo "$metadata" | jq -r '.projectId')
+proj_number=$(echo "$metadata" | jq -r '.project_number')
+proj_id=$(echo "$metadata" | jq -r '.project_id')
 proj_owner=$(echo "$metadata" | jq -r '.owner')
 
 actual_id=$(gh project view "$proj_number" --owner "$proj_owner" --format json 2>/dev/null | jq -r '.id // empty' 2>/dev/null) || true
