@@ -57,7 +57,7 @@ Before picking a new item, check whether the authenticated user already has work
 
    Then ask: "You have N in-progress item(s) — resume one, or pick a new item?"
    - **Resume chosen:** selected item becomes winner. Skip Steps 2, 2.5, 2.6, 3, 5, and 6.
-     Advise the user to check out the existing branch (`<type>/<slug>-<n>`).
+     Advise the user to check out the existing branch (`<type>/<slug>`).
      If a linked PR exists, skip Step 9 as well. Proceed to Step 4.
    - **New item chosen:** proceed to Step 2 normally.
 5. **If no matching In-Progress items:** proceed to Step 2 normally.
@@ -229,7 +229,7 @@ Determine the Conventional Commits prefix from the issue's `type:*` label:
 - `type:security`, `type:reliability`, `type:compliance` → `fix/` (security/correctness scope)
 - `type:spike` → `spike/`
 
-Branch name format: `<prefix><slug>-<issue-number>` (e.g. `fix/null-pointer-in-authn-42`).
+Branch name format: `<prefix>/<slug>` (e.g. `fix/null-pointer-in-authn`).
 
 ---
 
@@ -252,7 +252,7 @@ Branch name format: `<prefix><slug>-<issue-number>` (e.g. `fix/null-pointer-in-a
 A spike's deliverable is **knowledge** — a findings document plus the follow-on backlog items it surfaces — not a shippable feature. Apply this flow:
 
 1. **Investigate** the question framed in `### What` / `### Why` within the time-box implied by the `effort:*` label. Prototyping is permitted in throwaway branches but is NOT the deliverable.
-2. **Author the findings document** at `docs/spikes/<issue-number>-<slug>.md` with these sections (in this order):
+2. **Author the findings document** at `docs/spikes/####-<slug>.md`, use sequential numbering (e.g. `0001-slug.md`, `0002-slug.md`, etc.), with these sections (in this order):
    - `## Question` — restate the spike's investigative question
    - `## Approach` — what was investigated, sources consulted, prototypes built
    - `## Findings` — what was learned, including dead-ends
@@ -277,7 +277,7 @@ A spike's deliverable is **knowledge** — a findings document plus the follow-o
 
 For `type:spike` items, additionally:
 
-- Confirm the findings document exists at `docs/spikes/<issue-number>-<slug>.md` with all required sections
+- Confirm the findings document exists at `docs/spikes/<number>-<slug>.md` with all required sections
 - Confirm every approved follow-on was created and that its issue number is referenced in the `## Follow-on Work` section
 - Confirm follow-on parentage matches the rule in Step 7 (standalone if spike had no parent; peer sub-issues of the spike's parent otherwise)
 
@@ -294,7 +294,7 @@ For `type:spike` items, additionally:
 For `type:spike` items, the PR is typically a **findings-document-only** diff:
 
 - PR title uses the `spike:` Conventional Commits prefix (matching the `spike/` branch prefix)
-- PR body MUST additionally list every follow-on item created (`#<n> — <title>`), so reviewers can audit that the surfaced work landed in the backlog
+- PR body MUST additionally list every follow-on item created (`#<new-issue-number> — <title>`), so reviewers can audit that the surfaced work landed in the backlog
 - It is normal and expected for a spike PR to contain no code changes
 
 ---
