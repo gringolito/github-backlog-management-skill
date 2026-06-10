@@ -185,6 +185,27 @@ If priority or effort labels are missing or duplicated, STOP and direct the user
 
 ### 4. Planning
 
+#### 4.0. Parent Context (RELATIVE)
+
+Before drafting the plan, check whether the winning item is a sub-issue:
+
+1. `gh api "repos/<owner>/<repo>/issues/<n>/parent"`
+2. **If 404** → proceed silently. No warning, no block.
+3. **If a parent is returned:**
+   - Fetch: `gh issue view <parent-n> --json number,title,body`
+   - Extract `### What` and `### Why` sections from the body (matched by exact heading text).
+   - Emit the following block **before** the implementation plan:
+
+     ```
+     **Parent context — #N: <parent title>**
+     > **What:** <text from ### What>
+     > **Why:** <text from ### Why>
+     ```
+
+   - If one section is absent, show the available one and omit the missing line.
+   - If neither section exists, emit `(Parent body does not follow standard template — no What/Why sections found)` and proceed.
+4. Continue to the implementation plan below.
+
 - Propose a concise implementation plan that:
   - Covers ALL Acceptance Criteria (parsed from `### Acceptance Criteria`)
   - Respects defined Scope (`### In Scope` / `### Out of Scope`)
