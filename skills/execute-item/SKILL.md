@@ -220,6 +220,29 @@ Before drafting the plan, check whether the winning item is a sub-issue:
   - After approval, invoke `/add-item` for each sub-issue in sequence, passing the parent issue number so it handles the sub-issue relationship
   - STOP after the sub-issues are created — re-run `/execute-item` to pick the first sub-issue
 
+#### 4.1 Sibling Dependency Inference (RELATIVE)
+
+If two or more sub-issues were just created:
+
+1. **Call `dependency-inferrer`** with:
+   - **Prose**: the body of each newly created sub-issue, labeled with `#<n> "<title>"`
+   - **Issue roster**: the N newly created sub-issues as `#<n> "<title>"` per line
+2. **Discard** any `blocking` or `sub_issue` candidates — handle `blocked_by` only.
+3. **If `CANDIDATES: none`** or all candidates are non-`blocked_by` → skip the rest of this step.
+4. **Present all `blocked_by` candidates in a single review block** (same format as `migrate` step 8e):
+
+   ```
+   #<this-num> "<this-title>"
+     → blocked_by #<target-num> "<target-title>" (evidence: "...")
+   ```
+
+   User can accept all, reject all, or cherry-pick.
+5. **For each accepted candidate**, delegate to `/block-item #<this-num> #<target-num>`.
+   Surface any errors verbatim; continue applying remaining confirmed candidates.
+6. If the Dependencies API returns `404`, emit:
+   `Issue Dependencies API unavailable — sibling dependency inference skipped.`
+   and skip this step.
+
 - Wait for explicit approval before proceeding
 
 ---
