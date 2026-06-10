@@ -30,14 +30,14 @@ When editing any skill, these must stay consistent across files. Most consistenc
 grep -hoE "type:[a-z-]+" skills/*/SKILL.md | sort -u           # 10 type labels
 grep -hoE "priority:P[0-3]" skills/*/SKILL.md | sort -u         # 4 priority labels
 grep -hoE "effort:(XS|S|M|L|XL)\b" skills/*/SKILL.md | sort -u  # 5 effort labels
-grep -n "bin/backlog-preflight" skills/*/SKILL.md               # all consumer skills delegate preflight to the shared script
+grep -n "backlog-preflight" skills/*/SKILL.md                   # all consumer skills delegate preflight to the shared script
 grep -n "No Backlog project linked" bin/backlog-preflight       # canonical stop string lives here (single source of truth)
 grep -n ".claude/backlog-project.json" skills/*/SKILL.md        # metadata file referenced everywhere
 ```
 
 1. **Label catalog** — `type:{feature,bug,security,performance,dx,tech-debt,reliability,compliance,spike,external-blocker}`, `priority:{P0,P1,P2,P3}`, `effort:{XS,S,M,L,XL}`, plus `needs-clarification`. Any new value or rename must be applied in all skill files. `type:external-blocker` is infrastructure-only — never assigned to work items.
 
-2. **Standard preflight stop string** — the canonical stop string `No Backlog project linked to <owner>/<repo>. Run /initialize first.` is enforced in `bin/backlog-preflight`. Every consumer skill delegates its entire Section 0 to that script rather than re-implementing the checks inline. Do not re-inline the preflight logic in any skill.
+2. **Standard preflight stop string** — the canonical stop string `No Backlog project linked to <owner>/<repo>. Run /initialize first.` is enforced in `bin/backlog-preflight`. Every consumer skill delegates its entire Section 0 to that script (invoked by name as `backlog-preflight`, not by relative path) rather than re-implementing the checks inline. Do not re-inline the preflight logic in any skill.
 
 3. **Issue Forms template body shape** — section headings `### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes` (in this order). `audit` parses these by exact match. `add-item`, `migrate`, `refine-item` all emit bodies that conform. The template itself is authored at runtime by `initialize` (NOT committed in this repo) and goes out via PR, never direct commit.
 
@@ -76,8 +76,8 @@ Never skip signing or the DCO sign-off (`--no-gpg-sign`, omitting `-s`).
 ## When editing skills
 
 - Match the existing style: numbered workflow sections with `(MANDATORY)` / `(STRICT)` / `(RELATIVE)` flags, opening prose `You are an AI agent acting as...`, `Rules & Constraints` section, `Output Expectations` section.
-- New consumer skills MUST add Section 0 as a single delegation to `bin/backlog-preflight` — never re-implement the preflight checks inline.
-- **`bin/` vs `scripts/`**: `bin/` holds PATH-discoverable executables callable via the Bash tool (e.g. `bin/backlog-preflight`). `scripts/` holds hook event handlers invoked by the Claude Code harness (e.g. the `SessionStart` hook). Do not mix the two: shared preflight and other AI-callable helpers belong in `bin/`; hook scripts belong in `scripts/`.
+- New consumer skills MUST add Section 0 as a single delegation to `backlog-preflight` — never re-implement the preflight checks inline.
+- **`bin/` vs `scripts/`**: `bin/` holds executables added to the Bash tool's PATH by the plugin infrastructure (e.g. `backlog-preflight`). Call them by name — not by relative path — since the Bash tool's CWD is the user's project root, not the plugin directory. `scripts/` holds hook event handlers invoked by the Claude Code harness (e.g. the `SessionStart` hook). Do not mix the two: shared preflight and other AI-callable helpers belong in `bin/`; hook scripts belong in `scripts/`.
 - After non-trivial edits, run the consistency greps above and verify no spurious bucket/Bucket leftovers (`grep -nE "[Bb]ucket" skills/*/SKILL.md` should be empty — that term was renamed to `type` in this repo's history).
 - All `gh` errors must be surfaced verbatim — never swallow.
 

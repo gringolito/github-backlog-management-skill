@@ -30,7 +30,7 @@ Make the repository ready to host backlog items as GitHub Issues, prioritized in
 **Re-run / idempotent case** — if `.claude/backlog-project.json` already exists, delegate to the shared preflight script:
 
 ```sh
-bin/backlog-preflight
+backlog-preflight
 ```
 
 If it exits non-zero, STOP and surface the error verbatim. If it exits zero, continue to step 5.
