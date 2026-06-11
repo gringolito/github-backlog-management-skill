@@ -173,6 +173,19 @@ Done items (historical work is not migrated), and offers opt-in Dependency infer
 `/migrate`.
 _Avoid_: import (acceptable informally; "Migration" is the named activity)
 
+## Interaction Patterns
+
+**AskUserQuestion usage criterion**:
+Use `AskUserQuestion` when the set of valid responses is finite, known before the prompt is shown, and no response requires follow-up prose. Leave all other interactions as free-form conversation.
+
+Examples that qualify: item gate (Apply / Skip / Apply All Remaining / Stop Migration), milestone yes/no, label disambiguation (P0–P3, effort sizes, contextually-likely types), resume-vs-new-pick.
+
+Examples that do NOT qualify: plan approval (where "request changes" needs prose), spike findings sign-off (the user's answer IS the edits), rank-order confirmation (often needs explanation), apply-all-changes gate (where "yes but change X first" is common).
+
+Note: `AskUserQuestion` supports 2–4 options per call. For fixed catalogs larger than 4 (e.g. the 10 type values), offer the 3–4 most contextually relevant options; the tool automatically adds "Other" for free-form input.
+
+---
+
 ## Flagged ambiguities
 
 **Priority vs Rank** — these are independent and must never be conflated. Priority is a

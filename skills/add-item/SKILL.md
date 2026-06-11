@@ -80,9 +80,9 @@ Delegate classification to the `label-classifier` agent:
 
 Handle the returned verdict:
 
-- `type:*` — if the agent returns `unclear: type`, STOP and ask the user for clarification before proceeding
-- `priority:*` — if the agent returns `unclear: priority`, present the reasoning and ask the user to decide; default to `priority:P2` only if the user explicitly accepts
-- `effort:*` — if the agent returns `unclear: effort`, present the reasoning and ask the user to resolve before proceeding
+- `type:*` — if the agent returns `unclear: type`, STOP and use AskUserQuestion, offering the 3–4 most contextually likely types as options (choose from: `feature`, `bug`, `security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`, `external-blocker`); "Other" is automatically provided for anything not listed
+- `priority:*` — if the agent returns `unclear: priority`, present the reasoning and use AskUserQuestion with options: `P0` / `P1` / `P2` / `P3`; default to `priority:P2` only if the user explicitly selects it
+- `effort:*` — if the agent returns `unclear: effort`, present the reasoning and use AskUserQuestion with the 4 most contextually relevant sizes as options (from `XS`, `S`, `M`, `L`, `XL`); "Other" is automatically provided for the fifth
 
 `type:external-blocker` is reserved for infrastructure stubs created by `/add-external-blocker` — DO NOT classify work items with this type; if the agent returns it or the user attempts to, STOP and redirect them to `/add-external-blocker`.
 
