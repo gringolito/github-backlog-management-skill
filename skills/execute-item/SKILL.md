@@ -372,7 +372,7 @@ For `type:spike` items, additionally:
 
 - Commit using Conventional Commits format. Include `Refs #<issue-number>` in the commit body.
 - Push the branch.
-- Open a Pull Request via `gh pr create`. PR body MUST include:
+- Open a Pull Request via `gh pr create`, passing `--milestone "<milestone-title>"` when the issue has one (from the Step 3 fetch; omit for un-milestoned items). PR body MUST include:
   - `Closes #<issue-number>` (so GitHub auto-links and auto-closes the issue on merge)
   - A summary of changes mapped to each Acceptance Criterion
 
