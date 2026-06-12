@@ -36,7 +36,7 @@ Assign exactly ONE of the following. `type:external-blocker` is reserved for inf
 | `type:bug` | Incorrect behaviour that deviates from a documented or clearly expected contract |
 | `type:security` | Vulnerability, auth/authz gap, data-exposure risk, or compliance-driven hardening |
 | `type:performance` | Latency, throughput, memory, or resource-efficiency improvement |
-| `type:dx` | Developer-experience improvement: tooling, docs, onboarding, local setup, CI speed |
+| `type:dx` | Changes that improve the experience of building or maintaining the project: CI/CD, packaging, local dev setup, contributing docs. README changes qualify only when the changed content targets contributors, not end-users. |
 | `type:tech-debt` | Internal restructuring with no user-visible behaviour change; reduces future cost |
 | `type:reliability` | Uptime, error recovery, observability, or graceful-degradation improvement |
 | `type:compliance` | Regulatory, legal, or contractual obligation |
