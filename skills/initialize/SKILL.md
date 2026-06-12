@@ -93,37 +93,37 @@ Create the standard label catalog. Use `gh label create --force` so existing lab
 
 #### Type labels (one of these must be on every backlog item)
 
-- `type:feature`
-- `type:bug`
-- `type:security`
-- `type:performance`
-- `type:dx`
-- `type:tech-debt`
-- `type:reliability`
-- `type:compliance`
-- `type:spike`
-- `type:external-blocker`
+- `type:feature` — `"New capability or user-visible behaviour not yet present"`
+- `type:bug` — `"Incorrect behaviour deviating from a documented or expected contract"`
+- `type:security` — `"Vulnerability, auth gap, data-exposure risk, or compliance hardening"`
+- `type:performance` — `"Latency, throughput, memory, or resource-efficiency improvement"`
+- `type:dx` — `"Contributor-facing improvement: CI, tooling, contributing docs"`
+- `type:tech-debt` — `"Internal restructuring; no user-visible behaviour change"`
+- `type:reliability` — `"Uptime, error recovery, observability, or graceful-degradation improvement"`
+- `type:compliance` — `"Regulatory, legal, or contractual obligation"`
+- `type:spike` — `"Time-boxed investigation to reduce uncertainty; deliverable is knowledge"`
+- `type:external-blocker` — `"External constraint blocking a backlog item (infrastructure stub)"`
 
 #### Priority labels (one of these must be on every backlog item)
 
-- `priority:P0`
-- `priority:P1`
-- `priority:P2`
-- `priority:P3`
+- `priority:P0` — `"Critical: system broken, data loss, or no viable workaround"`
+- `priority:P1` — `"High: major user or business impact"`
+- `priority:P2` — `"Medium: planned work; not blocking anything critical"`
+- `priority:P3` — `"Low: nice-to-have; easily deferred without consequence"`
 
 #### Effort labels (one of these must be on every backlog item)
 
-- `effort:XS`
-- `effort:S`
-- `effort:M`
-- `effort:L`
-- `effort:XL`
+- `effort:XS` — `"Trivial: config tweak, one-liner, or doc edit"`
+- `effort:S` — `"Small: focused change in one file or component"`
+- `effort:M` — `"Medium: multiple files or components; some design thought"`
+- `effort:L` — `"Large: cross-cutting; multiple subsystems or substantial design"`
+- `effort:XL` — `"Extra large: major undertaking; probably needs a split plan"`
 
 Effort label descriptions MUST NOT include time estimates (e.g. "2 hours", "1 day"). Use only relative size terms (e.g. "Extra small", "Small", "Medium", "Large", "Extra large").
 
 #### Operational labels
 
-- `needs-clarification` — applied by `migrate` to items missing critical info
+- `needs-clarification` — `"Item needs more information before it can be worked"`
 
 Apply distinct color groupings (e.g. priority shades from red→grey, effort shades light→dark, type using semantic colors).
 
