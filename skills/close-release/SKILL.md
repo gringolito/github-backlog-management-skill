@@ -123,7 +123,15 @@ Collect all items from 3.1 and 3.2 into a unified checklist. Classify each as on
 1. Make all required file changes.
 2. Commit using Conventional Commits format: `chore(release): prepare <milestone-title>` (no issue reference in the commit body).
 3. Push to a branch `chore/release-prep-<milestone-title>` and open a PR:
-   `gh pr create --title "chore(release): prepare <milestone-title>" --body "Release prep for <milestone-title>. Milestone: <milestone-url>."`
+
+   ```sh
+   gh pr create \
+     --title "chore(release): prepare <milestone-title>" \
+     --milestone "<milestone-title>" \
+     --body "Release prep for <milestone-title>. Milestone: <milestone-url>."
+   ```
+
+   Capture the resulting PR URL from stdout.
 4. Use **AskUserQuestion** to inform the user and wait for confirmation before proceeding:
 
    > Release prep PR opened: `<PR URL>`
@@ -240,6 +248,7 @@ Print:
   - Closed as won't fix: #N list (or "none")
   - Returned to backlog: #N list (or "none")
 - Pre-closure checklist: items performed (file PR merged, manual steps confirmed) or "no requirements found"
+- Release prep PR: <URL> → milestone <milestone-title>  (omitted when no release-prep PR was opened)
 - GitHub Release draft URL
 - Pushed git tag: `<milestone-title>` (annotated, triggers `on: push: tags:` workflows)
 - Next steps:
