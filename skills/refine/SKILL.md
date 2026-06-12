@@ -86,13 +86,14 @@ Omit a section header entirely if its pool is empty.
 
 ### 3. Candidate Selection
 
-After displaying the queue, ask the user which items to refine:
+After displaying the queue, select items to refine:
 
-> Which items would you like to refine? Enter:
-> - Issue numbers from the `#` column above, separated by commas (e.g. `1, 3`)
-> - A range (e.g. `1-3`)
-> - `all` to refine every item in the queue
-> - You may combine and exclude: `all -2` means all except item 2 from the list
+- **Queue of ≤ 4 items** — use AskUserQuestion with multiSelect enabled, offering one option per queue item (`#N — <title>`) plus an "All" option. Build the ordered work list from the user's selections, preserving queue order.
+- **Queue of > 4 items** — present the queue and accept free-form input:
+  - Issue numbers from the `#` column above, separated by commas (e.g. `1, 3`)
+  - A range (e.g. `1-3`)
+  - `all` to refine every item in the queue
+  - Combine and exclude: `all -2` means all except item 2 from the list
 
 Build the ordered work list from the user's answer, preserving queue order.
 
@@ -104,9 +105,8 @@ For each selected item in work-list order:
 
 1. Print: `--- Refining item N of M: #<issue-number> — <title> ---`
 2. Invoke `/refine-item <issue-number>`
-3. After the single-item skill completes, ask:
-   > Continue to the next item? [Y = yes / S = stop / Enter = yes]
-4. If the user answers S (or any equivalent like "stop", "no", "done"), break the loop and jump to step 5.
+3. After the single-item skill completes, use AskUserQuestion with options: "Continue" / "Stop"
+4. If the user selects "Stop", break the loop and jump to step 5.
 
 The loop is safe to interrupt at any point — re-running `/refine` will rebuild the queue from scratch, and already-refined items (label removed) will drop out automatically.
 

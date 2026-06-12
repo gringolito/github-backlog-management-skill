@@ -55,11 +55,11 @@ Before picking a new item, check whether the authenticated user already has work
    | #N | ... | v0.x.x | type:... | ✅ PR #M open (waiting review) |
    | #N | ... | — | type:... | 🔧 No PR yet (work in progress) |
 
-   Then ask: "You have N in-progress item(s) — resume one, or pick a new item?"
-   - **Resume chosen:** selected item becomes winner. Skip Steps 2, 2.5, 2.6, 3, 5, and 6.
+   Then use AskUserQuestion with options built dynamically: one option per in-progress item (title + PR status, e.g. "fix/auth-bug — PR #42 open" or "feat/dashboard — no PR yet") plus a final "Pick a new item" option.
+   - **In-progress item chosen:** that item becomes winner. Skip Steps 2, 2.5, 2.6, 3, 5, and 6.
      Advise the user to check out the existing branch (`<type>/<slug>`).
      If a linked PR exists, skip Step 9 as well. Proceed to Step 4.
-   - **New item chosen:** proceed to Step 2 normally.
+   - **"Pick a new item" chosen:** proceed to Step 2 normally.
 5. **If no matching In-Progress items:** proceed to Step 2 normally.
 
 ---

@@ -151,7 +151,7 @@ Done items are historical and would only clutter the Project. Their PR shipped r
 - Primary sort: `due_on` ascending (milestones without a `due_on` are sorted last)
 - Tie-break: lowest version, parsed from milestone title (e.g. `v1.2.0` < `v1.3.0`; `2026-Q2` < `2026-Q3`). For non-parseable titles, fall back to milestone `number` ascending (creation order).
 - Fallback: if NO open milestone has a `due_on`, the active milestone is the open milestone with the lowest version (same parsing rule). For non-parseable titles, fall back to milestone `number` ascending.
-- If an active milestone is found, ask the user once (before any issue is created) whether to assign all migrated items to it. Record the answer — it applies to all items uniformly.
+- If an active milestone is found, ask the user once (before any issue is created) using AskUserQuestion with options: "Yes, assign all" / "No, skip". Record the answer — it applies to all items uniformly.
 - If no active milestone exists, skip milestone assignment entirely and note it in the Migration Report.
 
 #### 8c. Create issues
@@ -172,11 +172,11 @@ For each non-Done item, in priority order (P0 → P3):
    AC:       <first line of ### Acceptance Criteria>
    ```
 
-   Prompt: `Apply this item? [Y / N / All / Stop]`
-   - `Y` — proceed with creation for this item
-   - `N` — skip this item; record as "skipped by user" in the Migration Report; continue to next item
-   - `All` — set a flag so the prompt is not shown for any remaining items; proceed with this item immediately
-   - `Stop` — halt migration immediately; report how many items were created so far vs. how many remain; do NOT create any further issues
+   Use AskUserQuestion with options:
+   - "Apply" — proceed with creation for this item
+   - "Skip" — skip this item; record as "skipped by user" in the Migration Report; continue to next item
+   - "Apply All Remaining" — set a flag so the prompt is not shown for any remaining items; proceed with this item immediately
+   - "Stop Migration" — halt migration immediately; report how many items were created so far vs. how many remain; do NOT create any further issues
 
 1. Write the constructed body to a temp file
 2. Create the issue:
@@ -219,7 +219,7 @@ This map is used in 8e to resolve dependency hints to concrete issue IDs.
      → sub-issue of #<parent-num> "<parent-title>" (evidence: "part of API rework")
    ```
 
-4. **Apply only after explicit confirmation.** The user can accept all, reject all, or cherry-pick. For each accepted candidate:
+4. **Apply only after explicit confirmation.** Use AskUserQuestion with options: "Accept all" / "Cherry-pick" / "Reject all". For "Cherry-pick", follow up with a numbered list so the user can identify which candidates to apply. For each accepted candidate:
    - `blocked_by`: delegate to `/block-item #<this-num> #<target-num>`
    - `blocking`: `gh api -X POST "repos/<o>/<r>/issues/<this-num>/dependencies/blocking" -f issue_id=<target-id>`
    - sub-issue parent: `gh api -X POST "repos/<o>/<r>/issues/<parent-num>/sub_issues" -f sub_issue_id=<this-id>`

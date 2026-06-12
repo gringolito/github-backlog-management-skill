@@ -144,7 +144,10 @@ Compare the agent's verdict against the currently applied labels and propose cha
 - `effort:*` (complexity, NOT time)
 - `type:*` (if classification is now clearer)
 
-If the agent returns `unclear` for a group, surface the reasoning and ask the user to decide.
+If the agent returns `unclear` for a group, surface the reasoning and use AskUserQuestion:
+- `unclear: type` — offer the 3–4 most contextually likely types (from `feature`, `bug`, `security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`); "Other" is automatically provided for anything not listed
+- `unclear: priority` — offer options: `P0` / `P1` / `P2` / `P3`
+- `unclear: effort` — offer the 4 most contextually relevant sizes (from `XS`, `S`, `M`, `L`, `XL`); "Other" is automatically provided for the fifth
 
 Apply changes ONLY after explicit user confirmation:
 

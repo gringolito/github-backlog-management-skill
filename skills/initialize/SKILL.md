@@ -83,7 +83,7 @@ If no matching Project exists:
   - `Todo`
   - `In Progress`
   - `Done`
-- If the user has customized the Status field options, STOP and ask the user to confirm whether to add the missing options or rename existing ones — DO NOT silently overwrite
+- If the user has customized the Status field options, STOP and use AskUserQuestion with options: "Add missing options" / "Rename existing options" / "Cancel" — DO NOT silently overwrite
 
 ---
 
@@ -142,7 +142,7 @@ If `.github/ISSUE_TEMPLATE/backlog-item.yml` already exists on the default branc
 - Read its current contents
 - Compare against the canonical version below
 - If they match, SKIP step 5b
-- If they differ, STOP and ask the user whether to open a PR replacing it (do NOT silently overwrite user customizations)
+- If they differ, STOP and use AskUserQuestion with options: "Open PR to replace" / "Keep existing" — do NOT silently overwrite user customizations
 
 #### 5b. Open the template PR
 
