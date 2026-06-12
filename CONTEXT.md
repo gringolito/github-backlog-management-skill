@@ -167,6 +167,12 @@ _Avoid_: grooming
 Picking the topmost unblocked Workable Item from the Queue and carrying it through to a PR.
 Obeys Rank, skips blocked items, and descends into sub-issues. Run by `/execute-item`.
 
+**Scope Completeness Review**:
+The verification step entered when a picked Backlog Item has sub-issues and all are closed.
+Cross-references the parent's Acceptance Criteria against closed sub-issues, presents a
+coverage analysis, then either closes the parent (scope complete) or creates new sub-issues
+for uncovered gaps. Part of `/execute-item`; triggered automatically, never run standalone.
+
 **Migration**:
 The one-time bulk import of an existing `BACKLOG.md` into Issues — normalizes labels, skips
 Done items (historical work is not migrated), and offers opt-in Dependency inference. Run by
