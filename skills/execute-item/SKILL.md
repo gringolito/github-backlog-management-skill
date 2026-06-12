@@ -144,17 +144,58 @@ The Issue Dependencies API is GA on public repos and on paid plans for private r
 
 After block-skipping yields a winning candidate, check whether it has open sub-issues that should be executed first.
 
-1. Fetch sub-issues: `gh issue view <n> --json subIssues`
-2. Filter to sub-issues whose state is `open`.
+1. Fetch sub-issues: `gh api "repos/<owner>/<repo>/issues/<n>/sub_issues"` to get the full sub-issue list with state.
+2. Derive `sub_issues_summary`: `total` = count of all sub-issues, `completed` = count with `state == "closed"`.
 3. Cross-reference against the already-fetched Project item list (from Step 2) to find which open sub-issues are present in the Project with Status = `Todo`.
 4. **If one or more open sub-issues are in the Project's Todo column:**
    - Log: `Skipping parent #N — open sub-issues found. Picking #M.`
    - Apply the same block-skipping logic (Step 2.5) to the sub-issues ranked in the Project's Todo column; pick the first unblocked one.
    - If all sub-issues are blocked, report them using the same per-blocker analysis table from Step 2.5 and STOP.
    - The selected sub-issue becomes the new winner and proceeds to Step 3.
-5. **If no open sub-issues are in the Project's Todo column** (none exist, all are closed, or none were added to the Project): proceed with the parent normally — it becomes the winner and proceeds to Step 3.
+5. **If `sub_issues_summary.completed == total AND total > 0` (all sub-issues are closed):**
+   Enter Scope Completeness Review — see below.
+6. **If `sub_issues_summary.total == 0`** (no sub-issues exist): proceed with the parent normally — it becomes the winner and proceeds to Step 3.
 
-The `gh issue view <n> --json subIssues` endpoint returns `[]` when the issue has no sub-issues; treat this the same as case 5.
+The "none added to Project but open sub-issues exist" scenario (`completed < total`, none in Project Todo) is treated as a pass-through — treat the parent as a leaf and proceed to Step 3.
+
+The sub_issues API endpoint returns `[]` when the issue has no sub-issues; treat this the same as case 6.
+
+#### Scope Completeness Review
+
+Entered when `sub_issues_summary.completed == total AND total > 0`.
+
+1. Fetch the parent's body: `gh issue view <n> --json number,title,body`
+   - Extract the `### In Scope` and `### Acceptance Criteria` sections.
+
+2. Fetch each closed sub-issue body:
+   - Use the sub-issue list from the API call above for their numbers.
+   - For each: `gh issue view <m> --json number,title,body`
+
+3. Perform coverage analysis:
+   - For each criterion in `### Acceptance Criteria`, determine which closed sub-issue (if any) addressed it, based on sub-issue titles and bodies.
+   - Format as a checklist:
+
+     ```
+     **Coverage analysis — #N: <parent title>**
+
+     Acceptance Criteria:
+     - [x] AC1: <text> → covered by #M (<sub-issue title>)
+     - [x] AC2: <text> → covered by #P (<sub-issue title>)
+     - [ ] AC3: <text> → not addressed by any closed sub-issue
+     ```
+
+4. Present the coverage checklist to the user. Then use AskUserQuestion with two options:
+   - **"Close parent — scope complete"**
+   - **"Create sub-issues for uncovered gaps"**
+
+5. **If "Close parent — scope complete":**
+   - Post a comment with the full coverage checklist: `gh issue comment <n> --body "..."`
+   - Close the issue: `gh issue close <n>`
+   - STOP — do not proceed to Step 3.
+
+6. **If "Create sub-issues for gaps":**
+   - For each uncovered criterion (marked `[ ]` in the checklist), invoke `/add-item` with the parent issue number so the new items become sub-issues.
+   - STOP after sub-issues are created — re-run `/execute-item` to pick the first one.
 
 ---
 
@@ -384,7 +425,7 @@ Print:
 - Do NOT pick items from non-active open milestones (use Tier 2 fallback only when active-milestone Tier 1 is empty)
 - Do NOT pick a blocked item, even with user confirmation — block-skipping is strict
 - A blocker is satisfied ONLY when its issue state is `closed`; the manner of closure (merge / manual / transfer / delete) is irrelevant
-- Never close the issue manually — always rely on `Closes #N` in the PR
+- Never close the issue manually — always rely on `Closes #N` in the PR. Exception: closing a parent after Scope Completeness Review is an organisational closure (`gh issue close <n>` is correct there — no PR is involved).
 
 ---
 
