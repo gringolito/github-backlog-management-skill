@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+exclude_title=""
+positional_arg=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --exclude)
+      if [[ $# -lt 2 ]]; then
+        echo "Usage error: --exclude requires a title argument." >&2
+        exit 1
+      fi
+      exclude_title="$2"
+      shift 2
+      ;;
+    -*)
+      echo "Usage error: unknown option: $1" >&2
+      exit 1
+      ;;
+    *)
+      if [[ -n "$positional_arg" ]]; then
+        echo "Usage error: multiple positional arguments not supported." >&2
+        exit 1
+      fi
+      positional_arg="$1"
+      shift
+      ;;
+  esac
+done
+
+if [[ -n "$positional_arg" && -n "$exclude_title" ]]; then
+  echo "Usage error: cannot combine a milestone name argument with --exclude." >&2
+  exit 1
+fi
+
+metadata_file=".claude/backlog-project.json"
+if [[ ! -f "$metadata_file" ]]; then
+  echo "No .claude/backlog-project.json found. Run /initialize first." >&2
+  exit 1
+fi
+owner=$(jq -r '.owner' "$metadata_file")
+repo=$(jq -r '.repo' "$metadata_file")
+
+milestones=$(gh api "repos/${owner}/${repo}/milestones?state=open&per_page=100") || {
+  echo "Failed to fetch milestones from ${owner}/${repo}. Check gh authentication and repository access." >&2
+  exit 1
+}
+
+if [[ -n "$positional_arg" ]]; then
+  # Named milestone resolution — two-pass match
+  # Pass 1: case-insensitive substring of title
+  match=$(echo "$milestones" | jq --arg arg "$positional_arg" \
+    '[.[] | select((.title | ascii_downcase) | contains($arg | ascii_downcase))] | .[0]')
+
+  if [[ "$match" == "null" ]]; then
+    # Pass 2: strip leading v from both arg and each title, then compare
+    stripped_arg="${positional_arg#v}"
+    match=$(echo "$milestones" | jq --arg stripped "$stripped_arg" \
+      '[.[] | select((.title | ltrimstr("v")) == $stripped)] | .[0]')
+  fi
+
+  if [[ "$match" == "null" ]]; then
+    echo "No open milestone matching \"${positional_arg}\" found." >&2
+    exit 1
+  fi
+
+  echo "$match" | jq '{number: .number, title: .title, due_on: .due_on}'
+  exit 0
+fi
+
+# No-arg: Active Release resolution
+if [[ -n "$exclude_title" ]]; then
+  milestones=$(echo "$milestones" | jq --arg excl "$exclude_title" '[.[] | select(.title != $excl)]')
+fi
+
+count=$(echo "$milestones" | jq 'length')
+if [[ "$count" -eq 0 ]]; then
+  echo "No open milestones found." >&2
+  exit 1
+fi
+
+# Sort milestones:
+# 1. due_on ascending (null last)
+# 2. version parsed from title: strip leading v, split on ".", compare numerically per segment
+#    Non-parseable titles (e.g. "2026-Q2") fall through to number fallback
+# 3. milestone number ascending (creation order) as final tie-break
+echo "$milestones" | jq '
+  sort_by([
+    (if .due_on == null then 1 else 0 end),
+    (.due_on // ""),
+    (
+      .title
+      | ltrimstr("v")
+      | split(".")
+      | if (length > 0) and all(.[]; test("^[0-9]+$"))
+        then [0] + map(tonumber)
+        else [1]
+        end
+    ),
+    .number
+  ]) | .[0] | {number: .number, title: .title, due_on: .due_on}'

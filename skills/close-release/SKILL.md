@@ -27,20 +27,9 @@ Run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surfac
 
 ### 1. Milestone Resolution (MANDATORY)
 
-The skill accepts an optional milestone argument (title substring, number, or version string).
+The skill accepts an optional milestone argument (title substring or version string).
 
-**With argument** — resolve from open milestones via `gh api "repos/<owner>/<repo>/milestones?state=open&per_page=100"`:
-
-1. If the argument is a plain integer, match by milestone `number`.
-2. Otherwise, match by case-insensitive substring of `title`.
-3. If no substring match, try version string matching: strip a leading `v` from both the argument and each `title` before comparing (e.g. `1.2.0` matches `v1.2.0`).
-4. If no match is found after all three passes, STOP and output: `No open milestone matching "<argument>" found.`
-
-**Without argument** — use the canonical active-milestone logic:
-
-- Primary sort: `due_on` ascending; milestones with no `due_on` are sorted last.
-- Tie-break: lowest version parsed from milestone `title` (`v1.2.0` < `v1.3.0`; for non-parseable titles, fall back to milestone `number` ascending).
-- If NO open milestones exist, STOP and output: `No open milestones found.`
+Run `resolve-milestone "<argument>"` if an argument was provided, or `resolve-milestone` (no argument) for the Active Release. If it exits non-zero, STOP and surface its output verbatim.
 
 Display the resolved milestone title, number, `due_on`, and open/closed issue counts. Use **AskUserQuestion** to ask for explicit confirmation before proceeding — **closing a milestone is irreversible**.
 
@@ -57,7 +46,7 @@ If there are no open issues, skip to Step 3.
 For each open issue, use **AskUserQuestion** to present it (number, title, labels, URL) and ask the user to choose exactly one of three options:
 
 **A — Carry forward**: reassign the issue to the next open milestone.
-  - Resolve "next" using the same canonical tie-break logic as milestone resolution, but exclude the current milestone. If no other open milestone exists, STOP and output: `No next milestone exists to carry #<n> forward. Create one with /plan-release first.`
+  - Run `resolve-milestone --exclude "<current-milestone-title>"` to find the next Active Release. If it exits non-zero (no other open milestones), STOP and output: `No next milestone exists to carry #<n> forward. Create one with /plan-release first.`
   - Execute: `gh issue edit <n> --milestone "<next-milestone-title>"`
 
 **B — Close as won't fix**: close the issue and record the disposition.

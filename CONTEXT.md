@@ -108,8 +108,12 @@ mean the planning concept.
 **Active Release**:
 The Release work currently targets by default: the earliest open Milestone by `due_on`,
 tie-broken by lowest version parsed from the title (`v1.2.0` < `v1.3.0`), falling back to
-Milestone `number`. `/execute-backlog-item`, `/add-backlog-item`, and `/release-status` all
-resolve to this when no Release is named.
+Milestone `number`. `/execute-item`, `/add-item`, `/migrate`, and `/release-status` all
+resolve to this when no Release is named. When a Release name is given, it is matched by
+case-insensitive title substring, then by stripping a leading `v` from both sides.
+Resolved at runtime by `bin/resolve-milestone` (no-arg → Active Release; positional arg →
+named Release; `--exclude "<title>"` → Active Release skipping one Milestone by exact title).
+Output: `{"number": N, "title": "...", "due_on": "..."}` — `due_on` is `null` when unset.
 _Avoid_: current milestone, current release
 
 **Release artifact**:

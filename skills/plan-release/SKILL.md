@@ -32,14 +32,12 @@ Run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surfac
 
 ### 1. Argument Detection (MANDATORY)
 
-Check whether the skill was invoked with an argument (a milestone identifier: title, number, or version string).
+Check whether the skill was invoked with an argument (a milestone identifier: title substring or version string).
 
 - **No argument** — proceed to Step 2 (creation mode).
-- **Argument provided** — search open milestones for a match:
-  - `gh api "repos/<owner>/<repo>/milestones?state=open&per_page=100"`
-  - Match by: exact title, milestone number, or version string (e.g. `v1.2.0` matches a title of `v1.2.0`).
-  - **Match found** — skip Steps 2–10 and proceed to the Re-planning Workflow (Steps R1–R5).
-  - **No match found** — ask: "No open milestone found matching `<argument>`. Would you like to plan a new release instead?"
+- **Argument provided** — run `resolve-milestone "<argument>"` via the Bash tool:
+  - **Exit 0 (match found)** — skip Steps 2–10 and proceed to the Re-planning Workflow (Steps R1–R5).
+  - **Exit non-zero (no match)** — ask: "No open milestone found matching `<argument>`. Would you like to plan a new release instead?"
     - If yes: proceed to Step 2 (creation mode), carrying the argument as a suggested version name for Step 6.
     - If no: STOP.
 
@@ -224,7 +222,7 @@ Print:
   - >40 pts → Very Large
   - Items with no effort label counted as M=3, with a note.
 - Version bump rationale (semver only: bump type and triggering items)
-- Position in the open-milestones queue (which is the active one based on earliest `due_on`)
+- Active milestone: run `resolve-milestone` (no-arg) after creation and indicate whether the newly created milestone is now the Active Release (i.e. whether its `number` matches the script's `number` output)
 - For Mode A: forward-port clones created (list of new issue URLs), or "Forward-porting skipped"
 - Pointer to next steps:
   - "Run `/add-item` to add more items to this milestone"
