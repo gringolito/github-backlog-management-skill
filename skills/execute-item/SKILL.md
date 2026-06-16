@@ -25,141 +25,83 @@ Run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surfac
 
 ---
 
-### 1. Active Milestone Detection
+### 1. Item Selection (MANDATORY)
 
-Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON — `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
+Run `bin/pick-item` via the Bash tool. If it exits non-zero, STOP and surface its stderr verbatim.
 
----
+Capture the JSON output:
 
-### 1.5. In-Progress Resume Check (STRICT)
+```json
+{
+  "active_milestone": {"number": N, "title": "...", "due_on": "..."},
+  "in_progress": [...],
+  "candidate": {...} | null,
+  "skipped_blocked": [...],
+  "skipped_for_sub_issues": [...],
+  "warnings": [...],
+  "message": "..." | null
+}
+```
 
-Before picking a new item, check whether the authenticated user already has work in flight.
+If any `warnings` are present, surface them before proceeding.
 
-1. Get the current username: `gh api user --jq '.login'`
-2. Query the full project item list and filter for `status == "In Progress"`
-   AND `assignees` contains the current user.
-3. **For each matching item**, classify using the `linked pull requests` field from the
-   project item payload:
-   - **Linked PR found** → "near complete — PR open, likely waiting for review"
-   - **No linked PR** → "in progress — work started, no PR yet"
-4. **If one or more matching items exist**, present each as:
+**If `candidate` is null:** Surface `message`. If `skipped_blocked` is non-empty, render the per-blocker analysis table (see Step 2.5) using the facts already in the JSON — no extra API calls needed. Then STOP.
 
-   | # | Title | Milestone | Labels | PR Status |
-   |---|-------|-----------|--------|-----------|
-   | #N | ... | v0.x.x | type:... | ✅ PR #M open (waiting review) |
-   | #N | ... | — | type:... | 🔧 No PR yet (work in progress) |
+**If `in_progress` is non-empty:** Display each item:
 
-   Then use AskUserQuestion with options built dynamically: one option per in-progress item (title + PR status, e.g. "fix/auth-bug — PR #42 open" or "feat/dashboard — no PR yet") plus a final "Pick a new item" option.
-   - **In-progress item chosen:** that item becomes winner. Skip Steps 2, 2.5, 2.6, 3, 5, and 6.
-     Advise the user to check out the existing branch (`<type>/<slug>`).
-     If a linked PR exists, skip Step 9 as well. Proceed to Step 4.
-   - **"Pick a new item" chosen:** proceed to Step 2 normally.
-5. **If no matching In-Progress items:** proceed to Step 2 normally.
+| # | Title | Milestone | Labels | PR Status |
+|---|-------|-----------|--------|-----------|
+| #N | ... | v0.x.x | type:... | ✅ PR #M open (waiting review) |
+| #N | ... | — | type:... | 🔧 No PR yet (work in progress) |
 
----
+Then use AskUserQuestion with options built dynamically: one option per in-progress item (title + PR status, e.g. "fix/auth-bug — PR #42 open" or "feat/dashboard — no PR yet") plus a final "Pick a new item" option.
+- **In-progress item chosen:** that item becomes the winner. Skip Steps 2.6, 3, 5, and 6. Advise the user to check out the existing branch (`<type>/<slug>`). If a linked PR exists, skip Step 9 as well. Proceed to Step 4.
+- **"Pick a new item" chosen:** proceed with `candidate`.
 
-### 2. Candidate Selection (PRIORITIZED)
+If `skipped_blocked` is non-empty but `candidate` is not null, surface the blocked items table in the eventual plan output so the user knows why the queue was deeper than expected.
 
-Find the next item to execute by walking these tiers in order. Stop at the first tier that yields candidates.
+If `skipped_for_sub_issues` is non-empty, log each as: `Skipping parent #N — open sub-issues found.`
 
-Execution order is determined by the Project's rank — the topmost item in the `Todo` column wins. The `priority:*` label is severity classification ONLY and does NOT influence ordering.
-
-**Pre-filter (MANDATORY):** Before building the candidate lists for either tier, discard any issue whose labels include `type:external-blocker`. External-blocker stubs are infrastructure placeholders — they are never executable work items. Their titles surface in the "skipped because blocked" output when they are open blockers gating a real candidate (see step 2.5).
-
-#### Tier 1 — Active milestone, in Project, status Todo
-
-- Open issues assigned to the active milestone
-- Present in the linked Project
-- Project Status = `Todo`
-- Sorted by Project rank (top of column = next). The order is the position field returned by `gh project item-list` (items appear in rank order in the response).
-
-#### Tier 2 — In Project, no milestone, status Todo
-
-- Open issues with NO milestone assigned
-- Present in the linked Project
-- Project Status = `Todo`
-- Sorted by Project rank, same as Tier 1
-
-#### Tier 3 — None
-
-- If both tiers are empty:
-  - Report `No actionable backlog items.`
-  - STOP (do NOT pick items outside the Project, do NOT pick items in milestones other than the active one, do NOT pick by `priority:*` label as a fallback)
-
-If the picked item's `priority:*` label appears mismatched against its Project rank (e.g. a `priority:P3` is at the top while a `priority:P0` is below it), proceed anyway with the topmost item but surface the discrepancy in the proposed plan so the user can confirm or reorder.
-
-Use these `gh` calls to gather data:
-
-- Project candidates — use targeted queries:
-  - Tier 1: `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue status:Todo milestone:<active-milestone-title>"`
-  - Tier 2: `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue status:Todo no:milestone"`
+If the picked item's `priority:*` label appears mismatched against its Project rank, surface the discrepancy so the user can confirm or reorder.
 
 ---
 
-### 2.5. Block-skipping (STRICT)
+### 2.5. Per-Blocker Analysis Table
 
-Before declaring a winner, walk the rank-ordered candidate list and skip any item that is currently blocked by an open issue. The first unblocked item wins.
+Rendered when all candidates are blocked (`candidate` null, `skipped_blocked` non-empty). All facts come from the script output — no extra API calls needed.
 
-For each candidate in rank order (Tier 1 first, then Tier 2):
+- Report: `All actionable items are blocked. Resolve a blocker or re-rank.`
+- Render:
 
-- **Active-blocker pre-check**: fetch `gh api "repos/<owner>/<repo>/issues/<n>" --jq '.issue_dependencies_summary.blocked_by'`.
-  - If the count is `0` → the item has no active blockers. Treat it as unblocked and skip the `blocked_by` list fetch entirely.
-  - If the count is `> 0` → fetch the blocker list: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"` and apply the checks below.
-- For each blocker in the list:
-  - If `state == "open"`, the candidate is BLOCKED. Skip it. Record the candidate + its open blockers in a "skipped because blocked" list.
-  - If `state == "closed"`, the blocker is satisfied (regardless of how it was closed — merged PR, manual close, transferred, deleted)
-  - **Cross-Project / cross-repo blockers are permitted.** If the blocker lives in a different repo, query it via `gh api "repos/<blocker-owner>/<blocker-repo>/issues/<blocker-number>" --jq '.state'`. The blocker URL on the dependency response includes the full repo reference.
-- If a candidate has no active blockers (pre-check count is 0) OR every fetched blocker is closed, it is the winner. Stop walking.
+  | Blocked item | Blocker | Blocker state | Suggested action |
+  |---|---|---|---|
+  | #N title | #M title | open / closed | see rules below |
 
-Outcomes:
-
-1. **A candidate wins** — proceed to step 2.6 (Sub-issue Check). In the eventual plan output, list every item that was skipped above this one with their open blockers, so the user knows why the queue was deeper than expected. When a blocker carries `type:external-blocker`, show it as `External: <stub title>` rather than a plain issue reference.
-2. **Every candidate is blocked** — STOP. Report:
-   - `All actionable items are blocked. Resolve a blocker or re-rank.`
-   - Followed by a **per-blocker analysis table** with these columns:
-
-     | Blocked item | Blocker   | Blocker state  | Suggested action |
-     |--------------|-----------|----------------|------------------|
-     | #N title     | #M title  | open / closed  | see rules below  |
-
-   - **Suggested action rules** (apply the first matching rule):
-     - Blocker `closed` + dependency still active → `Stale — clear with: gh api -X DELETE repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by/<m>`
-     - Blocker `open`, cross-repo → `External — coordinate with owning team (<blocker-repo>)`
-     - Blocker `open`, has assignee → `In Progress — monitor`
-     - Blocker `open`, no assignee → `Unassigned — assign or re-plan`
-   - Close with a summary line: `N of M blockers may be resolvable without new work` (count stale + in-progress blockers as resolvable)
-   - DO NOT pick a blocked item even with user confirmation — re-running `execute-item` after the user resolves a blocker is the correct loop.
-
-The Issue Dependencies API is GA on public repos and on paid plans for private repos. If the API returns `404` (feature unavailable), treat all items as unblocked and emit a one-time warning: `Issue Dependencies API unavailable on this repo — block-skipping disabled.`
+- **Suggested action rules** (apply first match; use `cross_repo`, `assignees`, `labels` from `skipped_blocked[].open_blockers`):
+  - Blocker `closed` + dependency still active → `Stale — clear with: gh api -X DELETE repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by/<m>`
+  - Blocker `open`, `cross_repo: true` → `External — coordinate with owning team`
+  - Blocker `open`, `assignees` non-empty → `In Progress — monitor`
+  - Blocker `open`, `assignees` empty → `Unassigned — assign or re-plan`
+  - Blockers with `"type:external-blocker"` in labels: show as `External: <stub title>`.
+- Close with: `N of M blockers may be resolvable without new work` (stale + in-progress count as resolvable).
+- DO NOT pick a blocked item even with user confirmation — re-run `/execute-item` after resolving a blocker.
 
 ---
 
-### 2.6. Sub-issue Check (STRICT)
+### 2.6. Sub-issue Scope Check
 
-After block-skipping yields a winning candidate, check whether it has open sub-issues that should be executed first.
+Use `candidate.sub_issues_summary` from the script output — no API call needed.
 
-1. Fetch sub-issues: `gh api "repos/<owner>/<repo>/issues/<n>/sub_issues"` to get the full sub-issue list with state.
-2. Derive `sub_issues_summary`: `total` = count of all sub-issues, `completed` = count with `state == "closed"`.
-3. Cross-reference against the already-fetched Project item list (from Step 2) to find which open sub-issues are present in the Project with Status = `Todo`.
-4. **If one or more open sub-issues are in the Project's Todo column:**
-   - Log: `Skipping parent #N — open sub-issues found. Picking #M.`
-   - Apply the same block-skipping logic (Step 2.5) to the sub-issues ranked in the Project's Todo column; pick the first unblocked one.
-   - If all sub-issues are blocked, report them using the same per-blocker analysis table from Step 2.5 and STOP.
-   - The selected sub-issue becomes the new winner and proceeds to Step 3.
-5. **If `sub_issues_summary.completed == total AND total > 0` (all sub-issues are closed):**
-   Enter Scope Completeness Review — see below.
-6. **If `sub_issues_summary.total == 0`** (no sub-issues exist): proceed with the parent normally — it becomes the winner and proceeds to Step 3.
+- **If `completed == total AND total > 0`:** All sub-issues are closed. Enter **Scope Completeness Review** below.
+- **Otherwise:** proceed to Step 3.
 
-The "none added to Project but open sub-issues exist" scenario (`completed < total`, none in Project Todo) is treated as a pass-through — treat the parent as a leaf and proceed to Step 3.
-
-The sub_issues API endpoint returns `[]` when the issue has no sub-issues; treat this the same as case 6.
+Note: Open sub-issue routing is already handled by `bin/pick-item` — if the script selected a sub-issue as `candidate`, no further parent/sub-issue traversal is needed here.
 
 #### Scope Completeness Review
 
-Entered when `sub_issues_summary.completed == total AND total > 0`.
+Entered when `candidate.sub_issues_summary.completed == total AND total > 0`.
 
-1. Fetch the parent's body: `gh issue view <n> --json number,title,body`
-   - Extract the `### In Scope` and `### Acceptance Criteria` sections.
+1. Extract `### In Scope` and `### Acceptance Criteria` from `candidate.body` — no `gh issue view` call needed.
 
 2. Fetch each closed sub-issue body:
    - Use the sub-issue list from the API call above for their numbers.
@@ -195,9 +137,7 @@ Entered when `sub_issues_summary.completed == total AND total > 0`.
 
 ### 3. Item Validation (MANDATORY)
 
-Once a candidate is selected, fetch its full body and labels:
-
-- `gh issue view <n> --json number,title,body,labels,milestone,url`
+Use `candidate.body` and `candidate.labels` from the `bin/pick-item` output — no `gh issue view` call needed.
 
 Parse the body sections (`### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes`). Validate against INVEST principles:
 
@@ -222,13 +162,11 @@ If priority or effort labels are missing or duplicated, STOP and direct the user
 
 #### 4.0. Parent Context (RELATIVE)
 
-Before drafting the plan, check whether the winning item is a sub-issue:
+Use `candidate.parent` from the `bin/pick-item` output — no additional API call needed.
 
-1. `gh api "repos/<owner>/<repo>/issues/<n>/parent"`
-2. **If 404** → proceed silently. No warning, no block.
-3. **If a parent is returned:**
-   - Fetch: `gh issue view <parent-n> --json number,title,body`
-   - Extract `### What` and `### Why` sections from the body (matched by exact heading text).
+1. **If `candidate.parent` is `null`** → proceed silently. No warning, no block.
+2. **If `candidate.parent` is present:**
+   - Extract `### What` and `### Why` sections from `candidate.parent.body` (matched by exact heading text).
    - Emit the following block **before** the implementation plan:
 
      ```
@@ -239,7 +177,7 @@ Before drafting the plan, check whether the winning item is a sub-issue:
 
    - If one section is absent, show the available one and omit the missing line.
    - If neither section exists, emit `(Parent body does not follow standard template — no What/Why sections found)` and proceed.
-4. Continue to the implementation plan below.
+3. Continue to the implementation plan below.
 
 - Propose a concise implementation plan that:
   - Covers ALL Acceptance Criteria (parsed from `### Acceptance Criteria`)
