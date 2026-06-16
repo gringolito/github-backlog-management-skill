@@ -147,12 +147,9 @@ Done items are historical and would only clutter the Project. Their PR shipped r
 
 #### 8b. Resolve active milestone
 
-- `gh api "repos/<owner>/<repo>/milestones?state=open&per_page=100"`
-- Primary sort: `due_on` ascending (milestones without a `due_on` are sorted last)
-- Tie-break: lowest version, parsed from milestone title (e.g. `v1.2.0` < `v1.3.0`; `2026-Q2` < `2026-Q3`). For non-parseable titles, fall back to milestone `number` ascending (creation order).
-- Fallback: if NO open milestone has a `due_on`, the active milestone is the open milestone with the lowest version (same parsing rule). For non-parseable titles, fall back to milestone `number` ascending.
-- If an active milestone is found, ask the user once (before any issue is created) using AskUserQuestion with options: "Yes, assign all" / "No, skip". Record the answer — it applies to all items uniformly.
-- If no active milestone exists, skip milestone assignment entirely and note it in the Migration Report.
+Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON — `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
+
+Ask the user once (before any issue is created) using AskUserQuestion with options: "Yes, assign all" / "No, skip". Record the answer — it applies to all items uniformly.
 
 #### 8c. Create issues
 

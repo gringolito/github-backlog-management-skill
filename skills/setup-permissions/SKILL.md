@@ -21,7 +21,7 @@ These are the canonical allowlist blocks for each mode:
 
 **yolo** — no prompts during any multi-step skill:
 ```json
-["Bash(gh *)", "Bash(git *)", "Bash(backlog-preflight)"]
+["Bash(gh *)", "Bash(git *)", "Bash(backlog-preflight)", "Bash(resolve-milestone*)"]
 ```
 
 **safe** — read-only `gh` calls run silently; write commands still prompt:
@@ -37,7 +37,8 @@ These are the canonical allowlist blocks for each mode:
   "Bash(gh project item-list *)",
   "Bash(gh project field-list *)",
   "Bash(gh release list *)",
-  "Bash(backlog-preflight)"
+  "Bash(backlog-preflight)",
+  "Bash(resolve-milestone*)"
 ]
 ```
 

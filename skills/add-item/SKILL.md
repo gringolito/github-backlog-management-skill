@@ -235,19 +235,12 @@ Print the resolved relationships so the user can confirm before continuing to mi
 
 ### 9. Milestone Assignment (OPTIONAL, RECOMMENDED)
 
-The active milestone is determined as follows:
-
-- `gh api "repos/<owner>/<repo>/milestones?state=open&per_page=100"`
-- Primary sort: `due_on` ascending (milestones without a `due_on` are sorted last)
-- Tie-break: lowest version, parsed from milestone title (e.g. `v1.2.0` < `v1.3.0`; `2026-Q2` < `2026-Q3`). For non-parseable titles, fall back to milestone `number` ascending (creation order).
-- Fallback: if NO open milestone has a `due_on`, the active milestone is the open milestone with the lowest version (same parsing rule). For non-parseable titles, fall back to milestone `number` ascending (creation order).
+Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON — `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
 
 Ask the user whether to assign this item to the active milestone:
 
 - If yes: `gh issue edit <n> --milestone "<milestone-title>"`
 - If no: leave unassigned (will be picked up by `execute-item` only after items in the active milestone are exhausted)
-
-If no active milestone exists, suggest the user run `/plan-release` after.
 
 ---
 
