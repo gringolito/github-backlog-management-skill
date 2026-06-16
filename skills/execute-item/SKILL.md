@@ -55,7 +55,7 @@ If any `warnings` are present, surface them before proceeding.
 | #N | ... | — | type:... | 🔧 No PR yet (work in progress) |
 
 Then use AskUserQuestion with options built dynamically: one option per in-progress item (title + PR status, e.g. "fix/auth-bug — PR #42 open" or "feat/dashboard — no PR yet") plus a final "Pick a new item" option.
-- **In-progress item chosen:** that item becomes the winner. Skip Steps 2.6, 3, 5, and 6. Advise the user to check out the existing branch (`<type>/<slug>`). If a linked PR exists, skip Step 9 as well. Proceed to Step 4.
+- **In-progress item chosen:** that item becomes the winner. Skip Steps 3, 4, 6, and 7. Advise the user to check out the existing branch (`<type>/<slug>`). If a linked PR exists, skip Step 10 as well. Proceed to Step 5.
 - **"Pick a new item" chosen:** proceed with `candidate`.
 
 If `skipped_blocked` is non-empty but `candidate` is not null, surface the blocked items table in the eventual plan output so the user knows why the queue was deeper than expected.
@@ -66,7 +66,7 @@ If the picked item's `priority:*` label appears mismatched against its Project r
 
 ---
 
-### 2.5. Per-Blocker Analysis Table
+### 2. Per-Blocker Analysis Table
 
 Rendered when all candidates are blocked (`candidate` null, `skipped_blocked` non-empty). All facts come from the script output — no extra API calls needed.
 
@@ -88,7 +88,7 @@ Rendered when all candidates are blocked (`candidate` null, `skipped_blocked` no
 
 ---
 
-### 2.6. Sub-issue Scope Check
+### 3. Sub-issue Scope Check
 
 Use `candidate.sub_issues_summary` from the script output — no API call needed.
 
@@ -127,7 +127,7 @@ Entered when `candidate.sub_issues_summary.completed == total AND total > 0`.
 5. **If "Close parent — scope complete":**
    - Post a comment with the full coverage checklist: `gh issue comment <n> --body "..."`
    - Close the issue: `gh issue close <n>`
-   - STOP — do not proceed to Step 3.
+   - STOP — do not proceed to Step 4.
 
 6. **If "Create sub-issues for gaps":**
    - For each uncovered criterion (marked `[ ]` in the checklist), invoke `/add-item` with the parent issue number so the new items become sub-issues.
@@ -135,7 +135,7 @@ Entered when `candidate.sub_issues_summary.completed == total AND total > 0`.
 
 ---
 
-### 3. Item Validation (MANDATORY)
+### 4. Item Validation (MANDATORY)
 
 Use `candidate.body` and `candidate.labels` from the `bin/pick-item` output — no `gh issue view` call needed.
 
@@ -158,9 +158,9 @@ If priority or effort labels are missing or duplicated, STOP and direct the user
 
 ---
 
-### 4. Planning
+### 5. Planning
 
-#### 4.0. Parent Context (RELATIVE)
+#### 5.1. Parent Context (RELATIVE)
 
 Use `candidate.parent` from the `bin/pick-item` output — no additional API call needed.
 
@@ -193,7 +193,7 @@ Use `candidate.parent` from the `bin/pick-item` output — no additional API cal
   - After approval, invoke `/add-item` for each sub-issue in sequence, passing the parent issue number so it handles the sub-issue relationship
   - STOP after the sub-issues are created — re-run `/execute-item` to pick the first sub-issue
 
-#### 4.1 Sibling Dependency Inference (RELATIVE)
+#### 5.2 Sibling Dependency Inference (RELATIVE)
 
 If two or more sub-issues were just created:
 
@@ -220,7 +220,7 @@ If two or more sub-issues were just created:
 
 ---
 
-### 5. Status → In Progress (BEFORE BRANCH)
+### 6. Status → In Progress (BEFORE BRANCH)
 
 Once the plan is approved:
 
@@ -234,7 +234,7 @@ This makes the in-flight work visible on the Project board immediately.
 
 ---
 
-### 6. Branching
+### 7. Branching
 
 Determine the Conventional Commits prefix from the issue's `type:*` label:
 
@@ -250,7 +250,7 @@ Branch name format: `<prefix>/<slug>` (e.g. `fix/null-pointer-in-authn`).
 
 ---
 
-### 7. Implementation
+### 8. Implementation
 
 #### For Bugs
 
@@ -286,7 +286,7 @@ A spike's deliverable is **knowledge** — a findings document plus the follow-o
 
 ---
 
-### 8. Validation
+### 9. Validation
 
 - Verify ALL Acceptance Criteria are satisfied
 - Run full test suite
@@ -296,11 +296,11 @@ For `type:spike` items, additionally:
 
 - Confirm the findings document exists at `docs/spikes/<number>-<slug>.md` with all required sections
 - Confirm every approved follow-on was created and that its issue number is referenced in the `## Follow-on Work` section
-- Confirm follow-on parentage matches the rule in Step 7 (standalone if spike had no parent; peer sub-issues of the spike's parent otherwise)
+- Confirm follow-on parentage matches the rule in Step 8 (standalone if spike had no parent; peer sub-issues of the spike's parent otherwise)
 
 ---
 
-### 9. Delivery Workflow
+### 10. Delivery Workflow
 
 - Commit using Conventional Commits format. Include `Refs #<issue-number>` in the commit body.
 - Push the branch.
@@ -316,7 +316,7 @@ For `type:spike` items, the PR is typically a **findings-document-only** diff:
 
 ---
 
-### 10. Status & Closure (POST-PR)
+### 11. Status & Closure (POST-PR)
 
 GitHub handles the rest automatically:
 
@@ -330,14 +330,14 @@ If the Project's `Issue closed → Status: Done` workflow is disabled, manually 
 
 ---
 
-### 11. Output
+### 12. Output
 
 Print:
 
 - Issue URL and number
 - PR URL and number
 - Branch name
-- Assignee (the authenticated user, assigned in step 5)
+- Assignee (the authenticated user, assigned in step 6)
 - Final Project Status (typically `In Progress` until PR merges)
 - Whether the issue was assigned to the active milestone
 - Items skipped above this one because they were blocked (with `#N` and the open blockers that gated them; `type:external-blocker` blockers shown as `External: <stub title>`) — surfaces why the picked item wasn't necessarily the topmost

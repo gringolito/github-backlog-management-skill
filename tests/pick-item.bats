@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 
 setup() {
-  REPO_ROOT="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
+  REPO_ROOT="$(dirname "$(dirname "$BATS_TEST_FILENAME")")"
   PICK_ITEM="$REPO_ROOT/bin/pick-item"
 
   TEST_DIR="$(mktemp -d)"
@@ -42,9 +42,7 @@ shift || true
 
 if [[ "$subcmd" == "api" ]]; then
   path="${1:-}"
-  if [[ "$path" == "user" ]]; then
-    cat "$GH_MOCK_DIR/api_user.txt"
-  elif [[ "$path" =~ ^repos/[^/]+/[^/]+/issues/[0-9]+/dependencies/blocked_by$ ]]; then
+  if [[ "$path" =~ ^repos/[^/]+/[^/]+/issues/[0-9]+/dependencies/blocked_by$ ]]; then
     num=$(echo "$path" | grep -oE '/issues/[0-9]+/' | grep -oE '[0-9]+')
     file="$GH_MOCK_DIR/blockers_${num}.json"
     if [[ -f "${file}.404" ]]; then
@@ -80,9 +78,19 @@ elif [[ "$subcmd" == "project" ]]; then
     if echo "$args" | grep -qF "In Progress"; then
       cat "$GH_MOCK_DIR/items_inprogress.json"
     elif echo "$args" | grep -qF "no:milestone"; then
-      cat "$GH_MOCK_DIR/items_tier2.json"
+      if echo "$args" | grep -qF -- "-label:type:external-blocker"; then
+        jq '.items = [.items[] | select((.content.labels // [] | map(.name) | index("type:external-blocker")) == null)]' \
+          "$GH_MOCK_DIR/items_tier2.json"
+      else
+        cat "$GH_MOCK_DIR/items_tier2.json"
+      fi
     else
-      cat "$GH_MOCK_DIR/items_tier1.json"
+      if echo "$args" | grep -qF -- "-label:type:external-blocker"; then
+        jq '.items = [.items[] | select((.content.labels // [] | map(.name) | index("type:external-blocker")) == null)]' \
+          "$GH_MOCK_DIR/items_tier1.json"
+      else
+        cat "$GH_MOCK_DIR/items_tier1.json"
+      fi
     fi
   else
     echo "Unhandled project subcmd: $subcmd2" >&2; exit 1
@@ -105,8 +113,6 @@ SCRIPT
   chmod +x "$MOCK_BIN/gh"
 
   # Default fixtures shared across tests
-  # api user --jq '.login' returns just the username string (no JSON quotes)
-  echo 'testuser' > "$GH_MOCK_DIR/api_user.txt"
   echo '{"items": []}' > "$GH_MOCK_DIR/items_inprogress.json"
   echo '{"items": []}' > "$GH_MOCK_DIR/items_tier1.json"
   echo '{"items": []}' > "$GH_MOCK_DIR/items_tier2.json"
@@ -375,17 +381,16 @@ JSON
 # ---------------------------------------------------------------------------
 
 @test "AC7b: in_progress populated with current user's In Progress items" {
+  # Fixture reflects server-side assignee:@me filtering — only current user's items
   cat > "$GH_MOCK_DIR/items_inprogress.json" << 'JSON'
 {"items": [
-  {"id": "PVTI_55", "type": "ISSUE", "content": {"number": 55, "title": "WIP item", "url": "https://github.com/testowner/testrepo/issues/55", "assignees": [{"login": "testuser"}], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:M"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "In Progress", "linkedPullRequests": [{"number": 88, "url": "https://github.com/testowner/testrepo/pull/88"}]},
-  {"id": "PVTI_66", "type": "ISSUE", "content": {"number": 66, "title": "Another WIP", "url": "https://github.com/testowner/testrepo/issues/66", "assignees": [{"login": "otheruser"}], "labels": [{"name": "type:bug"}, {"name": "priority:P2"}, {"name": "effort:S"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "In Progress", "linkedPullRequests": []}
+  {"id": "PVTI_55", "type": "ISSUE", "content": {"number": 55, "title": "WIP item", "url": "https://github.com/testowner/testrepo/issues/55", "assignees": [{"login": "testuser"}], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:M"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "In Progress", "linkedPullRequests": [{"number": 88, "url": "https://github.com/testowner/testrepo/pull/88"}]}
 ]}
 JSON
 
   run "$PICK_ITEM"
   [[ "$status" -eq 0 ]]
 
-  # Only testuser's items appear in in_progress
   count=$(echo "$output" | jq '.in_progress | length')
   [[ "$count" == "1" ]]
 
