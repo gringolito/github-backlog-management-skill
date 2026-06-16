@@ -183,28 +183,15 @@ Done items (historical work is not migrated), and offers opt-in Dependency infer
 `/migrate`.
 _Avoid_: import (acceptable informally; "Migration" is the named activity)
 
-## Interaction Patterns
-
-**AskUserQuestion usage criterion**:
-Use `AskUserQuestion` when the set of valid responses is finite, known before the prompt is shown, and no response requires follow-up prose. Leave all other interactions as free-form conversation.
-
-Examples that qualify: item gate (Apply / Skip / Apply All Remaining / Stop Migration), milestone yes/no, label disambiguation (P0–P3, effort sizes, contextually-likely types), resume-vs-new-pick.
-
-Examples that do NOT qualify: plan approval (where "request changes" needs prose), spike findings sign-off (the user's answer IS the edits), rank-order confirmation (often needs explanation), apply-all-changes gate (where "yes but change X first" is common).
-
-Note: `AskUserQuestion` supports 2–4 options per call. For fixed catalogs larger than 4 (e.g. the 10 type values), offer the 3–4 most contextually relevant options; the tool automatically adds "Other" for free-form input.
-
----
-
 ## Flagged ambiguities
 
 **Priority vs Rank** — these are independent and must never be conflated. Priority is a
-severity *label* (P0–P3); Rank is the *queue order* in the Todo column. A P0 can sit below
+severity _label_ (P0–P3); Rank is the _queue order_ in the Todo column. A P0 can sit below
 a P2 in Rank if that's the deliberate order of work. Skills recommend keeping them roughly
 consistent, but execution obeys Rank alone.
 
-**Dependency vs Sub-issue** — a Dependency *blocks*: a blocked item is skipped in execution
-until its Blocker closes. A Sub-issue relationship *decomposes*: execution descends into a
+**Dependency vs Sub-issue** — a Dependency _blocks_: a blocked item is skipped in execution
+until its Blocker closes. A Sub-issue relationship _decomposes_: execution descends into a
 parent's sub-issues and picks the topmost unblocked one. A parent is not "blocked by" its
 children, but you cannot execute a parent without first working its sub-issues. Decomposition
 is not a Dependency.
@@ -214,8 +201,8 @@ Done). "Release Status" is the read-only dashboard reporting on a whole Release.
 "Release Status" to "Status."
 
 **Audit vs Health vs Release Status** — three distinct read-only lenses, none of which mutate.
-Audit checks *correctness* (is the backlog well-formed?). Health checks *strategic shape* (is
-the portfolio balanced?). Release Status checks *operational progress* (how is one Release
+Audit checks _correctness_ (is the backlog well-formed?). Health checks _strategic shape_ (is
+the portfolio balanced?). Release Status checks _operational progress_ (how is one Release
 tracking?).
 
 ## Example dialogue
