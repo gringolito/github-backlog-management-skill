@@ -234,15 +234,11 @@ for (( i=0; i<n_candidates; i++ )); do
   break
 done
 
-# ─── 7. Fetch winner body ─────────────────────────────────────────────────────
+# ─── 7. Emit JSON ─────────────────────────────────────────────────────────────
 candidate_out="null"
 message_out="null"
 
 if [[ -n "$winner_num" ]]; then
-  winner_body=$(gh issue view "$winner_num" --json body 2>&1) || {
-    echo "Failed to fetch body for issue #${winner_num}: $winner_body" >&2; exit 1
-  }
-
   # Parent check (404 = no parent)
   parent_raw=$(gh api "repos/${owner}/${repo}/issues/${winner_num}/parent" 2>/dev/null) && {
     parent_out=$(echo "$parent_raw" | jq '{
@@ -257,12 +253,11 @@ if [[ -n "$winner_num" ]]; then
     --argjson tier "$winner_tier" \
     --argjson sub_issues_summary "$winner_sub_issues_summary" \
     --argjson parent "$parent_out" \
-    --argjson body_obj "$winner_body" \
     '{
       number:             .content.number,
       title:              .content.title,
       tier:               $tier,
-      body:               $body_obj.body,
+      body:               .content.body,
       labels:             (.content.labels // []),
       milestone:          .content.milestone,
       url:                .content.url,
@@ -278,7 +273,6 @@ else
   fi
 fi
 
-# ─── 8. Emit JSON ─────────────────────────────────────────────────────────────
 warnings_out=$(jq -nR '[inputs | select(length > 0)]' < "$WARNINGS_FILE" 2>/dev/null || echo "[]")
 
 jq -n \

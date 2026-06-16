@@ -96,16 +96,6 @@ elif [[ "$subcmd" == "project" ]]; then
     echo "Unhandled project subcmd: $subcmd2" >&2; exit 1
   fi
 
-elif [[ "$subcmd" == "issue" ]]; then
-  subcmd2="${1:-}"
-  shift || true
-  if [[ "$subcmd2" == "view" ]]; then
-    num="$1"
-    cat "$GH_MOCK_DIR/issue_view_${num}.json"
-  else
-    echo "Unhandled issue subcmd: $subcmd2" >&2; exit 1
-  fi
-
 else
   echo "Unhandled gh subcmd: $subcmd ($*)" >&2; exit 1
 fi
@@ -132,6 +122,7 @@ issue_item() {
     "id": "PVTI_%s", "type": "ISSUE",
     "content": {
       "number": %s, "title": "%s",
+      "body": "Issue body.",
       "url": "https://github.com/testowner/testrepo/issues/%s",
       "assignees": [], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:S"}],
       "milestone": {"number": 8, "title": "%s"}
@@ -144,13 +135,6 @@ no_blockers_summary() {
   local num="$1" title="$2"
   printf '{"number": %s, "title": "%s", "state": "open", "issue_dependencies_summary": {"blocked_by": 0}}' \
     "$num" "$title"
-}
-
-issue_view() {
-  local num="$1" title="$2"
-  # \\n → printf outputs literal \n (JSON escape), not actual newline
-  printf '{"number": %s, "title": "%s", "body": "### What\\nDo X\\n\\n### Why\\nBecause\\n\\n### In Scope\\n- step\\n\\n### Out of Scope\\n- nothing\\n\\n### Acceptance Criteria\\n- [ ] AC1\\n\\n### INVEST Notes\\nOK", "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:S"}], "milestone": {"number": 8, "title": "v0.6.0"}, "url": "https://github.com/testowner/testrepo/issues/%s"}' \
-    "$num" "$title" "$num"
 }
 
 # ---------------------------------------------------------------------------
@@ -184,7 +168,6 @@ issue_view() {
   no_blockers_summary 42 "Do something" > "$GH_MOCK_DIR/issue_42.json"
   echo '[]' > "$GH_MOCK_DIR/sub_issues_42.json"
   # No parent file → 404
-  issue_view 42 "Do something" > "$GH_MOCK_DIR/issue_view_42.json"
 
   run "$PICK_ITEM"
   [[ "$status" -eq 0 ]]
@@ -207,12 +190,11 @@ issue_view() {
     > "$GH_MOCK_DIR/items_tier2.json"
   # Override: strip milestone from content
   cat > "$GH_MOCK_DIR/items_tier2.json" << 'JSON'
-{"items": [{"id": "PVTI_99", "type": "ISSUE", "content": {"number": 99, "title": "No-milestone item", "url": "https://github.com/testowner/testrepo/issues/99", "assignees": [], "labels": [{"name": "type:feature"}, {"name": "priority:P2"}, {"name": "effort:S"}], "milestone": null}, "status": "Todo", "linkedPullRequests": []}]}
+{"items": [{"id": "PVTI_99", "type": "ISSUE", "content": {"number": 99, "title": "No-milestone item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/99", "assignees": [], "labels": [{"name": "type:feature"}, {"name": "priority:P2"}, {"name": "effort:S"}], "milestone": null}, "status": "Todo", "linkedPullRequests": []}]}
 JSON
 
   no_blockers_summary 99 "No-milestone item" > "$GH_MOCK_DIR/issue_99.json"
   echo '[]' > "$GH_MOCK_DIR/sub_issues_99.json"
-  issue_view 99 "No-milestone item" > "$GH_MOCK_DIR/issue_view_99.json"
 
   run "$PICK_ITEM"
   [[ "$status" -eq 0 ]]
@@ -283,7 +265,6 @@ JSON
 
   no_blockers_summary 20 "Unblocked item" > "$GH_MOCK_DIR/issue_20.json"
   echo '[]' > "$GH_MOCK_DIR/sub_issues_20.json"
-  issue_view 20 "Unblocked item" > "$GH_MOCK_DIR/issue_view_20.json"
 
   run "$PICK_ITEM"
   [[ "$status" -eq 0 ]]
@@ -322,7 +303,6 @@ JSON
   touch "$GH_MOCK_DIR/blockers_42.json.404"
 
   echo '[]' > "$GH_MOCK_DIR/sub_issues_42.json"
-  issue_view 42 "Do something" > "$GH_MOCK_DIR/issue_view_42.json"
 
   run "$PICK_ITEM"
   [[ "$status" -eq 0 ]]
@@ -342,8 +322,8 @@ JSON
   # Tier 1: parent #100 first, then sub-issue #101
   cat > "$GH_MOCK_DIR/items_tier1.json" << 'JSON'
 {"items": [
-  {"id": "PVTI_100", "type": "ISSUE", "content": {"number": 100, "title": "Parent item", "url": "https://github.com/testowner/testrepo/issues/100", "assignees": [], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:L"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "Todo", "linkedPullRequests": []},
-  {"id": "PVTI_101", "type": "ISSUE", "content": {"number": 101, "title": "Sub-issue item", "url": "https://github.com/testowner/testrepo/issues/101", "assignees": [], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:S"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "Todo", "linkedPullRequests": []}
+  {"id": "PVTI_100", "type": "ISSUE", "content": {"number": 100, "title": "Parent item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/100", "assignees": [], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:L"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "Todo", "linkedPullRequests": []},
+  {"id": "PVTI_101", "type": "ISSUE", "content": {"number": 101, "title": "Sub-issue item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/101", "assignees": [], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:S"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "Todo", "linkedPullRequests": []}
 ]}
 JSON
 
@@ -356,7 +336,6 @@ JSON
 
   no_blockers_summary 101 "Sub-issue item" > "$GH_MOCK_DIR/issue_101.json"
   echo '[]' > "$GH_MOCK_DIR/sub_issues_101.json"
-  issue_view 101 "Sub-issue item" > "$GH_MOCK_DIR/issue_view_101.json"
 
   # Sub-issue #101's parent is #100
   cat > "$GH_MOCK_DIR/parent_101.json" << 'JSON'
@@ -384,7 +363,7 @@ JSON
   # Fixture reflects server-side assignee:@me filtering — only current user's items
   cat > "$GH_MOCK_DIR/items_inprogress.json" << 'JSON'
 {"items": [
-  {"id": "PVTI_55", "type": "ISSUE", "content": {"number": 55, "title": "WIP item", "url": "https://github.com/testowner/testrepo/issues/55", "assignees": [{"login": "testuser"}], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:M"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "In Progress", "linkedPullRequests": [{"number": 88, "url": "https://github.com/testowner/testrepo/pull/88"}]}
+  {"id": "PVTI_55", "type": "ISSUE", "content": {"number": 55, "title": "WIP item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/55", "assignees": [{"login": "testuser"}], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:M"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "In Progress", "linkedPullRequests": [{"number": 88, "url": "https://github.com/testowner/testrepo/pull/88"}]}
 ]}
 JSON
 
@@ -421,7 +400,7 @@ JSON
 @test "AC3b: items with type:external-blocker are never selected as candidates" {
   cat > "$GH_MOCK_DIR/items_tier1.json" << 'JSON'
 {"items": [
-  {"id": "PVTI_77", "type": "ISSUE", "content": {"number": 77, "title": "External blocker stub", "url": "https://github.com/testowner/testrepo/issues/77", "assignees": [], "labels": [{"name": "type:external-blocker"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "Todo", "linkedPullRequests": []}
+  {"id": "PVTI_77", "type": "ISSUE", "content": {"number": 77, "title": "External blocker stub", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/77", "assignees": [], "labels": [{"name": "type:external-blocker"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "Todo", "linkedPullRequests": []}
 ]}
 JSON
 
@@ -448,8 +427,6 @@ JSON
   {"number": 44, "title": "Sub 2", "state": "closed"}
 ]
 JSON
-
-  issue_view 42 "Parent with sub-issues done" > "$GH_MOCK_DIR/issue_view_42.json"
 
   run "$PICK_ITEM"
   [[ "$status" -eq 0 ]]
