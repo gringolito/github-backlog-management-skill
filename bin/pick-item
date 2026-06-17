@@ -44,15 +44,14 @@ tier2_raw=$(gh project item-list "$proj_num" --owner "$owner" \
 in_progress=$(echo "$inprogress_raw" | jq '
   [.items // []
    | .[]
-   | select(.type == "ISSUE")
    | {
        number: .content.number,
        title:  .content.title,
-       milestone: (.content.milestone.title // null),
-       labels: (.content.labels // [] | map(.name)),
+       milestone: (.milestone.title // null),
+       labels: (.labels // []),
        linked_pr: (
-         (.linkedPullRequests // []) | if length > 0
-           then .[0] | {number: .number, url: .url}
+         (."linked pull requests" // []) | if length > 0
+           then .[0] | {number: (split("/") | last | tonumber), url: .}
            else null
            end
        )
@@ -65,8 +64,8 @@ candidates=$(jq -n \
   --argjson t1 "$tier1_raw" \
   --argjson t2 "$tier2_raw" \
   '
-  ($t1.items // [] | map(select(.type == "ISSUE") | . + {_tier: 1}))
-  + ($t2.items // [] | map(select(.type == "ISSUE") | . + {_tier: 2}))
+  ($t1.items // [] | map(. + {_tier: 1}))
+  + ($t2.items // [] | map(. + {_tier: 2}))
   ')
 
 # ─── 5. Block-skipping helper ─────────────────────────────────────────────────
@@ -258,8 +257,8 @@ if [[ -n "$winner_num" ]]; then
       title:              .content.title,
       tier:               $tier,
       body:               .content.body,
-      labels:             (.content.labels // []),
-      milestone:          .content.milestone,
+      labels:             (.labels // []),
+      milestone:          (.milestone | if . then {title: .title} else null end),
       url:                .content.url,
       sub_issues_summary: $sub_issues_summary,
       parent:             $parent

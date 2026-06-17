@@ -78,15 +78,15 @@ elif [[ "$subcmd" == "project" ]]; then
     if echo "$args" | grep -qF "In Progress"; then
       cat "$GH_MOCK_DIR/items_inprogress.json"
     elif echo "$args" | grep -qF "no:milestone"; then
-      if echo "$args" | grep -qF -- "-label:type:external-blocker"; then
-        jq '.items = [.items[] | select((.content.labels // [] | map(.name) | index("type:external-blocker")) == null)]' \
+      if echo "$args" | grep -qF -- "-label:"; then
+        jq '.items = [.items[] | select((.labels // [] | index("type:external-blocker")) == null)]' \
           "$GH_MOCK_DIR/items_tier2.json"
       else
         cat "$GH_MOCK_DIR/items_tier2.json"
       fi
     else
-      if echo "$args" | grep -qF -- "-label:type:external-blocker"; then
-        jq '.items = [.items[] | select((.content.labels // [] | map(.name) | index("type:external-blocker")) == null)]' \
+      if echo "$args" | grep -qF -- "-label:"; then
+        jq '.items = [.items[] | select((.labels // [] | index("type:external-blocker")) == null)]' \
           "$GH_MOCK_DIR/items_tier1.json"
       else
         cat "$GH_MOCK_DIR/items_tier1.json"
@@ -118,17 +118,19 @@ teardown() {
 
 issue_item() {
   local num="$1" title="$2" milestone="${3:-v0.6.0}"
+  local ms_json
+  [[ -n "$milestone" ]] && ms_json="{\"title\": \"$milestone\"}" || ms_json="null"
   printf '{
-    "id": "PVTI_%s", "type": "ISSUE",
+    "id": "PVTI_%s", "type": null,
     "content": {
       "number": %s, "title": "%s",
       "body": "Issue body.",
-      "url": "https://github.com/testowner/testrepo/issues/%s",
-      "assignees": [], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:S"}],
-      "milestone": {"number": 8, "title": "%s"}
+      "url": "https://github.com/testowner/testrepo/issues/%s"
     },
-    "status": "Todo", "linkedPullRequests": []
-  }' "$num" "$num" "$title" "$num" "$milestone"
+    "labels": ["type:feature", "priority:P1", "effort:S"],
+    "milestone": %s,
+    "status": "Todo", "linked pull requests": []
+  }' "$num" "$num" "$title" "$num" "$ms_json"
 }
 
 no_blockers_summary() {
@@ -190,7 +192,7 @@ no_blockers_summary() {
     > "$GH_MOCK_DIR/items_tier2.json"
   # Override: strip milestone from content
   cat > "$GH_MOCK_DIR/items_tier2.json" << 'JSON'
-{"items": [{"id": "PVTI_99", "type": "ISSUE", "content": {"number": 99, "title": "No-milestone item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/99", "assignees": [], "labels": [{"name": "type:feature"}, {"name": "priority:P2"}, {"name": "effort:S"}], "milestone": null}, "status": "Todo", "linkedPullRequests": []}]}
+{"items": [{"id": "PVTI_99", "type": null, "content": {"number": 99, "title": "No-milestone item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/99"}, "labels": ["type:feature", "priority:P2", "effort:S"], "milestone": null, "status": "Todo", "linked pull requests": []}]}
 JSON
 
   no_blockers_summary 99 "No-milestone item" > "$GH_MOCK_DIR/issue_99.json"
@@ -322,8 +324,8 @@ JSON
   # Tier 1: parent #100 first, then sub-issue #101
   cat > "$GH_MOCK_DIR/items_tier1.json" << 'JSON'
 {"items": [
-  {"id": "PVTI_100", "type": "ISSUE", "content": {"number": 100, "title": "Parent item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/100", "assignees": [], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:L"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "Todo", "linkedPullRequests": []},
-  {"id": "PVTI_101", "type": "ISSUE", "content": {"number": 101, "title": "Sub-issue item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/101", "assignees": [], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:S"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "Todo", "linkedPullRequests": []}
+  {"id": "PVTI_100", "type": null, "content": {"number": 100, "title": "Parent item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/100"}, "labels": ["type:feature", "priority:P1", "effort:L"], "milestone": {"title": "v0.6.0"}, "status": "Todo", "linked pull requests": []},
+  {"id": "PVTI_101", "type": null, "content": {"number": 101, "title": "Sub-issue item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/101"}, "labels": ["type:feature", "priority:P1", "effort:S"], "milestone": {"title": "v0.6.0"}, "status": "Todo", "linked pull requests": []}
 ]}
 JSON
 
@@ -363,7 +365,7 @@ JSON
   # Fixture reflects server-side assignee:@me filtering — only current user's items
   cat > "$GH_MOCK_DIR/items_inprogress.json" << 'JSON'
 {"items": [
-  {"id": "PVTI_55", "type": "ISSUE", "content": {"number": 55, "title": "WIP item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/55", "assignees": [{"login": "testuser"}], "labels": [{"name": "type:feature"}, {"name": "priority:P1"}, {"name": "effort:M"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "In Progress", "linkedPullRequests": [{"number": 88, "url": "https://github.com/testowner/testrepo/pull/88"}]}
+  {"id": "PVTI_55", "type": null, "content": {"number": 55, "title": "WIP item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/55"}, "labels": ["type:feature", "priority:P1", "effort:M"], "milestone": {"title": "v0.6.0"}, "status": "In Progress", "linked pull requests": ["https://github.com/testowner/testrepo/pull/88"]}
 ]}
 JSON
 
@@ -400,7 +402,7 @@ JSON
 @test "AC3b: items with type:external-blocker are never selected as candidates" {
   cat > "$GH_MOCK_DIR/items_tier1.json" << 'JSON'
 {"items": [
-  {"id": "PVTI_77", "type": "ISSUE", "content": {"number": 77, "title": "External blocker stub", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/77", "assignees": [], "labels": [{"name": "type:external-blocker"}], "milestone": {"number": 8, "title": "v0.6.0"}}, "status": "Todo", "linkedPullRequests": []}
+  {"id": "PVTI_77", "type": null, "content": {"number": 77, "title": "External blocker stub", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/77"}, "labels": ["type:external-blocker"], "milestone": {"title": "v0.6.0"}, "status": "Todo", "linked pull requests": []}
 ]}
 JSON
 
