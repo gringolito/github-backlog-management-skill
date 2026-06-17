@@ -1,0 +1,284 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+if [[ $# -eq 0 || "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  cat << 'EOF'
+Usage: create-item --input <json-file>
+
+Creates a GitHub issue from a manifest JSON file and adds it to the backlog project.
+Emits a JSON result blob to stdout on success. Errors go to stderr.
+
+Manifest schema (title and body_file are required; all others are optional):
+  title           string
+  body_file       path to issue body file
+  labels          array of label strings
+  rank            {"position": "top"|"bottom"} | {"after_issue": N}
+  rank_adjustments array of {"issue": N, "position": "top"} | {"issue": N, "after_issue": M}
+  blocked_by      array of {"owner": "...", "repo": "...", "number": N}
+  blocking        array of {"owner": "...", "repo": "...", "number": N}
+  parent          integer (issue number)
+  milestone       string (milestone title)
+EOF
+  exit 0
+fi
+
+WORK_DIR="$(mktemp -d)"
+trap 'rm -rf "$WORK_DIR"' EXIT
+
+WARNINGS_FILE="$WORK_DIR/warnings"
+touch "$WARNINGS_FILE"
+
+echo "false"  > "$WORK_DIR/rank_applied"
+echo "[]"     > "$WORK_DIR/rank_adjustments_applied.json"
+echo "[]"     > "$WORK_DIR/blocked_by_applied.json"
+echo "[]"     > "$WORK_DIR/blocking_applied.json"
+echo "null"   > "$WORK_DIR/parent_applied.json"
+echo "null"   > "$WORK_DIR/milestone_applied.json"
+
+# ─── Parse args ────────────────────────────────────────────────────────────
+input_file=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --input)
+      [[ $# -lt 2 ]] && { echo "Usage error: --input requires a file argument." >&2; exit 1; }
+      input_file="$2"
+      shift 2
+      ;;
+    *)
+      echo "Usage error: unknown option: $1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+[[ -z "$input_file" ]] && { echo "Usage error: --input is required." >&2; exit 1; }
+[[ ! -f "$input_file" ]] && { echo "Input file not found: $input_file" >&2; exit 1; }
+
+# ─── Metadata ─────────────────────────────────────────────────────────────
+metadata_file=".claude/backlog-project.json"
+[[ ! -f "$metadata_file" ]] && {
+  echo "No .claude/backlog-project.json found. Run /initialize first." >&2
+  exit 1
+}
+owner=$(jq -r '.owner'               "$metadata_file")
+repo=$(jq -r '.repo'                 "$metadata_file")
+proj_num=$(jq -r '.project_number'   "$metadata_file")
+proj_id=$(jq -r '.project_id'        "$metadata_file")
+status_field_id=$(jq -r '.status_field_id'          "$metadata_file")
+todo_option_id=$(jq -r '.status_options.Todo'        "$metadata_file")
+
+# ─── Parse manifest ───────────────────────────────────────────────────────
+manifest=$(cat "$input_file")
+title=$(echo "$manifest" | jq -r '.title')
+body_file=$(echo "$manifest" | jq -r '.body_file')
+labels_json=$(echo "$manifest" | jq -c '.labels // []')
+rank_json=$(echo "$manifest" | jq -c '.rank // null')
+rank_adjustments_json=$(echo "$manifest" | jq -c '.rank_adjustments // []')
+blocked_by_json=$(echo "$manifest" | jq -c '.blocked_by // []')
+blocking_json=$(echo "$manifest" | jq -c '.blocking // []')
+parent_num=$(echo "$manifest" | jq -r '.parent // null')
+milestone_title=$(echo "$manifest" | jq -r '.milestone // null')
+
+[[ -z "$title" || "$title" == "null" ]] && { echo "Manifest missing required field: title" >&2; exit 1; }
+[[ -z "$body_file" || "$body_file" == "null" ]] && { echo "Manifest missing required field: body_file" >&2; exit 1; }
+[[ ! -f "$body_file" ]] && { echo "body_file not found: $body_file" >&2; exit 1; }
+
+# ─── 1. Create the issue ───────────────────────────────────────────────────
+labels_csv=$(echo "$labels_json" | jq -r 'join(",")')
+create_args=(--title "$title" --body-file "$body_file")
+[[ -n "$labels_csv" ]] && create_args+=(--label "$labels_csv")
+
+issue_url_out=$(gh issue create "${create_args[@]}" 2>&1) || {
+  echo "gh issue create failed: $issue_url_out" >&2
+  exit 1
+}
+issue_url=$(echo "$issue_url_out" | tail -1)
+issue_num=$(echo "$issue_url" | grep -oE '[0-9]+$')
+
+# ─── 2. Add to project ─────────────────────────────────────────────────────
+item_out=$(gh project item-add "$proj_num" --owner "$owner" --url "$issue_url" --format json 2>&1) || {
+  echo "gh project item-add failed: $item_out" >&2
+  exit 1
+}
+item_id=$(echo "$item_out" | jq -r '.id')
+
+# ─── 3. Set Status = Todo ──────────────────────────────────────────────────
+status_out=$(gh project item-edit \
+  --id "$item_id" \
+  --project-id "$proj_id" \
+  --field-id "$status_field_id" \
+  --single-select-option-id "$todo_option_id" 2>&1) || {
+  echo "gh project item-edit (status) failed: $status_out" >&2
+  exit 1
+}
+
+# ─── 4 & 5. Apply rank + rank_adjustments (non-fatal) ─────────────────────
+todo_items=""
+n_adjustments=$(echo "$rank_adjustments_json" | jq 'length')
+
+fetch_todo_items() {
+  todo_items=$(gh project item-list "$proj_num" --owner "$owner" \
+    --format json --limit 200 --query "is:issue status:Todo" 2>/dev/null) || \
+    todo_items='{"items": []}'
+}
+
+resolve_item_id() {
+  local issue_n="$1"
+  echo "$todo_items" | jq -r \
+    --argjson n "$issue_n" \
+    '.items // [] | .[] | select(.content.number == $n) | .id' 2>/dev/null | head -1
+}
+
+if [[ "$rank_json" != "null" ]]; then
+  fetch_todo_items
+
+  rank_pos=$(echo "$rank_json" | jq -r '.position // null')
+  rank_after=$(echo "$rank_json" | jq -r '.after_issue // null')
+
+  after_input=""
+  if [[ "$rank_pos" == "top" ]]; then
+    after_input=""
+  elif [[ "$rank_after" != "null" ]]; then
+    after_id=$(resolve_item_id "$rank_after")
+    [[ -n "${after_id:-}" && "$after_id" != "null" ]] && \
+      after_input=", afterId: \"$after_id\""
+  elif [[ "$rank_pos" == "bottom" ]]; then
+    last_id=$(echo "$todo_items" | jq -r '.items // [] | last | .id' 2>/dev/null)
+    [[ -n "${last_id:-}" && "$last_id" != "null" ]] && \
+      after_input=", afterId: \"$last_id\""
+  fi
+
+  mutation="mutation { updateProjectV2ItemPosition(input: {projectId: \"$proj_id\", itemId: \"$item_id\"$after_input}) { items { totalCount } } }"
+  rank_out=$(gh api graphql -f query="$mutation" 2>&1) && \
+    echo "true" > "$WORK_DIR/rank_applied" || \
+    echo "Rank mutation failed: $rank_out" >> "$WARNINGS_FILE"
+fi
+
+if [[ "$n_adjustments" -gt 0 ]]; then
+  [[ -z "$todo_items" ]] && fetch_todo_items
+
+  for (( i=0; i<n_adjustments; i++ )); do
+    adj=$(echo "$rank_adjustments_json" | jq ".[$i]")
+    adj_issue=$(echo "$adj" | jq -r '.issue')
+    adj_after=$(echo "$adj" | jq -r '.after_issue // null')
+    adj_pos=$(echo "$adj" | jq -r '.position // null')
+
+    adj_item_id=$(resolve_item_id "$adj_issue")
+    if [[ -z "${adj_item_id:-}" || "$adj_item_id" == "null" ]]; then
+      echo "rank_adjustments[$i]: item #$adj_issue not found in Todo" >> "$WARNINGS_FILE"
+      continue
+    fi
+
+    after_input=""
+    if [[ "$adj_pos" == "top" ]]; then
+      after_input=""
+    elif [[ "$adj_after" != "null" ]]; then
+      after_id=$(resolve_item_id "$adj_after")
+      [[ -n "${after_id:-}" && "$after_id" != "null" ]] && \
+        after_input=", afterId: \"$after_id\""
+    fi
+
+    adj_mutation="mutation { updateProjectV2ItemPosition(input: {projectId: \"$proj_id\", itemId: \"$adj_item_id\"$after_input}) { items { totalCount } } }"
+    adj_out=$(gh api graphql -f query="$adj_mutation" 2>&1) && {
+      current=$(cat "$WORK_DIR/rank_adjustments_applied.json")
+      echo "$current" | jq ". + [$adj_issue]" > "$WORK_DIR/rank_adjustments_applied.json"
+    } || echo "rank_adjustments[$i]: mutation for #$adj_issue failed: $adj_out" >> "$WARNINGS_FILE"
+  done
+fi
+
+# ─── Resolve this issue's database ID (needed for dep/parent APIs) ─────────
+this_id=""
+n_blocked_by=$(echo "$blocked_by_json" | jq 'length')
+n_blocking=$(echo "$blocking_json" | jq 'length')
+
+if [[ "$n_blocked_by" -gt 0 || "$n_blocking" -gt 0 || "$parent_num" != "null" ]]; then
+  this_id_out=$(gh api "repos/${owner}/${repo}/issues/${issue_num}" --jq '.id' 2>&1) && \
+    this_id="$this_id_out" || \
+    echo "Failed to resolve database ID for #$issue_num" >> "$WARNINGS_FILE"
+fi
+
+# ─── 6. Apply blocked_by (non-fatal) ───────────────────────────────────────
+if [[ "$n_blocked_by" -gt 0 && -n "$this_id" ]]; then
+  for (( i=0; i<n_blocked_by; i++ )); do
+    bl=$(echo "$blocked_by_json" | jq ".[$i]")
+    bl_owner=$(echo "$bl" | jq -r '.owner')
+    bl_repo=$(echo "$bl" | jq -r '.repo')
+    bl_num=$(echo "$bl" | jq -r '.number')
+
+    bl_id_out=$(gh api "repos/${bl_owner}/${bl_repo}/issues/${bl_num}" --jq '.id' 2>&1) && \
+      bl_id="$bl_id_out" || {
+      echo "blocked_by[$i]: failed to resolve ID for #$bl_num" >> "$WARNINGS_FILE"
+      continue
+    }
+
+    bl_out=$(gh api -X POST "repos/${owner}/${repo}/issues/${issue_num}/dependencies/blocked_by" \
+      -f issue_id="$bl_id" 2>&1) && {
+      current=$(cat "$WORK_DIR/blocked_by_applied.json")
+      echo "$current" | jq ". + [$bl_num]" > "$WORK_DIR/blocked_by_applied.json"
+    } || echo "blocked_by[$i]: failed to link #$bl_num: $bl_out" >> "$WARNINGS_FILE"
+  done
+fi
+
+# ─── 7. Apply blocking (non-fatal) ─────────────────────────────────────────
+if [[ "$n_blocking" -gt 0 && -n "$this_id" ]]; then
+  for (( i=0; i<n_blocking; i++ )); do
+    bl=$(echo "$blocking_json" | jq ".[$i]")
+    bl_owner=$(echo "$bl" | jq -r '.owner')
+    bl_repo=$(echo "$bl" | jq -r '.repo')
+    bl_num=$(echo "$bl" | jq -r '.number')
+
+    bl_id_out=$(gh api "repos/${bl_owner}/${bl_repo}/issues/${bl_num}" --jq '.id' 2>&1) && \
+      bl_id="$bl_id_out" || {
+      echo "blocking[$i]: failed to resolve ID for #$bl_num" >> "$WARNINGS_FILE"
+      continue
+    }
+
+    bl_out=$(gh api -X POST "repos/${owner}/${repo}/issues/${issue_num}/dependencies/blocking" \
+      -f issue_id="$bl_id" 2>&1) && {
+      current=$(cat "$WORK_DIR/blocking_applied.json")
+      echo "$current" | jq ". + [$bl_num]" > "$WORK_DIR/blocking_applied.json"
+    } || echo "blocking[$i]: failed to link #$bl_num: $bl_out" >> "$WARNINGS_FILE"
+  done
+fi
+
+# ─── 8. Apply parent linkage (non-fatal) ───────────────────────────────────
+if [[ "$parent_num" != "null" && -n "$this_id" ]]; then
+  parent_out=$(gh api -X POST "repos/${owner}/${repo}/issues/${parent_num}/sub_issues" \
+    -f sub_issue_id="$this_id" 2>&1) && \
+    echo "$parent_num" > "$WORK_DIR/parent_applied.json" || \
+    echo "parent: failed to link #$parent_num as parent: $parent_out" >> "$WARNINGS_FILE"
+fi
+
+# ─── 9. Apply milestone (non-fatal) ────────────────────────────────────────
+if [[ "$milestone_title" != "null" ]]; then
+  ms_out=$(gh issue edit "$issue_num" --milestone "$milestone_title" 2>&1) && {
+    echo "$milestone_title" | jq -R '.' > "$WORK_DIR/milestone_applied.json"
+  } || echo "milestone: failed to assign \"$milestone_title\": $ms_out" >> "$WARNINGS_FILE"
+fi
+
+# ─── 10. Emit JSON blob ────────────────────────────────────────────────────
+warnings_out=$(jq -nR '[inputs | select(length > 0)]' < "$WARNINGS_FILE")
+
+jq -n \
+  --arg    issue_num   "$issue_num" \
+  --arg    issue_url   "$issue_url" \
+  --argjson labels     "$labels_json" \
+  --argjson rank_applied  "$(cat "$WORK_DIR/rank_applied")" \
+  --argjson ra_applied    "$(cat "$WORK_DIR/rank_adjustments_applied.json")" \
+  --argjson milestone     "$(cat "$WORK_DIR/milestone_applied.json")" \
+  --argjson bb_applied    "$(cat "$WORK_DIR/blocked_by_applied.json")" \
+  --argjson bl_applied    "$(cat "$WORK_DIR/blocking_applied.json")" \
+  --argjson parent        "$(cat "$WORK_DIR/parent_applied.json")" \
+  --argjson warnings      "$warnings_out" \
+  '{
+    issue:                    {number: ($issue_num | tonumber), url: $issue_url},
+    labels:                   $labels,
+    status:                   "Todo",
+    rank:                     {applied: $rank_applied},
+    rank_adjustments_applied: $ra_applied,
+    milestone:                $milestone,
+    blocked_by:               $bb_applied,
+    blocking:                 $bl_applied,
+    parent:                   $parent,
+    warnings:                 $warnings
+  }'

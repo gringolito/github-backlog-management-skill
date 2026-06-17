@@ -104,132 +104,76 @@ If too vague → request clarification
 
 ---
 
-### 6. Issue Creation (MANDATORY)
+### 6. Issue Creation & Project Setup (MANDATORY)
 
-After validation passes:
+After validation passes, delegate all GitHub API calls to `bin/create-item`:
 
-- Write the constructed body to a temp file (avoids shell-escaping issues)
-- Create the issue:
-  - `gh issue create --title "<title>" --body-file <tmp> --label type:<x>,priority:<y>,effort:<z>`
-- Capture the returned issue URL and number
+1. Write the issue body to a temp file, e.g. `/tmp/add-item-body.md`
+2. Write the manifest JSON to `/tmp/add-item-manifest.json`:
+
+```json
+{
+  "title": "<issue title>",
+  "body_file": "/tmp/add-item-body.md",
+  "labels": ["type:<x>", "priority:<y>", "effort:<z>"],
+  "rank": <rank object — see step 7>,
+  "rank_adjustments": <array — see step 7>,
+  "blocked_by": [{"owner": "...", "repo": "...", "number": N}, ...],
+  "blocking":   [{"owner": "...", "repo": "...", "number": N}, ...],
+  "parent": <integer issue number or omit>,
+  "milestone": "<milestone title or omit>"
+}
+```
+
+Omit optional fields (`rank`, `rank_adjustments`, `blocked_by`, `blocking`, `parent`, `milestone`) when not applicable.
+
+3. Run: `bin/create-item --input /tmp/add-item-manifest.json`
+4. Capture the JSON blob emitted to stdout — use it for Step 10.
+
+If `bin/create-item` exits non-zero, STOP and surface its stderr output verbatim.
 
 ---
 
-### 7. Project Assignment & Execution Rank (MANDATORY, RELATIVE)
-
-Add the issue to the linked Project and set its initial Status:
-
-- `gh project item-add <project-number> --owner <owner> --url <issue-url>`
-- Set the Project `Status` field to `Todo`:
-  - `gh project item-edit --id <item-id> --project-id <project-id> --field-id <status-field-id> --single-select-option-id <todo-option-id>`
-- The exact field/option IDs can be retrieved via `gh project field-list <project-number> --owner <owner> --format json`
+### 7. Execution Rank (MANDATORY, RELATIVE)
 
 **Execution rank:** the order items are executed is determined by their position in the Project's `Todo` column — `execute-item` always picks the topmost item.
 
-This skill is responsible for placing the new item at the appropriate rank by RELATIVE analysis against existing Todo items, NOT defaulting to bottom-of-column.
+This skill is responsible for determining the appropriate rank by RELATIVE analysis against existing Todo items, NOT defaulting to bottom-of-column.
 
-The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next — execution order is set by position on the Project board. Severity and rank are tracked independently but should be **kept consistent** by this skill's relative analysis: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
+The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next — execution order is set by position on the Project board. Severity and rank should be **kept consistent**: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
 
-#### 7a. Fetch the current rank order
-
-- `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`
-- The response order is the current rank (top first).
-- For each Todo item, capture its title, `priority:*` label, and any milestone — these are the comparison set.
-
-#### 7b. Determine the new item's rank by delegating to `rank-recommender`
+#### 7a. Determine the new item's rank by delegating to `rank-recommender`
 
 Call the `rank-recommender` agent with:
 - **Candidate item**: the issue title, one-line `### What` summary, and the `type:*`, `priority:*`, `effort:*` labels from step 4
-- **Current Todo column**: the ordered list (top-to-bottom) from step 7a — each item's title and `type:*`, `priority:*`, `effort:*` labels
 
-The agent returns:
-- `position:` — `top` | `above: <item title>` | `below: <item title>` | `bottom`
+The agent fetches the current Todo list itself and returns:
+- `position:` — `top` | `after_issue: <N>` | `bottom`
 - `rationale:` — per-dimension Impact / Risk / Urgency / Frequency / Dependencies
 - `divergence_flag:` (if present) — the agent detected a priority/rank conflict; surface this to the user and ask them to confirm or override
 
-Present the agent's recommendation and rationale to the user before applying any rank change.
+Present the agent's recommendation and rationale to the user before proceeding. Normalize the output to the manifest `rank` field:
+- `position: top` → `{"position": "top"}`
+- `position: after_issue: 45` → `{"after_issue": 45}`
+- `position: bottom` → `{"position": "bottom"}`
 
-#### 7c. Surface re-rank suggestions for existing items
+#### 7b. Surface re-rank suggestions for existing items
 
 If the analysis reveals existing items that appear misranked relative to the new item OR relative to each other (e.g. a `priority:P3` sitting above a `priority:P1`), list each suggested move with rationale. DO NOT apply them silently.
 
-#### 7d. Apply rank changes (USER-CONFIRMED ONLY)
+#### 7c. Apply rank (USER-CONFIRMED ONLY)
 
-After the user confirms the proposed positions:
+After the user confirms the proposed positions, include the confirmed `rank` in the manifest and any `rank_adjustments` for re-ranked existing items. Pass them to `bin/create-item` in step 6.
 
-- For each rank change, run a GraphQL mutation via `gh api graphql`:
-
-  ```graphql
-  mutation {
-    updateProjectV2ItemPosition(input: {
-      projectId: "<project-node-id>",
-      itemId: "<item-node-id>",
-      afterId: "<existing-item-node-id-it-should-follow>"
-    }) {
-      items { totalCount }
-    }
-  }
-  ```
-
-  Use the `id` fields from the `item-list` response for both the moved item and its target neighbor. To move an item to the very top, omit `afterId` (or set it to `null`).
-
-- Alternatively, instruct the user to drag-drop in the Project's web UI if they prefer to apply moves manually.
-
-The skill MUST NOT apply rank changes without explicit confirmation. Always present the full proposed ordering before mutating.
+If the user prefers to apply moves manually, omit `rank` and `rank_adjustments` from the manifest and instruct the user to drag-drop in the Project's web UI.
 
 ---
 
 ### 8. Dependencies & Sub-issue Linkage
 
-Apply the relationships gathered in step 1 (Discovery). All linkages use GitHub's native APIs — they are NOT mirrored in the issue body.
+Include in the manifest any relationships gathered in step 1 (Discovery) — `blocked_by`, `blocking`, and `parent`. `bin/create-item` applies them and reports partial failures in `warnings`.
 
-If the user did not name any blockers, blocking items, or a sub-issue parent in step 1, SKIP this entire step.
-
-If the Dependencies API is unavailable on this repo (private repo without paid plan — `gh api "repos/<owner>/<repo>/issues/<number>/dependencies"` returns `404`), SKIP steps 9b–9c and emit one warning: `Issue Dependencies API unavailable on this repo — blockers/blocking not applied.` Step 9d (sub-issue parent) is unaffected if the user named one.
-
-#### 9a. Resolve numeric issue IDs
-
-The Dependencies and Sub-issues REST APIs use the issue's numeric `id` (database ID), not the human-visible `number`. For each referenced issue (this issue + every blocker / blocked / parent target):
-
-- `gh api "repos/<target-owner>/<target-repo>/issues/<number>" --jq '.id'`
-
-The current issue's `id` was returned by `gh issue create`; capture it. For cross-Project / cross-repo blockers, the target may live in a different repo — resolve `<target-owner>/<target-repo>` from the issue URL the user provided.
-
-#### 9b. Apply "blocked by" relationships
-
-For each blocker the user named in step 1, delegate to `/block-item`:
-
-```text
-/block-item #<this-number> #<blocker-number>
-```
-
-GitHub allows up to 50 blockers per direction and prevents cycles automatically. Cross-Project blockers ARE permitted — they will be flagged as a smell by `audit` but not rejected here.
-
-#### 9c. Apply "blocking" relationships
-
-For each item the user said this one blocks:
-
-- `gh api -X POST "repos/<owner>/<repo>/issues/<this-number>/dependencies/blocking" -f issue_id=<blocked-id>`
-
-This is a convenience — if A blocks B, GitHub maintains both directions. Skip this step entirely if the user only declared "blocked by".
-
-#### 9d. Apply sub-issue parent linkage
-
-If the user named a parent issue:
-
-- `gh api -X POST "repos/<owner>/<repo>/issues/<parent-number>/sub_issues" -f sub_issue_id=<this-id>`
-
-A sub-issue can only have one parent. The new issue does NOT inherit the parent's milestone, priority label, effort label, or Project rank — those stay independent.
-
-#### 9e. Verify and surface
-
-Read back the applied relationships:
-
-- `gh api "repos/<owner>/<repo>/issues/<this-number>/dependencies/blocked_by" --jq '.[].number'`
-- `gh api "repos/<owner>/<repo>/issues/<this-number>/dependencies/blocking" --jq '.[].number'`
-- `gh issue view <this-number> --json parent --jq '.parent.number'` (for sub-issue parent)
-
-Print the resolved relationships so the user can confirm before continuing to milestone assignment.
+If the user did not name any blockers, blocking items, or a sub-issue parent, omit these fields entirely.
 
 ---
 
@@ -239,24 +183,24 @@ Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surfac
 
 Ask the user whether to assign this item to the active milestone:
 
-- If yes: `gh issue edit <n> --milestone "<milestone-title>"`
-- If no: leave unassigned (will be picked up by `execute-item` only after items in the active milestone are exhausted)
+- If yes: include `"milestone": "<milestone-title>"` in the manifest passed to `bin/create-item`
+- If no: omit the `milestone` field (will be picked up by `execute-item` only after items in the active milestone are exhausted)
 
 ---
 
 ### 10. Output
 
-Print:
+Using the JSON blob returned by `bin/create-item`, print:
 
-- Issue URL and number
-- Applied labels (type / priority / effort)
-- Project Status (Todo)
-- Milestone assignment (or "unassigned")
-- Final rank in the Project `Todo` column (e.g. "position 3 of 12, above #45 and below #38")
-- Any rank changes applied to existing items as part of relative re-prioritization
-- Blockers (`#N` list, with cross-Project / cross-repo blockers explicitly flagged) — or "none"
-- Blocking (`#N` list) — or "none"
-- Sub-issue parent (`#N`) — or "none"
+- Issue URL and number (`.issue.url`, `.issue.number`)
+- Applied labels (`.labels`)
+- Project Status (`.status`)
+- Milestone assignment (`.milestone` or "unassigned")
+- Rank applied (`.rank.applied`) and any re-ranked items (`.rank_adjustments_applied`)
+- Blockers (`.blocked_by` list, with cross-Project / cross-repo blockers explicitly flagged) — or "none"
+- Blocking (`.blocking` list) — or "none"
+- Sub-issue parent (`.parent`) — or "none"
+- Any warnings (`.warnings` — surface each one verbatim)
 
 ---
 
