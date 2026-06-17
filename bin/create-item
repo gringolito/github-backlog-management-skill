@@ -212,7 +212,7 @@ if [[ "$n_blocked_by" -gt 0 && -n "$this_id" ]]; then
     }
 
     bl_out=$(gh api -X POST "repos/${owner}/${repo}/issues/${issue_num}/dependencies/blocked_by" \
-      -f issue_id="$bl_id" 2>&1) && {
+      -F issue_id="$bl_id" 2>&1) && {
       current=$(cat "$WORK_DIR/blocked_by_applied.json")
       echo "$current" | jq ". + [$bl_num]" > "$WORK_DIR/blocked_by_applied.json"
     } || echo "blocked_by[$i]: failed to link #$bl_num: $bl_out" >> "$WARNINGS_FILE"
@@ -234,7 +234,7 @@ if [[ "$n_blocking" -gt 0 && -n "$this_id" ]]; then
     }
 
     bl_out=$(gh api -X POST "repos/${owner}/${repo}/issues/${issue_num}/dependencies/blocking" \
-      -f issue_id="$bl_id" 2>&1) && {
+      -F issue_id="$bl_id" 2>&1) && {
       current=$(cat "$WORK_DIR/blocking_applied.json")
       echo "$current" | jq ". + [$bl_num]" > "$WORK_DIR/blocking_applied.json"
     } || echo "blocking[$i]: failed to link #$bl_num: $bl_out" >> "$WARNINGS_FILE"
@@ -244,7 +244,7 @@ fi
 # ─── 8. Apply parent linkage (non-fatal) ───────────────────────────────────
 if [[ "$parent_num" != "null" && -n "$this_id" ]]; then
   parent_out=$(gh api -X POST "repos/${owner}/${repo}/issues/${parent_num}/sub_issues" \
-    -f sub_issue_id="$this_id" 2>&1) && \
+    -F sub_issue_id="$this_id" 2>&1) && \
     echo "$parent_num" > "$WORK_DIR/parent_applied.json" || \
     echo "parent: failed to link #$parent_num as parent: $parent_out" >> "$WARNINGS_FILE"
 fi
