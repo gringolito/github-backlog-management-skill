@@ -28,7 +28,7 @@ Run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surfac
   - Desired outcome
   - User/business impact
   - Constraints, risks, and edge cases
-- Ask about relationships to existing items (used in step 8):
+- Ask about relationships to existing items:
   - **Blocked by**: Is this item blocked by any open issue that must be done first? (provide issue numbers; cross-Project blockers are allowed — e.g. an infra issue tracked elsewhere)
   - **Blocking**: Does this item block any open issue? (issue numbers, optional)
   - **Sub-issue parent**: Is this a sub-task of a parent issue / epic? (issue number, optional — sub-issues stay independent: they do NOT inherit the parent's milestone, priority, or rank)
@@ -86,7 +86,7 @@ Handle the returned verdict:
 
 `type:external-blocker` is reserved for infrastructure stubs created by `/add-external-blocker` — DO NOT classify work items with this type; if the agent returns it or the user attempts to, STOP and redirect them to `/add-external-blocker`.
 
-These labels will be passed as `--label` flags when creating the issue in step 6.
+These labels will be passed as `labels` in the manifest in step 9.
 
 ---
 
@@ -104,33 +104,11 @@ If too vague → request clarification
 
 ---
 
-### 6. Issue Creation & Project Setup (MANDATORY)
+### 6. Dependencies & Sub-issue Linkage
 
-After validation passes, delegate all GitHub API calls to `bin/create-item`:
+Include in the manifest any relationships gathered in step 1 (Discovery) — `blocked_by`, `blocking`, and `parent`.
 
-1. Write the issue body to a temp file, e.g. `/tmp/add-item-body.md`
-2. Write the manifest JSON to `/tmp/add-item-manifest.json`:
-
-```json
-{
-  "title": "<issue title>",
-  "body_file": "/tmp/add-item-body.md",
-  "labels": ["type:<x>", "priority:<y>", "effort:<z>"],
-  "rank": <rank object — see step 7>,
-  "rank_adjustments": <array — see step 7>,
-  "blocked_by": [{"owner": "...", "repo": "...", "number": N}, ...],
-  "blocking":   [{"owner": "...", "repo": "...", "number": N}, ...],
-  "parent": <integer issue number or omit>,
-  "milestone": "<milestone title or omit>"
-}
-```
-
-Omit optional fields (`rank`, `rank_adjustments`, `blocked_by`, `blocking`, `parent`, `milestone`) when not applicable.
-
-3. Run: `bin/create-item --input /tmp/add-item-manifest.json`
-4. Capture the JSON blob emitted to stdout — use it for Step 10.
-
-If `bin/create-item` exits non-zero, STOP and surface its stderr output verbatim.
+If the user did not name any blockers, blocking items, or a sub-issue parent, omit these fields entirely.
 
 ---
 
@@ -163,34 +141,42 @@ If the analysis reveals existing items that appear misranked relative to the new
 
 #### 7c. Apply rank (USER-CONFIRMED ONLY)
 
-After the user confirms the proposed positions, include the confirmed `rank` in the manifest and any `rank_adjustments` for re-ranked existing items. Pass them to `bin/create-item` in step 6.
+After the user confirms the proposed positions, include the confirmed `rank` in the manifest and any `rank_adjustments` for re-ranked existing items. 
 
 If the user prefers to apply moves manually, omit `rank` and `rank_adjustments` from the manifest and instruct the user to drag-drop in the Project's web UI.
 
 ---
 
-### 8. Dependencies & Sub-issue Linkage
-
-Include in the manifest any relationships gathered in step 1 (Discovery) — `blocked_by`, `blocking`, and `parent`. `bin/create-item` applies them and reports partial failures in `warnings`.
-
-If the user did not name any blockers, blocking items, or a sub-issue parent, omit these fields entirely.
-
----
-
-### 9. Milestone Assignment (OPTIONAL, RECOMMENDED)
+### 8. Milestone Assignment (OPTIONAL, RECOMMENDED)
 
 Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON — `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
 
 Ask the user whether to assign this item to the active milestone:
 
-- If yes: include `"milestone": "<milestone-title>"` in the manifest passed to `bin/create-item`
+- If yes: include `"milestone": "<milestone-title>"` in the manifest passed to `create-item`
 - If no: omit the `milestone` field (will be picked up by `execute-item` only after items in the active milestone are exhausted)
+
+---
+
+### 9. Issue Creation & Project Setup (MANDATORY)
+
+After validation passes, invoke the `create-item` Bash tool to create the issue:
+
+1. Write the issue body to a temp file, e.g. `/tmp/add-item-body.md`
+2. Write the manifest JSON file, e.g. `/tmp/add-item-manifest.json`:
+
+See [issue-manifest.md](./issue-manifest.md) for the full manifest schema.
+
+3. Run: `create-item --input /tmp/add-item-manifest.json`
+4. Capture the JSON blob emitted to stdout — use it for Step 10.
+
+If `create-item` exits non-zero, STOP and surface its stderr output verbatim.
 
 ---
 
 ### 10. Output
 
-Using the JSON blob returned by `bin/create-item`, print:
+Using the JSON blob returned by `create-item`, print:
 
 - Issue URL and number (`.issue.url`, `.issue.number`)
 - Applied labels (`.labels`)
@@ -242,4 +228,3 @@ You MUST:
 - Issue URL printed for verification
 - All labels and Project state explicitly listed
 - Do NOT proceed with incomplete or ambiguous information
-- All `gh` errors surfaced verbatim

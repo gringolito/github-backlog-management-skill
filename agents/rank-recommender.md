@@ -2,6 +2,7 @@
 name: rank-recommender
 model: sonnet
 effort: medium
+disallowedTools: Write, Edit
 allowedTools: Bash (gh project item-list *)
 description: Recommends where a candidate backlog item should sit in the Project's Todo column. Returns a concrete position, per-dimension rationale, and a flag when the recommended rank diverges from what the priority label would imply.
 ---
@@ -29,10 +30,10 @@ You receive:
 
 ```bash
 gh project item-list <project_number> --owner <owner> \
-  --format json --limit 200 --query "is:issue status:Todo"
+  --format json --limit 200 --query "is:issue status:Todo -label:type:external-blocker"
 ```
 
-Read `<project_number>` and `<owner>` from `.claude/backlog-project.json`. The response order is the current rank (top first). For each item capture its `content.number`, title, and `type:*`/`priority:*`/`effort:*` labels.
+Read `<project_number>` and `<owner>` from `.claude/backlog-project.json`. The response order is the current rank (top first). For each item capture its `content.number`, `content.body`, title, and `type:*`/`priority:*`/`effort:*` labels.
 
 ---
 

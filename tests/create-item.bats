@@ -18,6 +18,7 @@ setup() {
   "repo": "testrepo",
   "project_number": 1,
   "project_id": "PVT_test",
+  "project_title": "testowner/testrepo Backlog",
   "status_field_id": "PVTF_test",
   "status_options": {
     "Todo": "opt_todo",
@@ -29,6 +30,23 @@ JSON
 
   echo "Issue body content." > "$GH_MOCK_DIR/body.txt"
 
+  # Prepopulate Todo list with the issue the mock always creates (#42)
+  cat > "$GH_MOCK_DIR/items_todo.json" << 'JSON'
+{
+  "items": [
+    {
+      "id": "PVTI_42",
+      "type": "ISSUE",
+      "content": {
+        "number": 42,
+        "title": "Test issue title",
+        "url": "https://github.com/testowner/testrepo/issues/42"
+      }
+    }
+  ]
+}
+JSON
+
   # gh mock — reads control flags from $GH_MOCK_DIR at runtime
   cat > "$MOCK_BIN/gh" << 'SCRIPT'
 #!/usr/bin/env bash
@@ -39,24 +57,21 @@ if [[ "$subcmd" == "issue" ]]; then
   subcmd2="${1:-}"; shift || true
   if [[ "$subcmd2" == "create" ]]; then
     [[ -f "$GH_MOCK_DIR/issue_create_fail" ]] && { echo "gh issue create: simulated failure" >&2; exit 1; }
+    # Flag-specific failures
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --milestone) shift; [[ -f "$GH_MOCK_DIR/milestone_fail" ]] && { echo "gh issue create: milestone not found" >&2; exit 1; };;
+        --blocked-by) shift; [[ -f "$GH_MOCK_DIR/deps_404" ]] && { echo "gh issue create: blocked-by 404" >&2; exit 1; };;
+        *) shift;;
+      esac
+    done
     echo "https://github.com/testowner/testrepo/issues/42"
-    exit 0
-  elif [[ "$subcmd2" == "edit" ]]; then
-    [[ -f "$GH_MOCK_DIR/milestone_fail" ]] && { echo "gh issue edit: simulated failure" >&2; exit 1; }
     exit 0
   fi
 
 elif [[ "$subcmd" == "project" ]]; then
   subcmd2="${1:-}"; shift || true
-  if [[ "$subcmd2" == "item-add" ]]; then
-    [[ -f "$GH_MOCK_DIR/item_add_fail" ]] && { echo "gh project item-add: simulated failure" >&2; exit 1; }
-    echo '{"id": "PVTI_42", "type": "ISSUE", "content": {"number": 42, "url": "https://github.com/testowner/testrepo/issues/42"}}'
-    exit 0
-  elif [[ "$subcmd2" == "item-edit" ]]; then
-    [[ -f "$GH_MOCK_DIR/item_edit_fail" ]] && { echo "gh project item-edit: simulated failure" >&2; exit 1; }
-    echo '{"id": "PVTI_42"}'
-    exit 0
-  elif [[ "$subcmd2" == "item-list" ]]; then
+  if [[ "$subcmd2" == "item-list" ]]; then
     cat "$GH_MOCK_DIR/items_todo.json" 2>/dev/null || echo '{"items": []}'
     exit 0
   fi
@@ -64,12 +79,11 @@ elif [[ "$subcmd" == "project" ]]; then
 elif [[ "$subcmd" == "api" ]]; then
   method="GET"
   path=""
-  jq_filter=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -X|--method) method="$2"; shift 2;;
-      -f|--field) shift 2;;
-      --jq) jq_filter="$2"; shift 2;;
+      -f|--field|-F) shift 2;;
+      --jq) shift 2;;
       -*) shift;;
       *) [[ -z "$path" ]] && path="$1"; shift;;
     esac
@@ -81,37 +95,6 @@ elif [[ "$subcmd" == "api" ]]; then
     exit 0
   fi
 
-  if [[ "$method" == "POST" ]]; then
-    if [[ "$path" =~ /dependencies/blocked_by ]]; then
-      if [[ -f "$GH_MOCK_DIR/deps_404" ]]; then
-        echo "HTTP 404: Not Found" >&2; exit 1
-      fi
-      echo '{"id": 1}'; exit 0
-    fi
-    if [[ "$path" =~ /dependencies/blocking ]]; then
-      if [[ -f "$GH_MOCK_DIR/deps_404" ]]; then
-        echo "HTTP 404: Not Found" >&2; exit 1
-      fi
-      echo '{"id": 1}'; exit 0
-    fi
-    if [[ "$path" =~ /sub_issues ]]; then
-      [[ -f "$GH_MOCK_DIR/parent_fail" ]] && { echo "sub_issues: simulated failure" >&2; exit 1; }
-      echo '{"id": 1}'; exit 0
-    fi
-  fi
-
-  # GET issue by number — used for ID resolution
-  if [[ "$path" =~ ^repos/[^/]+/[^/]+/issues/[0-9]+$ ]]; then
-    num=$(echo "$path" | grep -oE '[0-9]+$')
-    result="{\"id\": 100${num}, \"number\": ${num}, \"state\": \"open\"}"
-    if [[ -n "$jq_filter" ]]; then
-      echo "$result" | jq -r "$jq_filter"
-    else
-      echo "$result"
-    fi
-    exit 0
-  fi
-
   echo "Unhandled api: method=$method path=$path" >&2; exit 1
 fi
 
@@ -119,8 +102,6 @@ echo "Unhandled gh: $subcmd $*" >&2
 exit 1
 SCRIPT
   chmod +x "$MOCK_BIN/gh"
-
-  echo '{"items": []}' > "$GH_MOCK_DIR/items_todo.json"
 }
 
 teardown() {
@@ -253,19 +234,24 @@ JSON
 
   run "$CREATE_ITEM" --input "$manifest"
   [[ "$status" -ne 0 ]]
-  # stderr should contain error (bats captures it in $output when combined)
-  # Using run's combined output check
   [[ "$output" == *"simulated failure"* ]] || [[ "$output" == *"error"* ]] || [[ "$output" == *"fail"* ]]
 }
 
 # ---------------------------------------------------------------------------
-# AC4 — Fatal: gh project item-add fails → exit non-zero
+# AC4 — Fatal: milestone failure is fatal (bundled into gh issue create)
 # ---------------------------------------------------------------------------
 
-@test "AC4: gh project item-add failure exits non-zero" {
+@test "AC4: milestone assignment failure is fatal" {
   local manifest="$GH_MOCK_DIR/manifest.json"
-  default_manifest "$manifest"
-  touch "$GH_MOCK_DIR/item_add_fail"
+  cat > "$manifest" << JSON
+{
+  "title": "Milestoned issue",
+  "body_file": "$GH_MOCK_DIR/body.txt",
+  "labels": ["type:feature", "priority:P2", "effort:S"],
+  "milestone": "v0.6.0"
+}
+JSON
+  touch "$GH_MOCK_DIR/milestone_fail"
 
   run "$CREATE_ITEM" --input "$manifest"
   [[ "$status" -ne 0 ]]
@@ -298,36 +284,10 @@ JSON
 }
 
 # ---------------------------------------------------------------------------
-# AC6 — Non-fatal: gh issue edit --milestone fails → warning in blob, exit 0
+# AC6 — Fatal: blocked_by failure is fatal (bundled into gh issue create)
 # ---------------------------------------------------------------------------
 
-@test "AC6: milestone assignment failure adds warning but exits 0" {
-  local manifest="$GH_MOCK_DIR/manifest.json"
-  cat > "$manifest" << JSON
-{
-  "title": "Milestoned issue",
-  "body_file": "$GH_MOCK_DIR/body.txt",
-  "labels": ["type:feature", "priority:P2", "effort:S"],
-  "milestone": "v0.6.0"
-}
-JSON
-  touch "$GH_MOCK_DIR/milestone_fail"
-
-  run "$CREATE_ITEM" --input "$manifest"
-  [[ "$status" -eq 0 ]]
-
-  milestone=$(echo "$output" | jq -r '.milestone')
-  [[ "$milestone" == "null" ]]
-
-  warnings_len=$(echo "$output" | jq '.warnings | length')
-  [[ "$warnings_len" -gt 0 ]]
-}
-
-# ---------------------------------------------------------------------------
-# AC7 — Non-fatal: Dependencies API 404 → warning in blob, exit 0
-# ---------------------------------------------------------------------------
-
-@test "AC7: Dependencies API 404 adds warning but exits 0" {
+@test "AC6: blocked_by failure is fatal" {
   local manifest="$GH_MOCK_DIR/manifest.json"
   cat > "$manifest" << JSON
 {
@@ -340,8 +300,5 @@ JSON
   touch "$GH_MOCK_DIR/deps_404"
 
   run "$CREATE_ITEM" --input "$manifest"
-  [[ "$status" -eq 0 ]]
-
-  warnings_len=$(echo "$output" | jq '.warnings | length')
-  [[ "$warnings_len" -gt 0 ]]
+  [[ "$status" -ne 0 ]]
 }

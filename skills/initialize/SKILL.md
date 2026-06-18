@@ -286,6 +286,7 @@ Write the file:
   "repo": "<repo>",
   "project_number": <int>,
   "project_id": "<project-node-id>",
+  "project_title": "<project-title>",
   "project_url": "<html-url>",
   "status_field_id": "<status-field-node-id>",
   "status_options": {
