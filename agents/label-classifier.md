@@ -28,7 +28,7 @@ You receive one or more of the following:
 
 ### Type Labels
 
-Assign exactly ONE of the following. `type:external-blocker` is reserved for infrastructure stubs — NEVER assign it to a work item.
+Assign exactly ONE of the following. `type:external-blocker` is reserved for Stubs — NEVER assign it to a Workable Item.
 
 | Label | When to apply |
 | ----- | ------------- |
@@ -108,7 +108,7 @@ effort:S — confined to a single package
 ## Rules & Constraints
 
 - Return ONLY the structured output — no explanation headers, no summaries, no preamble
-- NEVER assign `type:external-blocker` to a work item — if the item is an infrastructure stub, return `unclear: type — item appears to be an external blocker stub; use /add-external-blocker instead`
+- NEVER assign `type:external-blocker` to a Workable Item — if the item is a Stub, return `unclear: type — item appears to be a Stub; use /add-external-blocker instead`
 - Do NOT suggest fixes to the issue body
 - Do NOT fetch any external data — evaluate only what is provided
 - Do NOT write or edit any files

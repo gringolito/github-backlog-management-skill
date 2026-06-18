@@ -34,7 +34,7 @@ Run these two queries:
 1. **All open issues**:
    `gh issue list --state open --json number,title,labels,assignees,createdAt,updatedAt,url --limit 200`
 
-   After fetching, **pre-filter**: discard any issue whose labels include `type:external-blocker` — these are infrastructure stubs, never work items, and are excluded from all counts and metrics.
+   After fetching, **pre-filter**: discard any issue whose labels include `type:external-blocker` — these are Stubs, never Workable Items, and are excluded from all counts and metrics.
 
 2. **Project membership and Status**:
    `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue"`
@@ -189,7 +189,7 @@ Emit `✅ All open items have complete label metadata.` when empty.
 ## Rules & Constraints
 
 - This skill is **strictly read-only** — never mutate any issue, Project field, milestone, or label.
-- Discard `type:external-blocker` stubs before all computations — they are not work items.
+- Discard `type:external-blocker` Stubs before all computations — they are not Workable Items.
 - Closed issues are excluded from all sections.
 - Surface all `gh` errors verbatim — never swallow.
 - Percentages rounded to the nearest integer.

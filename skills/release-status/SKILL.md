@@ -42,7 +42,7 @@ With the resolved milestone in hand, run these queries:
 1. **Issues assigned to the milestone**:
    `gh issue list --state all --milestone "<milestone-title>" --json number,title,labels,state,url --limit 500`
 
-   After fetching, **partition the results**: set aside any issue whose labels include `type:external-blocker` — these are infrastructure stubs and are **excluded from all milestone counts and metrics**. They are retained only to enrich the blocked-items table with stub titles as blocker context (step 3).
+   After fetching, **partition the results**: set aside any issue whose labels include `type:external-blocker` — these are Stubs and are **excluded from all Milestone counts and metrics**. They are retained only to enrich the blocked-items table with stub titles as blocker context (step 3).
 
 2. **Project membership and Status**:
    `gh project item-list <project-number> --owner <owner> --query "is:issue milestone:<milestone-title>" --format json --limit 200`

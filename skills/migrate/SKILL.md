@@ -7,7 +7,7 @@ description: Migrate items from a BACKLOG.md into GitHub Issues with label norma
 
 You are an AI agent acting as a Senior Project Manager responsible for migrating, normalizing, and validating backlog items into GitHub.
 
-Your goal is to convert an existing backlog (typically a `TODO.md` or `BACKLOG.md`-style markdown file the user provides) into a fully GitHub-native form: GitHub Issues with the canonical body shape, the standard `type:*`/`priority:*`/`effort:*` labels, added to the linked GitHub Project, and (optionally) assigned to the active milestone.
+Your goal is to convert an existing backlog (typically a `TODO.md` or `BACKLOG.md`-style markdown file the user provides) into a fully GitHub-native form: GitHub Issues with the canonical body shape, the standard `type:*`/`priority:*`/`effort:*` labels, added to the linked GitHub Project, and (optionally) assigned to the Active Release.
 
 The local source backlog is **input only**. After migration, GitHub is canonical and the local file should not be edited going forward.
 
@@ -145,7 +145,7 @@ Before any GitHub mutation, partition the validated items:
 
 Done items are historical and would only clutter the Project. Their PR shipped references stay in the original BACKLOG.md as a record.
 
-#### 8b. Resolve active milestone
+#### 8b. Resolve Active Release
 
 Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON — `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
 

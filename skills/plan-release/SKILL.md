@@ -90,7 +90,7 @@ Ask the user which release mode to use:
 - Validate each resolved issue exists and is open:
   - `gh issue view <n> --json number,title,state,labels,milestone`
   - If an issue is closed or not found, surface the error and ask the user to correct the list.
-  - If any validated issue carries `type:external-blocker`, warn the user: "Issue #N is an external-blocker stub, not a work item. Stubs should not appear in release scope." Exclude the item unless the user explicitly overrides with a justification.
+  - If any validated issue carries `type:external-blocker`, warn the user: "Issue #N is an external-blocker stub, not a Workable Item. Stubs should not appear in release scope." Exclude the item unless the user explicitly overrides with a justification.
 - Display the confirmed issue list (number, title, type label, priority label, effort label) and ask for review.
 - Scan the scope for items that carry `type:feature` or any explicit breaking-change signal in `### What` / `### INVEST Notes` (read body via `gh issue view <n> --json body`). For each such item, WARN the user:
   > ⚠️ Issue #N "`<title>`" introduces new functionality / a breaking change, which is atypical for a maintenance release.
@@ -169,7 +169,7 @@ Wait for explicit user confirmation of the version name before proceeding.
 Collect from the user (with sensible defaults):
 
 - **Title** — confirmed in step 6
-- **Due date** (`due_on`) — Used by `execute-item` to determine the active milestone (earliest `due_on` wins). Format: `YYYY-MM-DDTHH:MM:SSZ`.
+- **Due date** (`due_on`) — Used by `execute-item` to determine the Active Release (earliest `due_on` wins). Format: `YYYY-MM-DDTHH:MM:SSZ`.
 - **Description** — if the user does not provide one, generate a suggested description from the confirmed scope:
   - Summarize the release theme (e.g. "Bug-fix and security hardening release", "Feature release: …", "Maintenance patch for v1.5.x")
   - List the top goals derived from the scoped items' `### Why` sections
@@ -338,7 +338,7 @@ Triggered when the user chooses "Remove items" or "Both" in Step R1.
 
 Fetch all open issues currently assigned to the milestone with Status = `Todo` (In Progress / Done items are read-only and not included).
 
-Display the current milestone Todo items in plain text before calling `AskUserQuestion`:
+Display the Milestone's Todo items in plain text before calling `AskUserQuestion`:
 
 ```text
 # | Title | Type | Priority | Effort

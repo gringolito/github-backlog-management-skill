@@ -1,6 +1,6 @@
 ---
 name: execute-item
-description: Pick and execute the highest-priority unblocked backlog item in the active milestone.
+description: Pick and execute the topmost unblocked Workable Item from the Queue.
 ---
 
 # execute-item
@@ -13,7 +13,7 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 ## Objective
 
-Select and execute the highest-priority actionable backlog item, scoped to the active milestone first, then to un-milestoned items as a fallback.
+Select and execute the topmost actionable Workable Item, scoped to the Active Release first, then to un-milestoned items as a fallback.
 
 ---
 
@@ -339,7 +339,7 @@ Print:
 - Branch name
 - Assignee (the authenticated user, assigned in step 6)
 - Final Project Status (typically `In Progress` until PR merges)
-- Whether the issue was assigned to the active milestone
+- Whether the issue was assigned to the Active Release
 - Items skipped above this one because they were blocked (with `#N` and the open blockers that gated them; `type:external-blocker` blockers shown as `External: <stub title>`) — surfaces why the picked item wasn't necessarily the topmost
 - Parent items skipped because open sub-issues were found in the Project's Todo column (log: `Skipping parent #N — open sub-issues found. Picking #M.`)
 - Whether this item was **resumed** (was already In Progress) or **newly picked** (was Todo)
