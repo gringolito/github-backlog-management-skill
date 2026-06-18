@@ -102,7 +102,7 @@ Create the standard label catalog. Use `gh label create --force` so existing lab
 - `type:reliability` — `"Uptime, error recovery, observability, or graceful-degradation improvement"`
 - `type:compliance` — `"Regulatory, legal, or contractual obligation"`
 - `type:spike` — `"Time-boxed investigation to reduce uncertainty; deliverable is knowledge"`
-- `type:external-blocker` — `"External constraint blocking a backlog item (infrastructure stub)"`
+- `type:external-blocker` — `"External constraint blocking a backlog item (Stub)"`
 
 #### Priority labels (one of these must be on every backlog item)
 
@@ -159,7 +159,7 @@ If the file is missing or the user approved replacement:
 - Push the branch: `git push -u origin chore/backlog-item-issue-template`
 - Open a PR via `gh pr create --title "chore: add backlog-item and external-blocker issue forms templates" --body "<body>"` where the body explains:
   - `backlog-item.yml` is the canonical body shape for backlog items — all skills depend on its section headings
-  - `external-blocker.yml` is the template for infrastructure stub issues created by `/add-external-blocker`
+  - `external-blocker.yml` is the template for External Blocker Stub issues created by `/add-external-blocker`
   - `audit` parses `backlog-item.yml` sections — changing them will break parsing
 - Print the PR URL
 

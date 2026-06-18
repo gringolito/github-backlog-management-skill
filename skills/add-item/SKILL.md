@@ -84,7 +84,7 @@ Handle the returned verdict:
 - `priority:*` — if the agent returns `unclear: priority`, present the reasoning and use AskUserQuestion with options: `P0` / `P1` / `P2` / `P3`; default to `priority:P2` only if the user explicitly selects it
 - `effort:*` — if the agent returns `unclear: effort`, present the reasoning and use AskUserQuestion with the 4 most contextually relevant sizes as options (from `XS`, `S`, `M`, `L`, `XL`); "Other" is automatically provided for the fifth
 
-`type:external-blocker` is reserved for infrastructure stubs created by `/add-external-blocker` — DO NOT classify work items with this type; if the agent returns it or the user attempts to, STOP and redirect them to `/add-external-blocker`.
+`type:external-blocker` is reserved for Stubs created by `/add-external-blocker` — DO NOT classify Workable Items with this type; if the agent returns it or the user attempts to, STOP and redirect them to `/add-external-blocker`.
 
 These labels will be passed as `labels` in the manifest in step 9.
 
@@ -114,11 +114,11 @@ If the user did not name any blockers, blocking items, or a sub-issue parent, om
 
 ### 7. Execution Rank (MANDATORY, RELATIVE)
 
-**Execution rank:** the order items are executed is determined by their position in the Project's `Todo` column — `execute-item` always picks the topmost item.
+**Execution rank:** the order items are executed is determined by their Rank in the Queue — `execute-item` always picks the topmost item.
 
 This skill is responsible for determining the appropriate rank by RELATIVE analysis against existing Todo items, NOT defaulting to bottom-of-column.
 
-The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next — execution order is set by position on the Project board. Severity and rank should be **kept consistent**: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
+The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next — execution order is set by Rank. Severity and rank should be **kept consistent**: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
 
 #### 7a. Determine the new item's rank by delegating to `rank-recommender`
 
@@ -141,7 +141,7 @@ If the analysis reveals existing items that appear misranked relative to the new
 
 #### 7c. Apply rank (USER-CONFIRMED ONLY)
 
-After the user confirms the proposed positions, include the confirmed `rank` in the manifest and any `rank_adjustments` for re-ranked existing items. 
+After the user confirms the proposed Rank placements, include the confirmed `rank` in the manifest and any `rank_adjustments` for re-ranked existing items. 
 
 If the user prefers to apply moves manually, omit `rank` and `rank_adjustments` from the manifest and instruct the user to drag-drop in the Project's web UI.
 
@@ -151,10 +151,10 @@ If the user prefers to apply moves manually, omit `rank` and `rank_adjustments` 
 
 Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON — `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
 
-Ask the user whether to assign this item to the active milestone:
+Ask the user whether to assign this item to the Active Release:
 
 - If yes: include `"milestone": "<milestone-title>"` in the manifest passed to `create-item`
-- If no: omit the `milestone` field (will be picked up by `execute-item` only after items in the active milestone are exhausted)
+- If no: omit the `milestone` field (will be picked up by `execute-item` only after items in the Active Release are exhausted)
 
 ---
 

@@ -13,7 +13,7 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 ## Objective
 
-Register a `blocked_by` dependency between two GitHub issues: mark issue `#N` as blocked by issue `#M`. Works for any two GitHub issues — not limited to items in the linked Project or the active milestone.
+Register a `blocked_by` dependency between two GitHub issues: mark issue `#N` as blocked by issue `#M`. Works for any two GitHub issues — not limited to items in the linked Project or the active Milestone.
 
 ---
 

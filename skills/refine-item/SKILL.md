@@ -240,7 +240,7 @@ Only after the pre-removal validation gate passes:
   - Issue URL
   - Summary of body changes
   - Label changes applied
-  - Rank change applied (e.g., "moved from position 8 to position 3")
+  - Rank change applied (e.g., "moved from Rank 8 to Rank 3")
   - Dependency changes applied (blockers added / removed, sub-issue parent change)
 
 ---

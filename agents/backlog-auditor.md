@@ -64,7 +64,7 @@ If structure is unclear or `gh` fails:
 
 ### 2. Structural Validation (MANDATORY)
 
-For EACH issue in the Project, first determine whether it is a `type:external-blocker` stub. Apply the appropriate check path — stubs and work items have different structural rules.
+For EACH issue in the Project, first determine whether it is a `type:external-blocker` stub. Apply the appropriate check path — stubs and Workable Items have different structural rules.
 
 #### 2a. Stub check path (issues with `type:external-blocker`)
 
@@ -76,7 +76,7 @@ For EACH issue in the Project, first determine whether it is a `type:external-bl
   - The content is boilerplate or non-descriptive — single words, generic phrases such as "TBD", "N/A", "Unknown", "External dependency", "External constraint", or any content that does not explain the specific nature of the constraint
 - **Project Status field**: every stub MUST have a Status set (`Todo` / `In Progress` / `Done`). Flag stubs with no Status.
 
-#### 2b. Work item check path (all other issues)
+#### 2b. Workable Item check path (all other issues)
 
 ##### Labels (exactly-one rule)
 
@@ -240,8 +240,8 @@ Flag each of the following as a Quality or Consistency issue:
 
 - **Dangling blocker** — an open or unresolvable entry in the `blocked_by` list where fetching the blocker returns `404` (deleted / transferred without redirect). A `closed` blocker is satisfied by design and is never flagged as dangling. Critical.
 - **Cross-Project blocker** — a blocker that exists but is NOT in the linked Project. Permitted by design (e.g. infra issue tracked elsewhere) but flagged as a smell so the user can verify it's intentional. Consistency.
-- **Stale blocker** — a blocker in a CLOSED milestone while THIS item is in the active milestone. Suggests the dep was meant to be resolved but wasn't. Quality.
-- **Blocked active-milestone item with priority:P0** — surface as a Critical risk so the user knows their highest-severity work is gated. When the blocker carries `type:external-blocker`, include the stub title alongside the blocked item so the source of the constraint is immediately visible.
+- **Stale blocker** — a blocker in a CLOSED milestone while THIS item is in the Active Release. Suggests the dep was meant to be resolved but wasn't. Quality.
+- **Blocked Active Release item with priority:P0** — surface as a Critical risk so the user knows their highest-severity work is gated. When the blocker carries `type:external-blocker`, include the stub title alongside the blocked item so the source of the constraint is immediately visible.
 - **Items at top of Todo column that are blocked** — they look ready to pick but `execute-item` will skip them. Consistency.
 - **Apparent cycles** — defense-in-depth: walk the `blocked_by` graph and detect back-edges. GitHub prevents direct cycles (A blocked-by B and B blocked-by A) but indirect ones via transferred issues, deleted nodes, or stale state may slip through. Critical.
 
@@ -301,14 +301,14 @@ Produce a **Validation Report** with:
 
 ### A. Critical Issues (Must Fix)
 
-- Missing required labels (`type:*` / `priority:*` / `effort:*`) on work items
-- Missing required body sections on work items
+- Missing required labels (`type:*` / `priority:*` / `effort:*`) on Workable Items
+- Missing required body sections on Workable Items
 - Missing Project Status
-- Items in active milestone missing `priority:*`
+- Items in the Active Release missing `priority:*`
 - Duplicate labels within a group
 - Dangling blockers (referenced issue does not exist)
 - Apparent dependency cycles
-- Blocked `priority:P0` items in the active milestone (include stub title when the blocker is a `type:external-blocker` stub)
+- Blocked `priority:P0` items in the Active Release (include stub title when the blocker is a `type:external-blocker` stub)
 
 ### B. Quality Issues
 
@@ -317,7 +317,7 @@ Produce a **Validation Report** with:
 - Scope problems
 - Effort issues
 - Vague or untestable criteria
-- Stale blockers (blocker in closed milestone while item is in active milestone)
+- Stale blockers (blocker in closed milestone while item is in the Active Release)
 - `type:external-blocker` stub with missing, empty, or boilerplate Reason field
 - `type:external-blocker` stub that is open but blocking no issues (orphaned)
 

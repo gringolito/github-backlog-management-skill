@@ -125,7 +125,7 @@ After the loop ends (queue exhausted, user stopped, or all items processed), out
 
 #### Refined items
 
-For each: issue URL, label changes applied (`priority:*` / `effort:*` / `type:*`), rank change (e.g. "moved from position 8 to position 3"), milestone changes (if any).
+For each: issue URL, label changes applied (`priority:*` / `effort:*` / `type:*`), rank change (e.g. "moved from Rank 8 to Rank 3"), milestone changes (if any).
 
 #### Partially refined items
 
