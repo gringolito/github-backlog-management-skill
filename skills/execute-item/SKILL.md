@@ -27,7 +27,7 @@ Run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surfac
 
 ### 1. Item Selection (MANDATORY)
 
-Run `bin/pick-item` via the Bash tool. If it exits non-zero, STOP and surface its stderr verbatim.
+Run `pick-item` via the Bash tool. If it exits non-zero, STOP and surface its stderr verbatim.
 
 Capture the JSON output:
 
@@ -95,7 +95,7 @@ Use `candidate.sub_issues_summary` from the script output — no API call needed
 - **If `completed == total AND total > 0`:** All sub-issues are closed. Enter **Scope Completeness Review** below.
 - **Otherwise:** proceed to Step 3.
 
-Note: Open sub-issue routing is already handled by `bin/pick-item` — if the script selected a sub-issue as `candidate`, no further parent/sub-issue traversal is needed here.
+Note: Open sub-issue routing is already handled by `pick-item` — if the script selected a sub-issue as `candidate`, no further parent/sub-issue traversal is needed here.
 
 #### Scope Completeness Review
 
@@ -137,7 +137,7 @@ Entered when `candidate.sub_issues_summary.completed == total AND total > 0`.
 
 ### 4. Item Validation (MANDATORY)
 
-Use `candidate.body` and `candidate.labels` from the `bin/pick-item` output — no `gh issue view` call needed.
+Use `candidate.body` and `candidate.labels` from the `pick-item` output — no `gh issue view` call needed.
 
 Parse the body sections (`### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes`). Validate against INVEST principles:
 
@@ -162,7 +162,7 @@ If priority or effort labels are missing or duplicated, STOP and direct the user
 
 #### 5.1. Parent Context (RELATIVE)
 
-Use `candidate.parent` from the `bin/pick-item` output — no additional API call needed.
+Use `candidate.parent` from the `pick-item` output — no additional API call needed.
 
 1. **If `candidate.parent` is `null`** → proceed silently. No warning, no block.
 2. **If `candidate.parent` is present:**
