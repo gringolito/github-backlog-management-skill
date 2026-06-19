@@ -248,10 +248,15 @@ if [[ -n "$winner_num" ]]; then
     }')
   } || parent_out="null"
 
+  # Comments fetch (cap at 100)
+  comments_raw=$(gh api "repos/${owner}/${repo}/issues/${winner_num}/comments?per_page=100" 2>/dev/null || echo "[]")
+  comments_out=$(echo "$comments_raw" | jq '[.[] | {author: .user.login, created_at, body}]')
+
   candidate_out=$(echo "$winner_item" | jq \
     --argjson tier "$winner_tier" \
     --argjson sub_issues_summary "$winner_sub_issues_summary" \
     --argjson parent "$parent_out" \
+    --argjson comments "$comments_out" \
     '{
       number:             .content.number,
       title:              .content.title,
@@ -261,7 +266,8 @@ if [[ -n "$winner_num" ]]; then
       milestone:          (.milestone | if . then {title: .title} else null end),
       url:                .content.url,
       sub_issues_summary: $sub_issues_summary,
-      parent:             $parent
+      parent:             $parent,
+      comments:           $comments
     }')
 
 else

@@ -64,6 +64,22 @@ If `skipped_for_sub_issues` is non-empty, log each as: `Skipping parent #N — o
 
 If the picked item's `priority:*` label appears mismatched against its Project rank, surface the discrepancy so the user can confirm or reorder.
 
+#### 1.1 Issue Comment History
+
+If `candidate.comments` is non-empty, display the full comment thread before proceeding to Step 3:
+
+```
+**Comment history — #N: <title>** (<count> comments)
+
+@<author> · <created_at>
+<body>
+
+@<author> · <created_at>
+<body>
+```
+
+One block per comment, in chronological order. Skip this section entirely when `candidate.comments` is empty.
+
 ---
 
 ### 2. Per-Blocker Analysis Table
