@@ -153,8 +153,8 @@ If the file is missing or the user approved replacement:
 - Create a branch: `chore/backlog-item-issue-template`
   - `git checkout -b chore/backlog-item-issue-template`
 - Create the parent directory if needed: `mkdir -p .github/ISSUE_TEMPLATE`
-- Write the canonical contents of §5c below to `.github/ISSUE_TEMPLATE/backlog-item.yml`
-- Write the canonical contents of §5d below to `.github/ISSUE_TEMPLATE/external-blocker.yml`
+- Write the canonical contents of §4c below to `.github/ISSUE_TEMPLATE/backlog-item.yml`
+- Write the canonical contents of §4d below to `.github/ISSUE_TEMPLATE/external-blocker.yml`
 - Commit both files using Conventional Commits:
   - `git add .github/ISSUE_TEMPLATE/backlog-item.yml .github/ISSUE_TEMPLATE/external-blocker.yml`
   - `git commit -m "chore: add backlog-item and external-blocker issue forms templates"`
@@ -167,7 +167,7 @@ If the file is missing or the user approved replacement:
 
 The remaining provisioning steps (project, labels) are NOT gated by this PR — they are direct API calls. The template only takes effect on the default branch after the PR is merged. Until then, `add-item` and `migrate` will still emit issue bodies in the canonical shape (the template is for human use in the GitHub UI).
 
-#### 5c. Canonical contents
+#### 4c. Canonical contents
 
 ```yaml
 name: Backlog Item
@@ -231,7 +231,7 @@ body:
 
 The rendered issue body produced by GitHub for this template uses `### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes` headings. All other skills MUST emit bodies that use these exact headings (case + ordering preserved).
 
-#### 5d. Canonical contents — external-blocker.yml
+#### 4d. Canonical contents — external-blocker.yml
 
 ```yaml
 name: External Blocker
