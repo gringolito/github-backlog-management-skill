@@ -70,8 +70,13 @@ Before creating anything:
 
 If no matching Project exists:
 
+- Use AskUserQuestion to ask which visibility the Project should have:
+  - **Private (Recommended)** — only members with explicit access can see the project
+  - **Public** — visible to anyone
 - Create a new Project (v2):
   - `gh project create --owner <owner> --title "<owner>/<repo> Backlog"`
+- If the user chose **public**, set the visibility:
+  - `gh project edit <project-number> --owner <owner> --visibility PUBLIC`
 - Link it to the repository
   - `gh project link <project-number> --owner <owner> --repo <repo>`
 - Set a canonical short description on the project:
@@ -313,6 +318,7 @@ Print a structured summary so the user can verify provisioning:
 - Project URL (`https://github.com/users/<owner>/projects/<n>` or `https://github.com/orgs/<owner>/projects/<n>`)
 - Project number (used by other skills)
 - Repository (`<owner>/<repo>`)
+- Visibility (`private` or `public`) — from the user's choice in Step 2 on fresh runs; derived from the `public` boolean in the `gh project view` JSON response (already fetched in Step 5) on idempotent re-runs
 - Labels created or updated (count, with full list)
 - Issue Forms template PR URL (or "already present, no PR needed")
 - Status field options confirmed
