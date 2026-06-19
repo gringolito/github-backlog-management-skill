@@ -25,7 +25,7 @@ Make the repository ready to host backlog items as GitHub Issues, prioritized in
 
 ## Workflow
 
-### 1. Preflight (MANDATORY)
+### 0. Preflight (MANDATORY)
 
 **Re-run / idempotent case** — if `.claude/backlog-project.json` already exists, delegate to the shared preflight script:
 
@@ -33,7 +33,7 @@ Make the repository ready to host backlog items as GitHub Issues, prioritized in
 backlog-preflight
 ```
 
-If it exits non-zero, STOP and surface the error verbatim. If it exits zero, continue to step 5.
+If it exits non-zero, STOP and surface the error verbatim. If it exits zero, continue to step 4.
 
 **Fresh bootstrap** — if `.claude/backlog-project.json` does not yet exist, verify the local environment can talk to GitHub:
 
@@ -50,7 +50,9 @@ If any required preflight step fails:
 
 ---
 
-### 2. Project Detection (IDEMPOTENT)
+After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
+
+### 1. Project Detection (IDEMPOTENT)
 
 Before creating anything:
 
@@ -59,12 +61,12 @@ Before creating anything:
 - Filter for a Project (v2) titled `<owner>/<repo> Backlog` that is linked to this repo
 - If a matching Project exists:
   - Record its number and URL
-  - SKIP step 3
+  - SKIP step 2
   - Continue with label and template provisioning (which are also idempotent)
 
 ---
 
-### 3. Project Creation
+### 2. Project Creation
 
 If no matching Project exists:
 
@@ -87,7 +89,7 @@ If no matching Project exists:
 
 ---
 
-### 4. Label Provisioning (IDEMPOTENT)
+### 3. Label Provisioning (IDEMPOTENT)
 
 Create the standard label catalog. Use `gh label create --force` so existing labels are updated rather than duplicated.
 
@@ -129,30 +131,30 @@ Apply distinct color groupings (e.g. priority shades from red→grey, effort sha
 
 ---
 
-### 5. Issue Forms Template (CANONICAL BODY SHAPE — VIA PR)
+### 4. Issue Forms Template (CANONICAL BODY SHAPE — VIA PR)
 
 The Issue Forms template at `.github/ISSUE_TEMPLATE/backlog-item.yml` is the **single source of truth for the backlog-item issue body shape** — every skill MUST construct issue bodies whose section headings match this template exactly.
 
 This file MUST be added to the repository through a Pull Request, not committed directly to the default branch. The PR is the gate for review and adoption of the canonical body shape.
 
-#### 5a. Detect existing template
+#### 4a. Detect existing template
 
 If `.github/ISSUE_TEMPLATE/backlog-item.yml` already exists on the default branch:
 
 - Read its current contents
 - Compare against the canonical version below
-- If they match, SKIP step 5b
+- If they match, SKIP step 4b
 - If they differ, STOP and use AskUserQuestion with options: "Open PR to replace" / "Keep existing" — do NOT silently overwrite user customizations
 
-#### 5b. Open the template PR
+#### 4b. Open the template PR
 
 If the file is missing or the user approved replacement:
 
 - Create a branch: `chore/backlog-item-issue-template`
   - `git checkout -b chore/backlog-item-issue-template`
 - Create the parent directory if needed: `mkdir -p .github/ISSUE_TEMPLATE`
-- Write the canonical contents of §5c below to `.github/ISSUE_TEMPLATE/backlog-item.yml`
-- Write the canonical contents of §5d below to `.github/ISSUE_TEMPLATE/external-blocker.yml`
+- Write the canonical contents of §4c below to `.github/ISSUE_TEMPLATE/backlog-item.yml`
+- Write the canonical contents of §4d below to `.github/ISSUE_TEMPLATE/external-blocker.yml`
 - Commit both files using Conventional Commits:
   - `git add .github/ISSUE_TEMPLATE/backlog-item.yml .github/ISSUE_TEMPLATE/external-blocker.yml`
   - `git commit -m "chore: add backlog-item and external-blocker issue forms templates"`
@@ -165,7 +167,7 @@ If the file is missing or the user approved replacement:
 
 The remaining provisioning steps (project, labels) are NOT gated by this PR — they are direct API calls. The template only takes effect on the default branch after the PR is merged. Until then, `add-item` and `migrate` will still emit issue bodies in the canonical shape (the template is for human use in the GitHub UI).
 
-#### 5c. Canonical contents
+#### 4c. Canonical contents
 
 ```yaml
 name: Backlog Item
@@ -229,7 +231,7 @@ body:
 
 The rendered issue body produced by GitHub for this template uses `### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes` headings. All other skills MUST emit bodies that use these exact headings (case + ordering preserved).
 
-#### 5d. Canonical contents — external-blocker.yml
+#### 4d. Canonical contents — external-blocker.yml
 
 ```yaml
 name: External Blocker
@@ -267,7 +269,7 @@ This template pre-applies the `type:external-blocker` label. There is no "Blocke
 
 ---
 
-### 6. Persist Project Metadata
+### 5. Persist Project Metadata
 
 Persist project metadata to `.claude/backlog-project.json` so other skills can read it without any live GitHub queries.
 
@@ -304,7 +306,7 @@ Schema notes:
 
 ---
 
-### 7. Output Summary
+### 6. Output Summary
 
 Print a structured summary so the user can verify provisioning:
 

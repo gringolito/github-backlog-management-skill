@@ -53,6 +53,8 @@ These are the canonical allowlist blocks for each mode:
 
 ---
 
+After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
+
 ### 1. Mode Resolution (MANDATORY)
 
 Determine the effective permission mode using this precedence:

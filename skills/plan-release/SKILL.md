@@ -30,6 +30,8 @@ Run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surfac
 
 ---
 
+After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
+
 ### 1. Argument Detection (MANDATORY)
 
 Check whether the skill was invoked with an argument (a milestone identifier: title substring or version string).
