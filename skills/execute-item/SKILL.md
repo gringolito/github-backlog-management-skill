@@ -47,7 +47,7 @@ Capture the JSON output:
 
 If any `warnings` are present, surface them before proceeding.
 
-**If `candidate` is null:** Surface `message`. If `skipped_blocked` is non-empty, render the per-blocker analysis table (see Step 2.5) using the facts already in the JSON — no extra API calls needed. Then STOP.
+**If `candidate` is null:** Surface `message`. When all candidates are blocked: read [blocker-analysis.md](./blocker-analysis.md) for the per-blocker analysis table. Then STOP.
 
 **If `in_progress` is non-empty:** Display each item:
 
@@ -84,72 +84,14 @@ One block per comment, in chronological order. Skip this section entirely when `
 
 ---
 
-### 2. Per-Blocker Analysis Table
-
-Rendered when all candidates are blocked (`candidate` null, `skipped_blocked` non-empty). All facts come from the script output — no extra API calls needed.
-
-- Report: `All actionable items are blocked. Resolve a blocker or re-rank.`
-- Render:
-
-  | Blocked item | Blocker | Blocker state | Suggested action |
-  |---|---|---|---|
-  | #N title | #M title | open / closed | see rules below |
-
-- **Suggested action rules** (apply first match; use `cross_repo`, `assignees`, `labels` from `skipped_blocked[].open_blockers`):
-  - Blocker `closed` + dependency still active → `Stale — clear with: gh api -X DELETE repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by/<m>`
-  - Blocker `open`, `cross_repo: true` → `External — coordinate with owning team`
-  - Blocker `open`, `assignees` non-empty → `In Progress — monitor`
-  - Blocker `open`, `assignees` empty → `Unassigned — assign or re-plan`
-  - Blockers with `"type:external-blocker"` in labels: show as `External: <stub title>`.
-- Close with: `N of M blockers may be resolvable without new work` (stale + in-progress count as resolvable).
-- DO NOT pick a blocked item even with user confirmation — re-run `/execute-item` after resolving a blocker.
-
----
-
 ### 3. Sub-issue Scope Check
 
 Use `candidate.sub_issues_summary` from the script output — no API call needed.
 
-- **If `completed == total AND total > 0`:** All sub-issues are closed. Enter **Scope Completeness Review** below.
+- **If `completed == total AND total > 0`:** All sub-issues are closed: read [scope-completeness.md](./scope-completeness.md) for the full review protocol. Then STOP.
 - **Otherwise:** proceed to Step 3.
 
 Note: Open sub-issue routing is already handled by `pick-item` — if the script selected a sub-issue as `candidate`, no further parent/sub-issue traversal is needed here.
-
-#### Scope Completeness Review
-
-Entered when `candidate.sub_issues_summary.completed == total AND total > 0`.
-
-1. Extract `### In Scope` and `### Acceptance Criteria` from `candidate.body` — no `gh issue view` call needed.
-
-2. Fetch each closed sub-issue body:
-   - Use the sub-issue list from the API call above for their numbers.
-   - For each: `gh issue view <m> --json number,title,body`
-
-3. Perform coverage analysis:
-   - For each criterion in `### Acceptance Criteria`, determine which closed sub-issue (if any) addressed it, based on sub-issue titles and bodies.
-   - Format as a checklist:
-
-     ```
-     **Coverage analysis — #N: <parent title>**
-
-     Acceptance Criteria:
-     - [x] AC1: <text> → covered by #M (<sub-issue title>)
-     - [x] AC2: <text> → covered by #P (<sub-issue title>)
-     - [ ] AC3: <text> → not addressed by any closed sub-issue
-     ```
-
-4. Present the coverage checklist to the user. Then use AskUserQuestion with two options:
-   - **"Close parent — scope complete"**
-   - **"Create sub-issues for uncovered gaps"**
-
-5. **If "Close parent — scope complete":**
-   - Post a comment with the full coverage checklist: `gh issue comment <n> --body "..."`
-   - Close the issue: `gh issue close <n>`
-   - STOP — do not proceed to Step 4.
-
-6. **If "Create sub-issues for gaps":**
-   - For each uncovered criterion (marked `[ ]` in the checklist), invoke `/add-item` with the parent issue number so the new items become sub-issues.
-   - STOP after sub-issues are created — re-run `/execute-item` to pick the first one.
 
 ---
 
@@ -272,35 +214,19 @@ Branch name format: `<prefix>/<slug>` (e.g. `fix/null-pointer-in-authn`).
 
 #### For Bugs
 
-- Write or update tests that reproduce the issue
+- Use TDD and write/update tests to reproduce the issue
 - Ensure tests FAIL before fixing
 - Implement the fix
 - Ensure tests PASS after fix
 
-#### For Features / Others
-
-- Implement functionality
-- Add tests that validate Acceptance Criteria
-
 #### For Spikes (`type:spike`)
 
-A spike's deliverable is **knowledge** — a findings document plus the follow-on backlog items it surfaces — not a shippable feature. Apply this flow:
+When the item carries `type:spike`: read [spike-lifecycle.md](./spike-lifecycle.md) for the full spike protocol.
 
-1. **Investigate** the question framed in `### What` / `### Why` within the time-box implied by the `effort:*` label. Prototyping is permitted in throwaway branches but is NOT the deliverable.
-2. **Author the findings document** at `docs/spikes/####-<slug>.md`, use sequential numbering (e.g. `0001-slug.md`, `0002-slug.md`, etc.), with these sections (in this order):
-   - `## Question` — restate the spike's investigative question
-   - `## Approach` — what was investigated, sources consulted, prototypes built
-   - `## Findings` — what was learned, including dead-ends
-   - `## Recommendation` — the recommended path forward (or "abandon — see Findings")
-   - `## Follow-on Work` — bulleted list of new backlog items this spike surfaces (filled in step 4)
-3. **Present the findings summary to the user** for confirmation/edits before the document is finalized. Do NOT proceed until the user signs off on the findings.
-4. **Determine parent context**: check whether the spike is itself a sub-issue of a parent. Use `gh api "repos/<owner>/<repo>/issues/<n>/parent"` (returns `404` if the spike has no parent — treat as standalone). Record the parent issue number if present.
-5. **Propose follow-on backlog items** for each piece of surfaced work — one per item — with title, What, Why, draft Acceptance Criteria, and suggested `type:*` / `priority:*` / `effort:*` labels. Present the full list to the user and wait for explicit approval per item (some may be discarded).
-6. **Create the approved follow-ons** by invoking `/add-item` for each in sequence:
-   - If the spike has NO parent → create as **standalone top-level items** (do NOT pass a parent number; the new items are NOT sub-issues of the spike)
-   - If the spike HAS a parent → pass the **spike's parent issue number** so the new items become **peer sub-issues of the spike** (children of the same parent), NOT children of the spike itself
-   - Record the resulting issue numbers and update the `## Follow-on Work` section of the findings document with `#<n>` references
-7. The spike's PR diff is typically only the findings document. Code changes (if any) belong in the follow-on items, not in the spike's PR.
+#### For Features / Others
+
+- Implement what was described following the existing project patterns
+- Add new tests that validate Acceptance Criteria
 
 ---
 
@@ -309,12 +235,6 @@ A spike's deliverable is **knowledge** — a findings document plus the follow-o
 - Verify ALL Acceptance Criteria are satisfied
 - Run full test suite
 - Ensure no regressions
-
-For `type:spike` items, additionally:
-
-- Confirm the findings document exists at `docs/spikes/<number>-<slug>.md` with all required sections
-- Confirm every approved follow-on was created and that its issue number is referenced in the `## Follow-on Work` section
-- Confirm follow-on parentage matches the rule in Step 8 (standalone if spike had no parent; peer sub-issues of the spike's parent otherwise)
 
 ---
 
@@ -325,12 +245,6 @@ For `type:spike` items, additionally:
 - Open a Pull Request via `gh pr create`, passing `--milestone "<milestone-title>"` when the issue has one (from the Step 3 fetch; omit for un-milestoned items). PR body MUST include:
   - `Closes #<issue-number>` (so GitHub auto-links and auto-closes the issue on merge)
   - A summary of changes mapped to each Acceptance Criterion
-
-For `type:spike` items, the PR is typically a **findings-document-only** diff:
-
-- PR title uses the `spike:` Conventional Commits prefix (matching the `spike/` branch prefix)
-- PR body MUST additionally list every follow-on item created (`#<new-issue-number> — <title>`), so reviewers can audit that the surfaced work landed in the backlog
-- It is normal and expected for a spike PR to contain no code changes
 
 ---
 
@@ -373,9 +287,9 @@ Print:
 - Keep changes minimal and focused
 - Do NOT pick items outside the linked Project
 - Do NOT pick items from non-active open milestones (use Tier 2 fallback only when active-milestone Tier 1 is empty)
-- Do NOT pick a blocked item, even with user confirmation — block-skipping is strict
-- A blocker is satisfied ONLY when its issue state is `closed`; the manner of closure (merge / manual / transfer / delete) is irrelevant
-- Never close the issue manually — always rely on `Closes #N` in the PR. Exception: closing a parent after Scope Completeness Review is an organisational closure (`gh issue close <n>` is correct there — no PR is involved).
+- Do NOT pick a blocked item, even with user confirmation, block-skipping is strict
+- A blocker is satisfied ONLY when its issue state is `closed`
+- Do NOT close the issue manually, always rely on `Closes #N` in the PR. Exception: closing a parent after Scope Completeness Review.
 
 ---
 
@@ -384,6 +298,6 @@ Print:
 An item is ONLY complete when:
 
 - All Acceptance Criteria are satisfied
-- Tests validate the behavior
+- Tests validate the defined behavior
 - PR is opened with `Closes #<n>`
 - Project Status reflects current state (`In Progress` while open, `Done` after merge)
