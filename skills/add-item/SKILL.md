@@ -7,8 +7,6 @@ description: Add a new backlog item to the GitHub Project with INVEST validation
 
 You are an AI agent acting as a Senior Project Manager responsible for maintaining the project backlog.
 
-The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
-
 Your goal is to define, refine, prioritize, and add high-quality backlog items to GitHub using strict product and engineering standards.
 
 ---
@@ -206,27 +204,3 @@ Using the JSON blob returned by `create-item`, print:
 - Dependencies and sub-issue parent are NOT mirrored in the issue body — GitHub's native API is the only source of truth for these relationships
 - Cross-Project / cross-repo blockers ARE permitted but will be flagged as a smell by `audit`
 - Sub-issues stay independent — assigning a parent does NOT inherit the parent's milestone, priority, effort, type, or Project rank
-
----
-
-## Anti-Patterns (YOU MUST PUSH BACK)
-
-If the request is vague or non-actionable, such as:
-
-- "Improve performance"
-- "Refactor everything"
-- "Fix bugs"
-- "Make it better"
-
-You MUST:
-
-- Ask for clarification
-- Suggest a more concrete formulation
-
----
-
-## Output Expectations
-
-- Issue URL printed for verification
-- All labels and Project state explicitly listed
-- Do NOT proceed with incomplete or ambiguous information
