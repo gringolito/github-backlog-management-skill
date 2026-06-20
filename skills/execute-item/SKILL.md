@@ -5,15 +5,7 @@ description: Pick and execute the topmost unblocked Workable Item from the Queue
 
 # execute-item
 
-You are an AI agent acting as a development lead responsible for executing backlog items.
-
-The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
-
----
-
-## Objective
-
-Select and execute the topmost actionable Workable Item, scoped to the Active Release first, then to un-milestoned items as a fallback.
+You are an AI agent acting as a development lead. Select and execute the topmost actionable Workable Item, scoped to the Active Release first, then to un-milestoned items as a fallback.
 
 ---
 
@@ -124,8 +116,9 @@ If priority or effort labels are missing or duplicated, STOP and direct the user
 
 Use `candidate.parent` from the `pick-item` output — no additional API call needed.
 
-1. **If `candidate.parent` is `null`** → proceed silently. No warning, no block.
-2. **If `candidate.parent` is present:**
+- **If `candidate.parent` is `null`** → proceed silently. No warning, no block.
+
+- **If `candidate.parent` is present:**
    - Extract `### What` and `### Why` sections from `candidate.parent.body` (matched by exact heading text).
    - Emit the following block **before** the implementation plan:
 
@@ -137,7 +130,6 @@ Use `candidate.parent` from the `pick-item` output — no additional API call ne
 
    - If one section is absent, show the available one and omit the missing line.
    - If neither section exists, emit `(Parent body does not follow standard template — no What/Why sections found)` and proceed.
-3. Continue to the implementation plan below.
 
 - Propose a concise implementation plan that:
   - Covers ALL Acceptance Criteria (parsed from `### Acceptance Criteria`)
@@ -190,8 +182,6 @@ Once the plan is approved:
    - Find the item ID via `gh project item-list <project-number> --owner <owner> --format json --query "#<n>"`
    - Update: `gh project item-edit --id <item-id> --project-id <project-id> --field-id <status-field-id> --single-select-option-id <in-progress-option-id>`
 
-This makes the in-flight work visible on the Project board immediately.
-
 ---
 
 ### 7. Branching
@@ -242,7 +232,7 @@ When the item carries `type:spike`: read [spike-lifecycle.md](./spike-lifecycle.
 
 - Commit using Conventional Commits format. Include `Refs #<issue-number>` in the commit body.
 - Push the branch.
-- Open a Pull Request via `gh pr create`, passing `--milestone "<milestone-title>"` when the issue has one (from the Step 3 fetch; omit for un-milestoned items). PR body MUST include:
+- Open a Pull Request via `gh pr create`, passing `--milestone "<milestone-title>"` when the issue has one (omit for un-milestoned items). PR body MUST include:
   - `Closes #<issue-number>` (so GitHub auto-links and auto-closes the issue on merge)
   - A summary of changes mapped to each Acceptance Criterion
 
@@ -290,14 +280,3 @@ Print:
 - Do NOT pick a blocked item, even with user confirmation, block-skipping is strict
 - A blocker is satisfied ONLY when its issue state is `closed`
 - Do NOT close the issue manually, always rely on `Closes #N` in the PR. Exception: closing a parent after Scope Completeness Review.
-
----
-
-## Completion Definition
-
-An item is ONLY complete when:
-
-- All Acceptance Criteria are satisfied
-- Tests validate the defined behavior
-- PR is opened with `Closes #<n>`
-- Project Status reflects current state (`In Progress` while open, `Done` after merge)

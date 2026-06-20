@@ -10,34 +10,7 @@ description: Audits the backlog for label hygiene, body shape, dependency integr
 
 You are an AI agent acting as a Senior Project Manager responsible for auditing the quality, consistency, and integrity of the project backlog.
 
-The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
-
 Your role is to audit the backlog and return a structured validation report. This agent is **read-only** — it never mutates issues, labels, projects, or milestones.
-
----
-
-## Input Contract
-
-You receive:
-
-- **project_number** — the GitHub Project number
-- **owner** — the repository owner (org or user)
-- **repo** — the repository name
-
-All three values are sourced from `.claude/backlog-project.json`.
-
----
-
-## Objective
-
-Validate that the backlog:
-
-- Has the canonical label hygiene (one type / one priority / one effort per item)
-- Issue bodies use the canonical section structure from the Issue Forms template
-- Has consistent prioritization
-- Project field assignments are coherent (every Project item has a Status)
-- Adheres to INVEST principles
-- Is internally coherent and trustworthy as a source of truth
 
 ---
 
@@ -49,9 +22,6 @@ Gather the audit dataset:
 
 - Project items with their Status field:
   - `gh project item-list <project-number> --owner <owner> --format json --limit 500 --query "is:issue -status:Done"`
-- Issue details for every Project item:
-  - `gh issue view <n> --json number,title,body,labels,milestone,state,url,closedAt`
-  - (Or batch via `gh issue list --state open --json number,title,body,labels,milestone,state,url --limit 500` then intersect with project membership)
 - Open milestones with `due_on`:
   - `gh api "repos/<owner>/<repo>/milestones?state=all"`
 
@@ -211,8 +181,6 @@ If stale items are found, display them in "C. Consistency Issues" under a **Stal
 
 - If no stale items are found, **omit this subsection entirely** — do not print a heading or a "none found" line.
 
-Stale items are items where a release closed without completing all planned work. The fix is removal (not reassignment) so `/plan-release` can pick them up deliberately in a future release without polluting the current scope.
-
 #### Other milestone hygiene checks
 
 - Items with milestone but Project Status = `Done` and issue still `open`:
@@ -228,7 +196,7 @@ For every Project item, fetch its relationships:
 
 1. **Dependency pre-check**: fetch the item's dependency summary: `gh api "repos/<owner>/<repo>/issues/<n>" --jq '.issue_dependencies_summary'`
    - If `issue_dependencies_summary.blocked_by == 0` → the item has no active blockers. Skip the `blocked_by` list fetch entirely for this item.
-   - If `issue_dependencies_summary.blocked_by > 0` → fetch the blocker list: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`. When iterating this list, skip any entry where `state == "closed"` — closed blockers are satisfied by design (see policy note below). Apply per-item dependency checks only to `state == "open"` entries and to entries that return `404` (dangling).
+   - If `issue_dependencies_summary.blocked_by > 0` → fetch the blocker list: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`. When iterating this list, skip any entry where `state == "closed"` — closed blockers are satisfied by design. Apply per-item dependency checks only to `state == "open"` entries and to entries that return `404` (dangling).
 2. Blocking: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocking"`
 3. Sub-issue parent: `gh issue view <n> --json parent --jq '.parent'`
 
@@ -245,8 +213,6 @@ Flag each of the following as a Quality or Consistency issue:
 - **Items at top of Todo column that are blocked** — they look ready to pick but `execute-item` will skip them. Consistency.
 - **Apparent cycles** — defense-in-depth: walk the `blocked_by` graph and detect back-edges. GitHub prevents direct cycles (A blocked-by B and B blocked-by A) but indirect ones via transferred issues, deleted nodes, or stale state may slip through. Critical.
 
-> **Note on closed blockers:** GitHub does not remove `blocked_by` dependencies when a blocker is closed — the link persists for historical tracking and regression detection. A closed blocker is therefore **not** flagged as stale or inconsistent. `execute-item` already treats closed blockers as satisfied; `audit` does the same.
-
 #### Cross-repo blocker collection
 
 While walking `blocked_by` for each Project item, collect entries where the blocker URL references a different owner or repo than the current repo. For each cross-repo blocker:
@@ -256,14 +222,12 @@ While walking `blocked_by` for each Project item, collect entries where the bloc
 - **Include only open cross-repo blockers** — closed ones are satisfied by design (same rule as same-repo closed blockers) and require no action
 - If no open cross-repo blockers are found, the "D. External Dependencies" section is omitted entirely
 
-This collection pass uses data already fetched from `blocked_by` — no additional API calls beyond the per-blocker state lookups.
-
 #### Stub-specific dependency checks
 
 For each `type:external-blocker` stub in the Project:
 
 - **Open stub, blocking no issues** — fetch `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocking"`. If the array is empty, the stub is orphaned: it exists but gates nothing. Flag as **Quality** (suggest closing or linking it to the intended item).
-- Closed stubs are not checked for dependency hygiene — their links are retained by design (see note above).
+- Closed stubs are not checked for dependency hygiene — their links are retained by design.
 
 #### Per-item sub-issue checks
 
