@@ -15,7 +15,7 @@ Your goal is to define, refine, prioritize, and add high-quality backlog items t
 
 ### 0. Preflight (MANDATORY)
 
-Run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON it prints to stdout — this is the metadata used throughout the workflow (owner, repo, project_number, project_id, status_field_id, status_options).
+Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
 
 ---
 
@@ -44,7 +44,7 @@ Delegate body authoring to the `issue-body-author` agent:
 - **Mode**: `create`
 - **Input**: the title and all context gathered in step 1 (desired outcome, user/business impact, constraints, risks, edge cases, scope inclusions and exclusions, acceptance criteria, and classification notes)
 
-The agent returns a fully structured body with canonical sections in strict order: `### What` → `### Why` → `### In Scope` → `### Out of Scope` → `### Acceptance Criteria` → `### INVEST Notes`.
+The agent returns a fully structured body with canonical sections; read [../github-backlog-management/issue-body-sections.md](../github-backlog-management/issue-body-sections.md) for the exact headings and order.
 
 If the agent marks any section with `<!-- TODO: ... -->`, STOP and resolve those gaps with the user before proceeding to step 3.
 
