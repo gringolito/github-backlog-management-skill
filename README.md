@@ -215,6 +215,9 @@ Every issue created by this skill follows a consistent body shape:
 Every backlog item carries three label groups:
 
 - **Type** — `type:feature` `type:bug` `type:security` `type:performance` `type:dx` `type:tech-debt` `type:reliability` `type:compliance` `type:spike`
+
+  Custom `type:*` labels are automatically discovered by `label-classifier` at runtime. No changes to the skill are required. For best accuracy, add a meaningful GitHub label description to each custom label; the description is used as "when to apply" guidance. Labels with no description fall back to a generic name-based rule. The `/audit` command flags any `type:*` label with a blank description.
+
 - **Priority** — `priority:P0` through `priority:P3`
 - **Effort** — `effort:XS` `effort:S` `effort:M` `effort:L` `effort:XL`
 
