@@ -48,12 +48,11 @@ Every Workable Item passes INVEST (Independent, Negotiable, Valuable, Estimable,
 - `effort:` — `XS` `S` `M` `L` `XL`
 - Operational: `needs-clarification`
 
-**Issue body sections** (exact headings, this order):
-`### What` · `### Why` · `### In Scope` · `### Out of Scope` · `### Acceptance Criteria` · `### INVEST Notes`
+**Issue body sections**: read [issue-body-sections.md](./issue-body-sections.md) for the canonical ordered headings.
 
-**Metadata file**: `.claude/backlog-project.json` — written by `initialize`, read directly by all other skills.
+**Standard preflight**: read [preflight-contract.md](./preflight-contract.md) for the preflight instruction.
 
-**Standard preflight**: all consumer skills run `backlog-preflight` (a shared executable by the plugin infrastructure) as Step 0. On success it emits the metadata JSON; on failure it prints the canonical stop string and exits non-zero. The canonical stop string is: `No Backlog project linked to <owner>/<repo>. Run /initialize first.`
+**Metadata file**: `.claude/backlog-project.json` — written by `initialize`, read during preflight.
 
 **Priority vs rank**: `priority:*` is severity classification. Project rank (topmost Todo item) is execution order. They should stay consistent but are independent concepts — `execute-item` sorts by rank only.
 

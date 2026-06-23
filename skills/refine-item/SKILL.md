@@ -30,7 +30,7 @@ Bring the target issue to a fully refined state where:
 
 ### 0. Preflight (MANDATORY)
 
-Run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON it prints to stdout — this is the metadata used throughout the workflow (owner, repo, project_number, project_id, status_field_id, status_options).
+Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
 
 ---
 
@@ -214,7 +214,7 @@ Before removing the `needs-clarification` label, re-fetch the current live state
 
 Run all of the following checks:
 
-- **Sections present** — all six body headings exist in exact order: `### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes`
+- **Sections present** — all body headings exist in the exact order defined in [../github-backlog-management/issue-body-sections.md](../github-backlog-management/issue-body-sections.md)
 - **No stale markers** — no occurrences of `UNKNOWN`, `NEEDS CLARIFICATION`, or `_No response_` remain in any section
 - **Label completeness** — all three label groups are present: one `type:*`, one `priority:*`, one `effort:*`
 - **Project Status set** — the item has a non-empty Status value in the Project
