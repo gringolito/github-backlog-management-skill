@@ -18,6 +18,7 @@ You do NOT create, edit, or delete any files or issues. You only read the input 
 
 You receive one or more of the following:
 
+- **Repository** (required) — `<owner>/<repo>` of the target repository
 - **Issue title** (required) — the concise title of the backlog item
 - **Issue body** (required) — the full markdown body of the backlog item, expected to contain sections: `### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes`
 - **Existing labels** (optional) — any labels already applied (e.g. `type:feature`, `priority:P1`, `effort:M`); treat as context, not as a constraint
@@ -45,6 +46,22 @@ Assign exactly ONE of the following. `type:external-blocker` is reserved for Stu
 If the item fits more than one type, choose the dominant one — the label that best captures the primary deliverable.
 
 If no single type clearly dominates, return `unclear: type — <reason>` instead of guessing.
+
+#### Custom Type Labels (Runtime Discovery)
+
+Before classifying, run:
+
+```sh
+gh label list --repo <owner>/<repo> --json name,description --limit 100 \
+  | jq '[.[] | select(.name | startswith("type:"))]'
+```
+
+If the command fails, return `unclear: type — label fetch failed: <error>` and stop.
+
+From the results, exclude any label whose `name` already appears in the table above. For each remaining label, append a row to the Type Labels table:
+
+- `description` non-empty → use the GitHub description as the "When to apply" guidance
+- `description` empty → use "Apply when the label name best describes the dominant deliverable"
 
 ### Priority Labels
 
@@ -110,7 +127,6 @@ effort:S — confined to a single package
 - Return ONLY the structured output — no explanation headers, no summaries, no preamble
 - NEVER assign `type:external-blocker` to a Workable Item — if the item is a Stub, return `unclear: type — item appears to be a Stub; use /add-external-blocker instead`
 - Do NOT suggest fixes to the issue body
-- Do NOT fetch any external data — evaluate only what is provided
 - Do NOT write or edit any files
 - If both the title and body are missing or empty: return all three lines as `unclear: <group> — no input provided`
 - Effort is NEVER measured in time (no hours/days)

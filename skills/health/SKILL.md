@@ -23,7 +23,7 @@ Produce a Markdown strategic portfolio health report covering: open-issue distri
 
 ### 0. Preflight (MANDATORY)
 
-Run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON it prints to stdout — this is the metadata used throughout the workflow (owner, repo, projectNumber, projectId, statusFieldId, statusOptions).
+Run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON it prints to stdout — this is the metadata used throughout the workflow (owner, repo, project_number, project_id, status_field_id, status_options).
 
 ---
 
@@ -58,7 +58,7 @@ All computations operate on the pre-filtered open-issue set (stubs excluded). Us
 
 For each of the three label groups — `type:*`, `priority:*`, `effort:*` — in canonical order:
 
-- `type:*`: feature, bug, security, performance, dx, tech-debt, reliability, compliance, spike (omit values with 0 count)
+- `type:*`: use the discovered label list from `gh label list --repo <owner>/<repo> --json name --limit 100 | jq '[.[] | select(.name | startswith("type:")) | .name]'` as the value set; omit values with 0 count
 - `priority:*`: P0, P1, P2, P3
 - `effort:*`: XS, S, M, L, XL
 

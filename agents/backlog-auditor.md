@@ -24,6 +24,9 @@ Gather the audit dataset:
   - `gh project item-list <project-number> --owner <owner> --format json --limit 500 --query "is:issue -status:Done"`
 - Open milestones with `due_on`:
   - `gh api "repos/<owner>/<repo>/milestones?state=all"`
+- All `type:*` labels with their descriptions (for catalog hygiene):
+  - `gh label list --repo <owner>/<repo> --json name,description --limit 100 | jq '[.[] | select(.name | startswith("type:"))]'`
+  - For each label where `description` is empty or blank, flag as **Quality**: `type:* label "<name>" has no description — label-classifier will use a generic fallback. Fix: gh label edit "<name>" --repo <owner>/<repo> --description "..."`
 
 If structure is unclear or `gh` fails:
 
@@ -50,7 +53,7 @@ For EACH issue in the Project, first determine whether it is a `type:external-bl
 
 ##### Labels (exactly-one rule)
 
-- Exactly one `type:*` label from the canonical set (`type:feature`, `type:bug`, `type:security`, `type:performance`, `type:dx`, `type:tech-debt`, `type:reliability`, `type:compliance`, `type:spike`, `type:external-blocker`)
+- Exactly one `type:*` label from the set discovered in Step 1 (canonical labels plus any custom `type:*` labels present in the repository)
 - Exactly one `priority:*` label from {`priority:P0`, `priority:P1`, `priority:P2`, `priority:P3`}
 - Exactly one `effort:*` label from {`effort:XS`, `effort:S`, `effort:M`, `effort:L`, `effort:XL`}
 
@@ -58,7 +61,7 @@ Flag:
 
 - Missing required label group
 - Duplicate labels within a group (e.g. both `priority:P0` and `priority:P1`)
-- Unknown labels matching the pattern but not in the canonical set
+- `type:*` label not present in the repository's label catalog (use the Step 1 fetch as the source of truth)
 
 ##### Issue body sections
 
@@ -284,6 +287,7 @@ Produce a **Validation Report** with:
 - Stale blockers (blocker in closed milestone while item is in the Active Release)
 - `type:external-blocker` stub with missing, empty, or boilerplate Reason field
 - `type:external-blocker` stub that is open but blocking no issues (orphaned)
+- `type:*` labels with missing or blank GitHub description
 
 ### C. Consistency Issues
 

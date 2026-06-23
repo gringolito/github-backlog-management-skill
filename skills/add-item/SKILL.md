@@ -15,7 +15,7 @@ Your goal is to define, refine, prioritize, and add high-quality backlog items t
 
 ### 0. Preflight (MANDATORY)
 
-Run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON it prints to stdout — this is the metadata used throughout the workflow (owner, repo, projectNumber, projectId, statusFieldId, statusOptions).
+Run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON it prints to stdout — this is the metadata used throughout the workflow (owner, repo, project_number, project_id, status_field_id, status_options).
 
 ---
 
@@ -75,7 +75,7 @@ If `invest-gate` returns `Overall: FAIL`:
 
 Delegate classification to the `label-classifier` agent:
 
-- **Input**: the issue title and the body produced in step 2
+- **Input**: `owner`/`repo`, the issue title and the body produced in step 2
 - The agent returns a verdict for each of the three label groups (`type:*`, `priority:*`, `effort:*`) with one-line reasoning
 
 Handle the returned verdict:
