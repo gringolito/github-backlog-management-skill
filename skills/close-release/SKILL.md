@@ -41,7 +41,7 @@ Display the resolved milestone title, number, `due_on`, and open/closed issue co
 
 Fetch all open issues assigned to the milestone:
 
-`gh issue list --state open --milestone "<milestone-title>" --json number,title,labels,url --limit 500`
+`gh project item-list <project-number> --owner <owner> --query "is:issue state:open milestone:<milestone-title>" --format json --limit 500`
 
 If there are no open issues, skip to Step 3.
 
@@ -85,7 +85,7 @@ If the call fails (e.g. no PRs merged), use an empty base draft and note the fai
 
 Fetch all closed issues from the milestone:
 
-`gh issue list --state closed --milestone "<milestone-title>" --json number,title,labels,body,url --limit 500`
+`gh project item-list <project-number> --owner <owner> --query "is:issue state:closed milestone:<milestone-title>" --format json --limit 500`
 
 Scan each closed issue's `### What` and `### INVEST Notes` body sections for signals worth surfacing in release notes:
 
