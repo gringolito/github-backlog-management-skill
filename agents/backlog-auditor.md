@@ -167,8 +167,7 @@ Fetch all closed milestones: `gh api "repos/<owner>/<repo>/milestones?state=clos
 
 For each closed milestone, find open issues assigned to it that are also present in the linked Project:
 
-- `gh issue list --state open --milestone "<milestone-title>" --json number,title,url --limit 200`
-- Cross-reference against the Project item list already fetched in Step 1 (retain only issues that appear in the Project).
+- Filter the Step 1 project item-list result by `milestone.title` matching `<closed-milestone-title>`.
 
 If stale items are found, display them in "C. Consistency Issues" under a **Stale Milestone Items** heading:
 

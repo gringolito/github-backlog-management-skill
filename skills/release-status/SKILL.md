@@ -41,21 +41,20 @@ Run `resolve-milestone "<argument>"` if an argument was provided, or `resolve-mi
 
 With the resolved milestone in hand, run these queries:
 
-1. **Issues assigned to the milestone**:
-   `gh issue list --state all --milestone "<milestone-title>" --json number,title,labels,state,url --limit 500`
+1. **Issues assigned to the milestone** (two queries — state is inferred from which query returned the item):
+   - Open: `gh project item-list <project-number> --owner <owner> --query "is:issue state:open milestone:<milestone-title>" --format json --limit 500`
+   - Closed: `gh project item-list <project-number> --owner <owner> --query "is:issue state:closed milestone:<milestone-title>" --format json --limit 500`
+
+   All returned items are Project members by definition. The `status` field (`Todo` / `In Progress` / `Done`) is available directly on each item.
 
    After fetching, **partition the results**: set aside any issue whose labels include `type:external-blocker` — these are Stubs and are **excluded from all Milestone counts and metrics**. They are retained only to enrich the blocked-items table with stub titles as blocker context (step 3).
 
-2. **Project membership and Status**:
-   `gh project item-list <project-number> --owner <owner> --query "is:issue milestone:<milestone-title>" --format json --limit 200`
-   Build a lookup map: issue `number` → Project `Status` (`Todo` / `In Progress` / `Done`). Issues absent from the map are classified as "Not in Project."
-
-3. **Blocker check** (open issues only):
+2. **Blocker check** (open issues only):
    For each open issue, call: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`
    - If the API returns `404` on the first call, emit exactly once: `Issue Dependencies API unavailable on this repo — blocked items section omitted.` Skip the blocked-items section for the entire report.
    - An issue is **blocked** if the response contains at least one blocker with `state == "open"`.
 
-4. **Unestimated check**:
+3. **Unestimated check**:
    For each issue, scan its labels for any `effort:*` label. Issues with none are unestimated.
 
 ---
@@ -80,10 +79,8 @@ Omit the `Due:` line if the milestone has no `due_on`.
 | ✅ Done | N | N% |
 | 🔄 In Progress | N | N% |
 | 📋 Todo | N | N% |
-| ⚠️ Not in Project | N | — |
 
 - **% complete** = Done ÷ (all non-stub issues assigned to the milestone), rounded to the nearest integer. `type:external-blocker` stubs are excluded from this denominator.
-- Omit the "Not in Project" row if its count is 0.
 
 #### Blocked Items
 
@@ -122,9 +119,6 @@ Issues grouped by Status:
 **📋 Todo (N)**
 - [ ] [#N](\<url\>) — title
 
-**⚠️ Not in Project (N)** _(omit section if 0)_
-- [ ] [#N](\<url\>) — title
-
 ---
 
 ## Rules & Constraints
@@ -132,7 +126,7 @@ Issues grouped by Status:
 - This skill is **strictly read-only** — never mutate any issue, Project field, milestone, or label.
 - Surface all `gh` errors verbatim — never swallow.
 - Issue Dependencies API `404` must emit one warning line and gracefully skip the blocked-items section; it must not abort the rest of the report.
-- % complete is always computed over ALL issues assigned to the milestone, not just those in the Project.
+- % complete is computed over all non-stub issues returned by the project queries.
 - Do NOT pick or recommend execution order — this skill surfaces state only.
 
 ---
