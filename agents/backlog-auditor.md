@@ -235,7 +235,8 @@ For each `type:external-blocker` stub in the Project:
 
 - **Sub-issue parent not in Project** — child is in the Project but its parent isn't. Flag as Consistency. The parent should usually be in the Project too (epic-level visibility).
 - **Sub-issue with explicit milestone different from parent's milestone** — informational only. Sub-issues stay independent by design (no milestone inheritance), but a divergence is worth surfacing in case it's accidental.
-- **Parent issue with no sub-issues but type is `type:spike`** — informational. Spikes that were broken down should still hold their children.
+- **Parent issue with no sub-issues and `type:epic`** — **Quality**: a childless epic has not been groomed. Flag as: `Epic #N has no sub-issues — not yet decomposed`. Provide remediation: `gh issue edit <n> --add-label "needs-clarification"`.
+- **Parent issue with no sub-issues and `type:spike`** — informational. Spikes that were broken down should still hold their children.
 
 ---
 

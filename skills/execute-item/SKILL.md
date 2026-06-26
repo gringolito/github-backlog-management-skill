@@ -81,9 +81,13 @@ One block per comment, in chronological order. Skip this section entirely when `
 Use `candidate.sub_issues_summary` from the script output — no API call needed.
 
 - **If `completed == total AND total > 0`:** All sub-issues are closed: read [scope-completeness.md](./scope-completeness.md) for the full review protocol. Then STOP.
-- **Otherwise:** proceed to Step 3.
+- **Otherwise:** proceed to Step 4.
 
 Note: Open sub-issue routing is already handled by `pick-item` — if the script selected a sub-issue as `candidate`, no further parent/sub-issue traversal is needed here.
+
+#### type:epic Gate
+
+If `candidate.labels` includes `type:epic` AND the item did not enter Scope Completeness Review above: STOP and tell the user to decompose the epic into sub-issues or add them into the project.
 
 ---
 

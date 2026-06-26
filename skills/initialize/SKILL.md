@@ -103,6 +103,7 @@ Create the standard label catalog. Use `gh label create --force` so existing lab
 - `type:reliability` — `"Uptime, error recovery, observability, or graceful-degradation improvement"`
 - `type:compliance` — `"Regulatory, legal, or contractual obligation"`
 - `type:spike` — `"Time-boxed investigation to reduce uncertainty; deliverable is knowledge"`
+- `type:epic` — `"A large, high-level body of work that is too big to complete in a single iteration or is large enough that it can be split into multiple sub-issues"`
 - `type:external-blocker` — `"External constraint blocking a backlog item (Stub)"`
 
 #### Priority labels (one of these must be on every backlog item)
