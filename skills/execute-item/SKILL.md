@@ -7,15 +7,11 @@ description: Pick and execute the topmost unblocked Workable Item from the Queue
 
 You are an AI agent acting as a development lead. Select and execute the topmost actionable Workable Item, scoped to the Active Release first, then to un-milestoned items as a fallback.
 
----
-
 ## Workflow
 
 ### 0. Preflight (MANDATORY)
 
 Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
-
----
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
@@ -74,8 +70,6 @@ If `candidate.comments` is non-empty, display the full comment thread before pro
 
 One block per comment, in chronological order. Skip this section entirely when `candidate.comments` is empty.
 
----
-
 ### 3. Sub-issue Scope Check
 
 Use `candidate.sub_issues_summary` from the script output — no API call needed.
@@ -88,8 +82,6 @@ Note: Open sub-issue routing is already handled by `pick-item` — if the script
 #### type:epic Gate
 
 If `candidate.labels` includes `type:epic` AND the item did not enter Scope Completeness Review above: STOP and tell the user to decompose the epic into sub-issues or add them into the project.
-
----
 
 ### 4. Item Validation (MANDATORY)
 
@@ -111,8 +103,6 @@ If any principle fails:
 - Ask: "Would you like to refine this item now? Run `/refine-item <n>` to walk through a guided refinement session, then re-run `/execute-item` when it is ready."
 
 If priority or effort labels are missing or duplicated, STOP and direct the user to run `/audit`.
-
----
 
 ### 5. Planning
 
@@ -174,8 +164,6 @@ If two or more sub-issues were just created:
 
 - Wait for explicit approval before proceeding
 
----
-
 ### 6. Status → In Progress (BEFORE BRANCH)
 
 Once the plan is approved:
@@ -185,8 +173,6 @@ Once the plan is approved:
    - Resolve field/option IDs: `gh project field-list <project-number> --owner <owner> --format json`
    - Find the item ID via `gh project item-list <project-number> --owner <owner> --format json --query "#<n>"`
    - Update: `gh project item-edit --id <item-id> --project-id <project-id> --field-id <status-field-id> --single-select-option-id <in-progress-option-id>`
-
----
 
 ### 7. Branching
 
@@ -202,8 +188,6 @@ Determine the Conventional Commits prefix from the issue's `type:*` label:
 - Any other custom `type:*` label → use the label value as the prefix (e.g. `type:data-pipeline` → `data-pipeline/`); if the value contains `:`, strip it
 
 Branch name format: `<prefix>/<slug>` (e.g. `fix/null-pointer-in-authn`).
-
----
 
 ### 8. Implementation
 
@@ -223,15 +207,11 @@ When the item carries `type:spike`: read [spike-lifecycle.md](./spike-lifecycle.
 - Implement what was described following the existing project patterns
 - Add new tests that validate Acceptance Criteria
 
----
-
 ### 9. Validation
 
 - Verify ALL Acceptance Criteria are satisfied
 - Run full test suite
 - Ensure no regressions
-
----
 
 ### 10. Delivery Workflow
 
@@ -240,8 +220,6 @@ When the item carries `type:spike`: read [spike-lifecycle.md](./spike-lifecycle.
 - Open a Pull Request via `gh pr create`, passing `--milestone "<milestone-title>"` when the issue has one (omit for un-milestoned items). PR body MUST include:
   - `Closes #<issue-number>` (so GitHub auto-links and auto-closes the issue on merge)
   - A summary of changes mapped to each Acceptance Criterion
-
----
 
 ### 11. Status & Closure (POST-PR)
 
@@ -254,8 +232,6 @@ GitHub handles the rest automatically:
 If the Project's `Issue closed → Status: Done` workflow is disabled, manually update Status:
 
 - `gh project item-edit --id <item-id> --project-id <project-id> --field-id <status-field-id> --single-select-option-id <done-option-id>`
-
----
 
 ### 12. Output
 
@@ -270,8 +246,6 @@ Print:
 - Items skipped above this one because they were blocked (with `#N` and the open blockers that gated them; `type:external-blocker` blockers shown as `External: <stub title>`) — surfaces why the picked item wasn't necessarily the topmost
 - Parent items skipped because open sub-issues were found in the Project's Todo column (log: `Skipping parent #N — open sub-issues found. Picking #M.`)
 - Whether this item was **resumed** (was already In Progress) or **newly picked** (was Todo)
-
----
 
 ## Rules & Constraints
 

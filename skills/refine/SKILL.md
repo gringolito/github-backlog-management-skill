@@ -9,21 +9,15 @@ You are an AI agent acting as a Senior Project Manager orchestrating a backlog r
 
 The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
 
----
-
 ## Objective
 
 Walk every selected item from two candidate pools — `needs-clarification` issues and issues with incomplete metadata (missing `priority:*` or `effort:*` labels) — through interactive refinement, one at a time, by invoking `/refine-item` for each. At the end, produce a structured report of what was refined, partially refined, or skipped, broken down by source pool.
-
----
 
 ## Workflow
 
 ### 0. Preflight (MANDATORY)
 
 Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
-
----
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
@@ -54,8 +48,6 @@ If both pools are empty:
 - Print `No items need clarification or have incomplete metadata. Done.`
 - STOP
 
----
-
 ### 2. Sort & Display Queue
 
 Build the refinement queue:
@@ -84,8 +76,6 @@ Display the queue as a numbered table with two clearly labeled sections. Numberi
 
 Omit a section header entirely if its pool is empty.
 
----
-
 ### 3. Candidate Selection
 
 After displaying the queue, select items to refine:
@@ -99,8 +89,6 @@ After displaying the queue, select items to refine:
 
 Build the ordered work list from the user's answer, preserving queue order.
 
----
-
 ### 4. Refinement Loop
 
 For each selected item in work-list order:
@@ -111,8 +99,6 @@ For each selected item in work-list order:
 4. If the user selects "Stop", break the loop and jump to step 5.
 
 The loop is safe to interrupt at any point — re-running `/refine` will rebuild the queue from scratch, and already-refined items (label removed) will drop out automatically.
-
----
 
 ### 5. Refinement Report (MANDATORY)
 
@@ -145,16 +131,12 @@ If the loop ended before the full queue was processed, add:
 
 > Re-run `/refine` to continue — already-refined items drop out of the queue automatically.
 
----
-
 ## Rules & Constraints
 
 - Do NOT perform any issue mutations directly — delegate all per-item work to `/refine-item`
 - Do NOT operate on issues outside the linked Project, even if they carry `needs-clarification`
 - The loop is safe to interrupt and resume — the sort is deterministic and idempotent on already-refined items
 - All `gh` errors surfaced verbatim
-
----
 
 ## Output Expectations
 

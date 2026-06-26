@@ -11,21 +11,15 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 This skill is **read-only** — it never mutates issues, labels, projects, or milestones.
 
----
-
 ## Objective
 
 Produce a Markdown strategic portfolio health report covering: open-issue distribution by type, priority, and effort; age cohorts; overdue high-priority items; stale In-Progress items; and metadata debt (items missing label coverage). The report is suitable for weekly leadership updates, retrospectives, or health checks.
-
----
 
 ## Workflow
 
 ### 0. Preflight (MANDATORY)
 
 Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
-
----
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
@@ -42,8 +36,6 @@ Run these two queries:
    `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue"`
 
    Build a lookup map: issue `number` → Project `Status` (`Todo` / `In Progress` / `Done`). Issues absent from the map are classified as "Not in Project."
-
----
 
 ### 2. Compute Report Sections (MANDATORY)
 
@@ -93,8 +85,6 @@ If none exist, emit `✅ No stale In-Progress items.`
 Issues missing any of `type:*`, `priority:*`, or `effort:*` labels. For each such issue, note which label group(s) are absent.
 
 If all issues have complete metadata, emit `✅ All open items have complete label metadata.`
-
----
 
 ### 3. Report Assembly (MANDATORY)
 
@@ -186,8 +176,6 @@ Emit `✅ No stale In-Progress items.` when empty.
 
 Emit `✅ All open items have complete label metadata.` when empty.
 
----
-
 ## Rules & Constraints
 
 - This skill is **strictly read-only** — never mutate any issue, Project field, milestone, or label.
@@ -198,8 +186,6 @@ Emit `✅ All open items have complete label metadata.` when empty.
 - "Age" is computed from `createdAt` (UTC); "last activity" from `updatedAt` (UTC).
 - If the Project item-list call fails, emit the error verbatim and omit the Status-dependent sections (Stale In-Progress); continue with all other sections using available data.
 - Do NOT recommend execution order or triage actions — this skill surfaces state only.
-
----
 
 ## Output Expectations
 

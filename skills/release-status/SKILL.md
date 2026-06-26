@@ -11,21 +11,15 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 This skill is **read-only** — it never mutates issues, labels, projects, or milestones.
 
----
-
 ## Objective
 
 Produce a Markdown release health dashboard for a target milestone: issue counts by Project Status, percentage complete, blocked items, and unestimated items — aggregated with zero manual querying with zero manual querying.
-
----
 
 ## Workflow
 
 ### 0. Preflight (MANDATORY)
 
 Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
-
----
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
@@ -34,8 +28,6 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
 The skill accepts an optional milestone argument (title substring or version string).
 
 Run `resolve-milestone "<argument>"` if an argument was provided, or `resolve-milestone` (no argument) for the Active Release. If it exits non-zero, STOP and surface its output verbatim.
-
----
 
 ### 2. Data Collection (MANDATORY)
 
@@ -56,8 +48,6 @@ With the resolved milestone in hand, run these queries:
 
 3. **Unestimated check**:
    For each issue, scan its labels for any `effort:*` label. Issues with none are unestimated.
-
----
 
 ### 3. Report Assembly (MANDATORY)
 
@@ -119,8 +109,6 @@ Issues grouped by Status:
 **📋 Todo (N)**
 - [ ] [#N](\<url\>) — title
 
----
-
 ## Rules & Constraints
 
 - This skill is **strictly read-only** — never mutate any issue, Project field, milestone, or label.
@@ -128,8 +116,6 @@ Issues grouped by Status:
 - Issue Dependencies API `404` must emit one warning line and gracefully skip the blocked-items section; it must not abort the rest of the report.
 - % complete is computed over all non-stub issues returned by the project queries.
 - Do NOT pick or recommend execution order — this skill surfaces state only.
-
----
 
 ## Output Expectations
 

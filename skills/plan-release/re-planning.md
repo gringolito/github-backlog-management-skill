@@ -19,8 +19,6 @@ Todo (N):        #n title [effort]  ...
 
 Items with In Progress or Done status are shown as read-only context throughout the session — they cannot be added to or removed from the milestone via this skill.
 
----
-
 ## Actions
 
 Use `AskUserQuestion` to open the main session menu:
@@ -129,15 +127,11 @@ Apply the disposition:
 
 After processing all selected items, recompute and display the updated capacity estimate.
 
----
-
 ## Session Loop
 
 After completing an Add or Remove flow, re-issue the main `AskUserQuestion` from the Actions step so the user can continue adjusting or exit.
 
 Proceed to the next step ONLY when the user chooses "Done — show summary".
-
----
 
 ## Session Summary
 
@@ -154,13 +148,9 @@ Print:
   - "Run `/add-item` to add more items to this milestone"
   - "Run `/execute-item` to start working on this milestone"
 
----
-
 ## Rules & Constraints
 
 - All `gh` errors must be surfaced verbatim, never silent skip errors
-
----
 
 ## Output Expectations
 
