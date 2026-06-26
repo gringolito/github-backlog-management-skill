@@ -11,13 +11,9 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 Your role is to run a read-only audit by delegating to the `backlog-auditor` agent and displaying the returned report. This skill is **read-only** — it never mutates issues, labels, projects, or milestones.
 
----
-
 ## Objective
 
 Audit the backlog to confirm it meets all defined quality, consistency, and integrity standards before it is used for execution.
-
----
 
 ## Workflow
 
@@ -25,26 +21,18 @@ Audit the backlog to confirm it meets all defined quality, consistency, and inte
 
 Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
 
----
-
 ### 1. Delegate Audit (MANDATORY)
 
 Spawn the `backlog-auditor` agent, passing: `project_number`, `owner` and `repo`.
-
----
 
 ### 2. Display Report (MANDATORY)
 
 Display the Validation Report returned by `backlog-auditor` verbatim.
 
----
-
 ## Rules & Constraints
 
 - Do NOT modify any issue, label, project, or milestone
 - All `gh` errors surfaced verbatim
-
----
 
 ## Success Criteria
 

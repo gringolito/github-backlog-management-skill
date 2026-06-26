@@ -9,21 +9,15 @@ You are an AI agent acting as a development lead responsible for resolving exter
 
 The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
 
----
-
 ## Objective
 
 Close an external-blocker stub issue (created by `/add-external-blocker`) with a resolution comment, and surface which backlog items are now unblocked as a result.
-
----
 
 ## Workflow
 
 ### 0. Preflight (MANDATORY)
 
 Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
-
----
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
@@ -35,8 +29,6 @@ Accept from the user argument or conversation:
 - `"resolution"` — a short description of how the external constraint was resolved (free text)
 
 If either is missing, STOP and ask the user to supply both.
-
----
 
 ### 2. Stub Validation (STRICT)
 
@@ -55,8 +47,6 @@ Validate:
 
 This guard prevents accidentally closing a real backlog item via this skill.
 
----
-
 ### 3. Identify Blocked Items (MANDATORY)
 
 Before closing the stub, record which open issues are currently blocked by it:
@@ -71,8 +61,6 @@ If the API returns `404`:
 - Proceed to step 4 (close the stub) but skip step 5.
 
 Capture the list of issues returned. Filter to those with `state == "open"` — these are the items potentially unblocked by closing this stub.
-
----
 
 ### 4. Resolution Comment, Closure & Project Status (STRICT)
 
@@ -97,8 +85,6 @@ gh project item-edit \
 
 Resolve `<item-id>` via `gh project item-list <project-number> --owner <owner> --format json --query "#<stub>"` if not already known. Use `project_id`, `project_number`, `status_field_id`, and `status_options.Done` from `.claude/backlog-project.json`. If the Project Status update fails (e.g. the stub was never added to the Project), surface the error as a warning but do not abort — the stub is already closed.
 
----
-
 ### 5. Newly Unblocked Detection (MANDATORY)
 
 For each open issue identified in step 3, re-fetch its remaining blockers to determine if it is now fully unblocked:
@@ -111,8 +97,6 @@ gh api "repos/<owner>/<repo>/issues/<N>/dependencies/blocked_by" \
 - Count = 0 → `#N` is **now unblocked** (all remaining blockers are closed)
 - Count > 0 → `#N` is still blocked (other open blockers remain); list the remaining open blockers by number
 
----
-
 ## Rules & Constraints
 
 - NEVER close a stub that lacks the `type:external-blocker` label — use the guard in step 2 strictly
@@ -120,8 +104,6 @@ gh api "repos/<owner>/<repo>/issues/<N>/dependencies/blocked_by" \
 - Do NOT reopen a closed stub — if the external constraint resurfaces, create a new stub via `/add-external-blocker`
 - If the Dependencies API is unavailable, close the stub anyway — the label guard still protects against mis-closes; the unblocked-detection step is skipped gracefully
 - Surface all `gh` errors verbatim — never swallow
-
----
 
 ## Output Expectations
 

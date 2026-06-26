@@ -12,8 +12,6 @@ Your goal is to inspect the current set of GitHub Releases and Milestones, selec
 
 A GitHub Milestone is the unit of version planning for this skill — backlog items (Issues) are assigned to a milestone to declare which release they belong to.
 
----
-
 ## Objective
 
 Either:
@@ -21,15 +19,11 @@ Either:
 - **Creation mode** (no argument, or argument that doesn't match an open milestone): Create a GitHub Milestone for the next release, with a release mode chosen by the user (Maintenance / Regular / Automated), a scope of backlog items, a coherent version name, a due date, a description, and all scoped items assigned.
 - **Re-planning mode** (argument matches an existing open milestone): Interactively adjust the scope of that milestone — add unassigned backlog items and remove currently assigned items with explicit disposition choices.
 
----
-
 ## Workflow
 
 ### 0. Preflight (MANDATORY)
 
 Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
-
----
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
@@ -43,8 +37,6 @@ Check whether the skill was invoked with an argument (a milestone identifier: ti
   - **Exit non-zero (no match)** — ask: "No open milestone found matching `<argument>`. Would you like to plan a new release instead?"
     - If yes: proceed to Step 2 (creation mode), carrying the argument as a suggested version name for Step 6.
     - If no: STOP.
-
----
 
 ### 2. Existing Releases & Milestones Inventory
 
@@ -67,8 +59,6 @@ If multiple schemes are mixed (e.g. some `v1.x`, some `2026-Qx`):
 - STOP
 - Ask the user to clarify which scheme should be used going forward
 
----
-
 ### 3. Release Mode Selection
 
 Use `AskUserQuestion` to ask the user which release mode to use:
@@ -76,8 +66,6 @@ Use `AskUserQuestion` to ask the user which release mode to use:
 - **Maintenance release**: scope is defined by the user (explicit list of issues). Targets any `major.minor` release — including the latest — when only bug fixes, security patches, or small corrections are intended. Version will be a patch on that release.
 - **Regular release**: fetch all unassigned backlog items and let the user select the scope interactively.
 - **Automated release planning**: fetch all unassigned backlog items, analyze them as an experienced Project Manager (priority, theme, dependencies), and propose a coherent release scope with rationale. User confirms or adjusts.
-
----
 
 ### 4. Scope Definition
 
@@ -128,8 +116,6 @@ Use `AskUserQuestion` to ask the user which release mode to use:
 - Present the suggested scope with rationale (why each item was included, overall release theme, dependency chains pulled in, items excluded due to external blockers).
 - Let the user confirm, remove items, or add items from the remaining pool (adding an externally-blocked item requires explicit user confirmation).
 
----
-
 ### 5. Version Inference
 
 After scope is confirmed, infer the appropriate version. Do NOT propose a version before this step.
@@ -149,8 +135,6 @@ Present the inferred bump type with rationale (e.g. "Minor bump — scope contai
 
 Follow the existing naming pattern (next period, continuation of observed naming) — scope content does not drive version naming for non-semver schemes.
 
----
-
 ### 6. Version Proposal & Confirmation
 
 - Compute the concrete version string from the inferred bump and existing release/milestone history.
@@ -165,8 +149,6 @@ Follow the existing naming pattern (next period, continuation of observed naming
 
 Wait for explicit user confirmation of the version name before proceeding.
 
----
-
 ### 7. Milestone Metadata
 
 Collect from the user (with sensible defaults):
@@ -179,16 +161,12 @@ Collect from the user (with sensible defaults):
   - Note any notable dependency chains or constraints surfaced during scope definition
   - Present the suggested description to the user and ask for confirmation or edits before proceeding. Do NOT create the milestone until the description is approved (or explicitly waived).
 
----
-
 ### 8. Milestone Creation
 
 Create the milestone via the GitHub API:
 
 - `gh api -X POST "repos/<owner>/<repo>/milestones" -f title=<title> -f due_on=<due_on> -f description=<description>`
 - Capture the returned `number` and `html_url`
-
----
 
 ### 9. Issue Assignment
 
@@ -209,8 +187,6 @@ After all issues are assigned, ask:
   - Add the clone to the Project with Status=`Todo` and no milestone assigned.
 - **If no**: skip — the scoped issues remain assigned to the maintenance milestone only.
 
----
-
 ### 10. Output Summary
 
 Print:
@@ -230,6 +206,3 @@ Print:
 - Pointer to next steps:
   - "Run `/add-item` to add more items to this milestone"
   - "Run `/execute-item` to start working on this milestone"
-
----
-

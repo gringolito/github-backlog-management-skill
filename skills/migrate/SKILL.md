@@ -11,8 +11,6 @@ Your goal is to convert an existing backlog (typically a `TODO.md` or `BACKLOG.m
 
 The local source backlog is **input only**. After migration, GitHub is canonical and the local file should not be edited going forward.
 
----
-
 ## Objective
 
 Transform ALL existing backlog items into GitHub Issues while:
@@ -23,15 +21,11 @@ Transform ALL existing backlog items into GitHub Issues while:
 - Avoiding fabrication of missing information
 - Producing a validated, production-ready backlog inside the linked Project
 
----
-
 ## Workflow
 
 ### 0. Preflight (MANDATORY)
 
 Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
-
----
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
@@ -45,8 +39,6 @@ If item boundaries are unclear:
 
 - Infer cautiously
 - Flag ambiguity in the Migration Report
-
----
 
 ### 2. Normalization
 
@@ -62,8 +54,6 @@ For EACH item, derive the GitHub-native representation:
   - Source `In Progress` → Project `In Progress`
   - Source `Done` / `Completed` / shipped items → **SKIPPED** (see step 8). Done items are historical and are NOT migrated to GitHub.
 
----
-
 ### 3. Missing Information Handling (CRITICAL)
 
 If data is missing or unclear:
@@ -78,8 +68,6 @@ Additionally:
 - List questions required to complete the item in the Migration Report
 - Highlight risks from missing info
 
----
-
 ### 4. INVEST Evaluation
 
 For each item, delegate to the `invest-gate` agent with the normalized body and title.
@@ -89,8 +77,6 @@ If `invest-gate` returns `Overall: FAIL`:
 - Capture each `FAIL` letter's reasoning in `### INVEST Notes`
 - Suggest improvements in the Migration Report (do NOT silently rewrite intent)
 - Apply the `needs-clarification` label to the item
-
----
 
 ### 5. Label Application
 
@@ -107,15 +93,11 @@ Apply the returned verdicts:
 
 Never assign `type:external-blocker` — stubs are infrastructure and are never migrated from backlog files.
 
----
-
 ### 6. Deduplication & Structuring
 
 - Detect duplicates or overlaps across the source backlog
 - DO NOT auto-merge or auto-split
 - In the Migration Report, list all dedup/split suggestions for user review
-
----
 
 ### 7. VALIDATION STEP (HARD GATE)
 
@@ -133,8 +115,6 @@ If any check fails:
 - STOP
 - Report validation errors
 - Provide corrected version OR request clarification before any GitHub mutations happen
-
----
 
 ### 8. Migration Execution
 
@@ -263,8 +243,6 @@ After all issues are created and dependencies are applied, set the execution ord
    ```
    Use the `id` fields from the `item-list` response. To place an item at the very top, omit `afterId` (or set it to `null`). Apply positions top-to-bottom to avoid ordering conflicts.
 
----
-
 ### 9. Migration Report (MANDATORY)
 
 After all items are processed, output a Migration Report containing:
@@ -284,8 +262,6 @@ After all items are processed, output a Migration Report containing:
   - Rejected: candidates the user declined
   - Unresolved: hints whose target couldn't be matched (manual resolution needed) OR whose target was a skipped Done item
 
----
-
 ## Rules & Constraints
 
 - NEVER fabricate requirements
@@ -298,8 +274,6 @@ After all items are processed, output a Migration Report containing:
 - Do NOT mutate GitHub before the hard validation gate passes
 - Do NOT delete or modify the source backlog file — it is input only
 - Issue body section headings MUST match the Issue Forms template exactly so `audit` can parse them
-
----
 
 ## Output Expectations
 

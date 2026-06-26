@@ -11,8 +11,6 @@ Your goal is to provision the GitHub primitives the other backlog skills depend 
 
 This skill is **idempotent**: re-running it on a repo where the project already exists must not duplicate or destroy anything.
 
----
-
 ## Objective
 
 Make the repository ready to host backlog items as GitHub Issues, prioritized inside a linked GitHub Project (v2), so that:
@@ -20,8 +18,6 @@ Make the repository ready to host backlog items as GitHub Issues, prioritized in
 - All other skills can all read project metadata from `.claude/backlog-project.json`
 - Issues created by any skill share the same body shape (driven by the Issue Forms template)
 - Labels are uniform across `type:*`, `priority:*`, and `effort:*`
-
----
 
 ## Workflow
 
@@ -42,8 +38,6 @@ If any required preflight step fails:
 - Report the missing prerequisite explicitly
 - Do NOT continue to provisioning
 
----
-
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
 ### 1. Project Detection (IDEMPOTENT)
@@ -57,8 +51,6 @@ Before creating anything:
   - Record its number and URL
   - SKIP step 2
   - Continue with label and template provisioning (which are also idempotent)
-
----
 
 ### 2. Project Creation
 
@@ -85,8 +77,6 @@ If no matching Project exists:
   - `In Progress`
   - `Done`
 - If the user has customized the Status field options, STOP and use AskUserQuestion with options: "Add missing options" / "Rename existing options" / "Cancel" — DO NOT silently overwrite
-
----
 
 ### 3. Label Provisioning (IDEMPOTENT)
 
@@ -128,8 +118,6 @@ Effort label descriptions MUST NOT include time estimates (e.g. "2 hours", "1 da
 - `needs-clarification` — `"Item needs more information before it can be worked"`
 
 Apply distinct color groupings (e.g. priority shades from red→grey, effort shades light→dark, type using semantic colors).
-
----
 
 ### 4. Issue Forms Template (CANONICAL BODY SHAPE — VIA PR)
 
@@ -183,8 +171,6 @@ Schema notes:
 - This file is the single source of truth for project metadata — all other skills read it directly with no fallback
 - Re-running `initialize` on a fully-provisioned repo MUST refresh this file
 
----
-
 ### 6. Output Summary
 
 Print a structured summary so the user can verify provisioning:
@@ -198,8 +184,6 @@ Print a structured summary so the user can verify provisioning:
 - Status field options confirmed
 - Metadata file path: `.claude/backlog-project.json`
 
----
-
 ## Rules & Constraints
 
 - Re-running this skill on a fully-provisioned repo MUST be a no-op except for printing the summary
@@ -208,8 +192,6 @@ Print a structured summary so the user can verify provisioning:
 - Stop and ask before opening a PR that would replace a pre-existing `.github/ISSUE_TEMPLATE/backlog-item.yml`
 - NEVER commit `.github/ISSUE_TEMPLATE/backlog-item.yml` directly to the default branch — always go through a PR
 - All `gh` errors must be surfaced verbatim to the user — do not swallow them
-
----
 
 ## Output Expectations
 

@@ -9,21 +9,15 @@ You are an AI agent acting as a development lead responsible for managing issue 
 
 The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
 
----
-
 ## Objective
 
 Register a `blocked_by` dependency between two GitHub issues: mark issue `#N` as blocked by issue `#M`. Works for any two GitHub issues — not limited to items in the linked Project or the active Milestone.
-
----
 
 ## Workflow
 
 ### 0. Preflight (MANDATORY)
 
 Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
-
----
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
@@ -35,8 +29,6 @@ Accept two issue references from the user argument or conversation:
 - `#M` — the issue that is blocking it (the blocker)
 
 Both may be in the same repo or in different repos. If a cross-repo reference is provided, expect a full URL or `<owner>/<repo>#<number>` format. If either reference is missing or ambiguous, STOP and ask the user to supply both.
-
----
 
 ### 2. Issue Validation (MANDATORY)
 
@@ -53,8 +45,6 @@ Surface to the user:
 - Both issue titles and states (open/closed)
 - A warning if `#M` is already closed (the dependency is technically valid but may be stale)
 
----
-
 ### 3. ID Resolution (MANDATORY)
 
 The GitHub Dependencies API requires the numeric database `id`, not the human-visible `number`:
@@ -65,8 +55,6 @@ The GitHub Dependencies API requires the numeric database `id`, not the human-vi
   - Cross-repo: `gh api "repos/<blocker-owner>/<blocker-repo>/issues/<M>" --jq '.id'`
 
 Capture both IDs for use in step 4.
-
----
 
 ### 4. Dependency Creation (STRICT)
 
@@ -85,8 +73,6 @@ If the API returns any other error, surface it verbatim and STOP.
 
 Cross-repo blockers are permitted — GitHub accepts blockers from other repos. `audit` will flag them as a smell for visibility, but they are not rejected here.
 
----
-
 ### 5. Verification (MANDATORY)
 
 Read back the dependency to confirm it was applied:
@@ -98,8 +84,6 @@ gh api "repos/<owner>/<repo>/issues/<N>/dependencies/blocked_by" \
 
 Confirm `<M>` appears in the response.
 
----
-
 ## Rules & Constraints
 
 - NEVER create the dependency in reverse (`#N` blocking `#M`) unless the user explicitly requests it — run `/block-item #M #N` for the reverse direction
@@ -108,8 +92,6 @@ Confirm `<M>` appears in the response.
 - Cross-Project / cross-repo blockers are permitted and will be flagged (not rejected) by `audit`
 - A closed blocker is technically valid — surface a warning but allow it (stale deps are cleaned up by `audit`)
 - Surface all `gh` errors verbatim — never swallow
-
----
 
 ## Output Expectations
 

@@ -7,13 +7,9 @@ description: Write the Claude Code permissions allowlist for this skill into the
 
 You are an AI agent acting as an installation assistant responsible for configuring Claude Code permission settings for the GitHub Backlog Management skill.
 
----
-
 ## Objective
 
 Write the correct `permissions.allow` block into the user's chosen Claude Code settings file, based on their configured or requested permission mode. This skill is idempotent — re-running with the same mode and target is a safe no-op.
-
----
 
 ## Allowlist reference
 
@@ -42,16 +38,12 @@ These are the canonical allowlist blocks for each mode:
 ]
 ```
 
----
-
 ## Workflow
 
 ### 0. Preflight (MANDATORY)
 
 - `gh auth status` — if unauthenticated, STOP and output: `gh auth status failed. Run gh auth login and retry.`
 - Parse `<owner>/<repo>` from `gh repo view --json owner,name`
-
----
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
@@ -65,16 +57,12 @@ Determine the effective permission mode using this precedence:
 
 Valid values: `yolo`, `safe`, `off`. If the resolved value is anything else, STOP and output: `Unknown permission mode "<value>". Valid values: yolo, safe, off.`
 
----
-
 ### 2. Off / Unset path (STRICT)
 
 If the resolved mode is `off`:
 
 - Print exactly: `Permission mode is "off" — no settings written. See README "Authentication & Permissions" for manual configuration.`
 - STOP. Do not read, write, or touch any settings file.
-
----
 
 ### 3. Target file selection (MANDATORY)
 
@@ -86,8 +74,6 @@ Ask the user which file to write. Present exactly three options:
 
 Wait for the user to select one before proceeding.
 
----
-
 ### 4. Idempotent merge and write (STRICT)
 
 1. **Read** the chosen target file. If it does not exist, treat its content as `{}`.
@@ -98,13 +84,9 @@ Wait for the user to select one before proceeding.
 6. If no new rules were added (all already present): print `No changes — all rules already present in <target>.` and STOP.
 7. Write the updated JSON back to the target file with 2-space indentation.
 
----
-
 ### 5. Verification (MANDATORY)
 
 Re-read the target file and confirm all expected rules are present. Output the result summary (see Output Expectations).
-
----
 
 ## Rules & Constraints
 
@@ -114,8 +96,6 @@ Re-read the target file and confirm all expected rules are present. Output the r
 - An explicit argument overrides `userConfig` for this invocation ONLY — do NOT persist or modify the stored `userConfig` value
 - Surface all `gh` errors and file I/O errors verbatim — never swallow
 - If the target file path contains `~`, expand it to the user's home directory using `$HOME`
-
----
 
 ## Output Expectations
 

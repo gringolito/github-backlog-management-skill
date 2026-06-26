@@ -11,8 +11,6 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 Items carrying the `needs-clarification` label were created by `migrate` (or flagged later) because they are missing critical detail — typically with `UNKNOWN` / `NEEDS CLARIFICATION` markers in body sections and open questions parked in `### INVEST Notes`. Your goal is to walk this one item through interactive discovery, fill the gaps, re-evaluate severity / effort / type / Project rank using full relative analysis, and remove the `needs-clarification` label once validation passes.
 
----
-
 ## Objective
 
 Bring the target issue to a fully refined state where:
@@ -24,15 +22,11 @@ Bring the target issue to a fully refined state where:
 - Project rank reflects the refined understanding (re-evaluated relatively)
 - The `needs-clarification` label is removed
 
----
-
 ## Workflow
 
 ### 0. Preflight (MANDATORY)
 
 Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
-
----
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
@@ -44,8 +38,6 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
   - No argument — ask: "Which issue should I refine? You can provide an issue number or a title."
 - Fetch issue data and verify the issue is a member of the linked Project: `gh project item-list <project-number> --owner <owner> --format json --query "#<n>"` — if the issue is NOT in the Project, STOP and output: `Issue #<n> is not in the linked Backlog project. Only Project members can be refined here.`
 - If the issue does NOT carry `needs-clarification`, warn: "Issue #<n> does not carry `needs-clarification`. Proceed anyway? [Y/n]" and stop if the user declines.
-
----
 
 ### 2. Display Item
 
@@ -64,8 +56,6 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
     - `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocking"`
   - Sub-issue parent (if any): `#N`, title.
     - `gh issue view <n> --json parent --jq '.parent'`
-
----
 
 ### 3. Discovery Dialogue (MANDATORY)
 
@@ -88,8 +78,6 @@ Reuse the discovery pattern from `add-item`:
 - Challenge vague answers — DO NOT accept hand-waving like "improve performance" or "make it better"
 - If the user genuinely cannot answer a question, capture it as a remaining gap (handled in step 5)
 
----
-
 ### 4. Reconstruct Body
 
 Delegate body authoring to the `issue-body-author` agent:
@@ -101,8 +89,6 @@ Delegate body authoring to the `issue-body-author` agent:
 The agent returns an updated body with all `UNKNOWN` / `NEEDS CLARIFICATION` / `_No response_` markers replaced by the discovered content. Any sections where information is still missing will be marked with `<!-- TODO: ... -->` — those remain as open questions in `### INVEST Notes`.
 
 DO NOT introduce new headings or change ordering — `audit` parses these section headings.
-
----
 
 ### 5. INVEST Gate (MANDATORY)
 
@@ -122,16 +108,12 @@ If splitting is needed (S letter fails):
 - Apply the partial body update reflecting the reduced scope of the original item, OR keep the original as-is if the user prefers to handle the split manually
 - KEEP the `needs-clarification` label until the split is resolved
 
----
-
 ### 6. Apply Body Update
 
 If INVEST passes (or partial — per step 5):
 
 - Write the refined body to a temp file (avoids shell-escaping issues)
 - `gh issue edit <n> --body-file <tmp>`
-
----
 
 ### 7. Re-evaluate Labels (RELATIVE)
 
@@ -156,8 +138,6 @@ Apply changes ONLY after explicit user confirmation:
 - `gh issue edit <n> --remove-label <old> --add-label <new>`
 
 If existing items appear misranked in their priority labels relative to the refined item, surface the discrepancy and recommend label changes for those existing items. Apply ONLY after confirmation.
-
----
 
 ### 8. Re-evaluate Project Rank + Dependencies (RELATIVE)
 
@@ -204,8 +184,6 @@ If the Dependencies API is unavailable on this repo (returns `404`), skip blocke
 
 Apply ONLY after explicit user confirmation. Cross-Project / cross-repo blockers ARE permitted but should be flagged in the per-item confirmation so the user knows they exist.
 
----
-
 ### 9. Pre-removal Validation Gate (MANDATORY)
 
 Before removing the `needs-clarification` label, re-fetch the current live state of the issue and validate it:
@@ -231,8 +209,6 @@ If ANY check fails:
 
 If all checks pass, proceed to step 10.
 
----
-
 ### 10. Remove Clarification Label
 
 Only after the pre-removal validation gate passes:
@@ -245,8 +221,6 @@ Only after the pre-removal validation gate passes:
   - Rank change applied (e.g., "moved from Rank 8 to Rank 3")
   - Dependency changes applied (blockers added / removed, sub-issue parent change)
 
----
-
 ## Rules & Constraints
 
 - Do NOT remove `needs-clarification` until the pre-removal validation gate passes (step 9)
@@ -257,8 +231,6 @@ Only after the pre-removal validation gate passes:
 - Effort must NEVER be expressed in time (no hours/days)
 - All `gh` errors surfaced verbatim
 - This skill operates on exactly one issue. Use `/refine` to drive a multi-item session.
-
----
 
 ## Output Expectations
 
