@@ -42,6 +42,7 @@ Assign exactly ONE of the following. `type:external-blocker` is reserved for Stu
 | `type:reliability` | Uptime, error recovery, observability, or graceful-degradation improvement |
 | `type:compliance` | Regulatory, legal, or contractual obligation |
 | `type:spike` | Time-boxed research or proof-of-concept to reduce uncertainty |
+| `type:epic` | A large, high-level body of work that is too big to complete in a single iteration or is large enough that it can be split into multiple sub-issues |
 
 If the item fits more than one type, choose the dominant one — the label that best captures the primary deliverable.
 

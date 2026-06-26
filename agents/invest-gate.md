@@ -24,6 +24,16 @@ You receive one or more of the following:
 
 ---
 
+## Type-specific Exemptions
+
+If the item carries `type:epic` in its labels:
+
+- **S**: return `PASS — S: exempt; epic decomposes into sub-issues by design`
+- **T**: return `PASS — T: exempt; acceptance criteria are verified at the sub-issue level`
+- Evaluate I, N, V, E normally.
+
+---
+
 ## INVEST Rubric
 
 | Letter | Criterion | Definition |
@@ -32,7 +42,7 @@ You receive one or more of the following:
 | **N** | Negotiable | The item describes WHAT is needed, not HOW to implement it. Hard-wired technology choices, specific file names, or mandatory code patterns are violations unless they are themselves the acceptance criteria (e.g. a migration to a specific library). |
 | **V** | Valuable | The item delivers a clear, stated benefit to a user, the system, or the business. Internal work (refactors, debt cleanup) is valuable if `### Why` explains the benefit explicitly. An empty or `_No response_` `### Why` is a violation. |
 | **E** | Estimable | The `### In Scope`, `### Acceptance Criteria`, and `### What` sections together contain enough detail for a developer to form a complexity estimate. `UNKNOWN`, `NEEDS CLARIFICATION`, or `_No response_` in any required section is a violation. |
-| **S** | Small | The item can be delivered in a single iteration. Signs it is too large: more than ~5 acceptance criteria, or criteria that imply multiple independent deliverables. |
+| **S** | Small | The item can be delivered in a single iteration. Signs it is too large: too many acceptance criteria, or criteria that imply multiple independent deliverables. |
 | **T** | Testable | Each criterion in `### Acceptance Criteria` must be objectively verifiable by a third party. Vague criteria ("works correctly", "improves performance", "is better") are violations. |
 
 ---

@@ -43,7 +43,7 @@ Every Workable Item passes INVEST (Independent, Negotiable, Valuable, Estimable,
 ## Key Invariants (apply to all skills)
 
 **Label catalog**
-- `type:` — `feature` `bug` `security` `performance` `dx` `tech-debt` `reliability` `compliance` `spike` `external-blocker` (plus any custom `type:*` labels present in the repository)
+- `type:` — `feature` `bug` `security` `performance` `dx` `tech-debt` `reliability` `compliance` `spike` `epic` `external-blocker` (plus any custom `type:*` labels present in the repository)
 - `priority:` — `P0` `P1` `P2` `P3`
 - `effort:` — `XS` `S` `M` `L` `XL`
 - Operational: `needs-clarification`

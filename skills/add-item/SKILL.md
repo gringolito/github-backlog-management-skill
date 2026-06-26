@@ -80,7 +80,7 @@ Delegate classification to the `label-classifier` agent:
 
 Handle the returned verdict:
 
-- `type:*` — if the agent returns `unclear: type`, STOP and use AskUserQuestion, offering the 3–4 most contextually likely types as options (choose from: `feature`, `bug`, `security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`, `external-blocker`); "Other" is automatically provided for anything not listed
+- `type:*` — if the agent returns `unclear: type`, STOP and use AskUserQuestion, offering the 3–4 most contextually likely types as options (choose from: `feature`, `bug`, `security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`, `epic`, `external-blocker`); "Other" is automatically provided for anything not listed
 - `priority:*` — if the agent returns `unclear: priority`, present the reasoning and use AskUserQuestion with options: `P0` / `P1` / `P2` / `P3`; default to `priority:P2` only if the user explicitly selects it
 - `effort:*` — if the agent returns `unclear: effort`, present the reasoning and use AskUserQuestion with the 4 most contextually relevant sizes as options (from `XS`, `S`, `M`, `L`, `XL`); "Other" is automatically provided for the fifth
 
