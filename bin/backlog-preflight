@@ -18,7 +18,7 @@ repo="${nameWithOwner##*/}"
 # 3. Read metadata file
 metadata_file=".claude/backlog-project.json"
 if [[ ! -f "$metadata_file" ]]; then
-  echo "No Backlog project linked to ${owner}/${repo}. Run /initialize first."
+  echo "No Backlog project linked to ${owner}/${repo}. Run /initialize first." >&2
   exit 1
 fi
 metadata=$(cat "$metadata_file")
