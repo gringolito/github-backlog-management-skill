@@ -8,6 +8,7 @@ setup() {
   MOCK_BIN="$(mktemp -d)"
   export GH_MOCK_DIR="$(mktemp -d)"
   export PATH="$MOCK_BIN:$PATH"
+  export CREATE_ITEM_RETRY_SLEEP=0
 
   cd "$TEST_DIR"
 
@@ -72,6 +73,15 @@ if [[ "$subcmd" == "issue" ]]; then
 elif [[ "$subcmd" == "project" ]]; then
   subcmd2="${1:-}"; shift || true
   if [[ "$subcmd2" == "item-list" ]]; then
+    counter_file="$GH_MOCK_DIR/item_list_empty_responses"
+    if [[ -f "$counter_file" ]]; then
+      remaining=$(cat "$counter_file")
+      if [[ "$remaining" -gt 0 ]]; then
+        echo $((remaining - 1)) > "$counter_file"
+        echo '{"items": []}'
+        exit 0
+      fi
+    fi
     cat "$GH_MOCK_DIR/items_todo.json" 2>/dev/null || echo '{"items": []}'
     exit 0
   fi
@@ -258,10 +268,11 @@ JSON
 }
 
 # ---------------------------------------------------------------------------
-# AC5 — Non-fatal: rank GraphQL mutation fails → warning in blob, exit 0
+# AC5 — Non-fatal (to the issue): rank GraphQL mutation fails → warning in
+# blob, exit 2 (issue was created, but a post-creation step warned)
 # ---------------------------------------------------------------------------
 
-@test "AC5: GraphQL rank mutation failure adds warning but exits 0" {
+@test "AC5: GraphQL rank mutation failure adds warning and exits 2" {
   local manifest="$GH_MOCK_DIR/manifest.json"
   cat > "$manifest" << JSON
 {
@@ -274,10 +285,90 @@ JSON
   touch "$GH_MOCK_DIR/graphql_fail"
 
   run "$CREATE_ITEM" --input "$manifest"
-  [[ "$status" -eq 0 ]]
+  [[ "$status" -eq 2 ]]
+
+  issue_num=$(echo "$output" | jq -r '.issue.number')
+  [[ "$issue_num" == "42" ]]
 
   rank_applied=$(echo "$output" | jq -r '.rank.applied')
   [[ "$rank_applied" == "false" ]]
+
+  warnings_len=$(echo "$output" | jq '.warnings | length')
+  [[ "$warnings_len" -gt 0 ]]
+}
+
+# ---------------------------------------------------------------------------
+# #186 — New item's Status is set asynchronously by GitHub's "item added to
+# project" workflow, so resolving its node ID must retry against an
+# unfiltered item list rather than the status:Todo-filtered one.
+# ---------------------------------------------------------------------------
+
+@test "#186a: item resolves after 2 empty list responses, rank.applied=true, exit 0" {
+  local manifest="$GH_MOCK_DIR/manifest.json"
+  cat > "$manifest" << JSON
+{
+  "title": "Ranked issue",
+  "body_file": "$GH_MOCK_DIR/body.txt",
+  "labels": ["type:feature", "priority:P1", "effort:M"],
+  "rank": {"position": "top"}
+}
+JSON
+  echo "2" > "$GH_MOCK_DIR/item_list_empty_responses"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 0 ]]
+
+  rank_applied=$(echo "$output" | jq -r '.rank.applied')
+  [[ "$rank_applied" == "true" ]]
+
+  warnings=$(echo "$output" | jq -c '.warnings')
+  [[ "$warnings" == "[]" ]]
+}
+
+@test "#186b: item never propagates into the Project, retries exhausted, exit 2 with rank.applied=false" {
+  local manifest="$GH_MOCK_DIR/manifest.json"
+  cat > "$manifest" << JSON
+{
+  "title": "Ranked issue",
+  "body_file": "$GH_MOCK_DIR/body.txt",
+  "labels": ["type:feature", "priority:P1", "effort:M"],
+  "rank": {"position": "top"}
+}
+JSON
+  echo "99" > "$GH_MOCK_DIR/item_list_empty_responses"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 2 ]]
+
+  issue_num=$(echo "$output" | jq -r '.issue.number')
+  [[ "$issue_num" == "42" ]]
+
+  rank_applied=$(echo "$output" | jq -r '.rank.applied')
+  [[ "$rank_applied" == "false" ]]
+
+  warnings_len=$(echo "$output" | jq '.warnings | length')
+  [[ "$warnings_len" -gt 0 ]]
+
+  warnings_text=$(echo "$output" | jq -r '.warnings[]')
+  [[ "$warnings_text" == *"not found in Project"* ]]
+}
+
+@test "#186c: a failed rank_adjustments[] entry also yields exit 2 (generalized exit-code contract)" {
+  local manifest="$GH_MOCK_DIR/manifest.json"
+  cat > "$manifest" << JSON
+{
+  "title": "Test issue title",
+  "body_file": "$GH_MOCK_DIR/body.txt",
+  "labels": ["type:feature", "priority:P2", "effort:S"],
+  "rank_adjustments": [{"issue": 99, "position": "top"}]
+}
+JSON
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 2 ]]
+
+  issue_num=$(echo "$output" | jq -r '.issue.number')
+  [[ "$issue_num" == "42" ]]
 
   warnings_len=$(echo "$output" | jq '.warnings | length')
   [[ "$warnings_len" -gt 0 ]]

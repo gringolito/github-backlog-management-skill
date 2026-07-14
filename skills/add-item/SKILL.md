@@ -170,7 +170,11 @@ See [issue-manifest.md](./issue-manifest.md) for the full manifest schema.
 3. Run: `create-item --input /tmp/add-item-manifest.json`
 4. Capture the JSON blob emitted to stdout — use it for Step 10.
 
-If `create-item` exits non-zero, STOP and surface its stderr output verbatim.
+Branch on the exit code:
+
+- **Exit 0** — success. Proceed to Step 10 as normal.
+- **Exit 2** — the issue **was created**, but a post-creation step warned. Parse the JSON blob from stdout anyway and proceed to Step 10, reporting the issue as created. Do NOT retry or re-run `create-item` for this request, retrying would create a duplicate.
+- **Any other non-zero exit** — nothing was created (e.g. `gh issue create` itself failed). STOP and surface its stderr output verbatim. It is safe to retry once the underlying input is fixed.
 
 ---
 
@@ -183,6 +187,7 @@ Using the JSON blob returned by `create-item`, print:
 - Project Status (`.status`)
 - Milestone assignment (`.milestone` or "unassigned")
 - Rank applied (`.rank.applied`) and any re-ranked items (`.rank_adjustments_applied`)
+  - If `.rank.applied == false`, do NOT fold this into the generic bullet — render a standalone, prominent line instead: `⚠️ Rank NOT applied — item landed at the bottom of Todo, not the requested position. <matching warning text from .warnings>`
 - Blockers (`.blocked_by` list, with cross-Project / cross-repo blockers explicitly flagged) — or "none"
 - Blocking (`.blocking` list) — or "none"
 - Sub-issue parent (`.parent`) — or "none"
