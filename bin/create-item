@@ -8,6 +8,14 @@ Usage: create-item --input <json-file>
 Creates a GitHub issue from a manifest JSON file and adds it to the backlog project.
 Emits a JSON result blob to stdout on success. Errors go to stderr.
 
+Exit codes:
+  0  Full success — issue created, no warnings.
+  1  Nothing created — gh issue create itself failed.
+  2  Issue was created, but a post-creation step warned (rank retries
+     exhausted, a rank GraphQL mutation failed, or a rank_adjustments[]
+     entry failed). The JSON blob is still emitted on stdout; do not retry
+     the request — the issue already exists.
+
 Manifest schema (title and body_file are required; all others are optional):
   title           string
   body_file       path to issue body file
@@ -110,30 +118,56 @@ issue_url_out=$(gh issue create "${create_args[@]}" 2>&1) || {
 issue_url=$(echo "$issue_url_out" | tail -1)
 issue_num=$(echo "$issue_url" | grep -oE '[0-9]+$')
 
-# ─── 2 & 3. Apply rank + rank_adjustments (non-fatal) ─────────────────────
+# ─── 2 & 3. Apply rank + rank_adjustments (non-fatal to issue creation) ───
+: "${CREATE_ITEM_RETRY_SLEEP:=1}"
+
 todo_items=""
+all_items=""
 n_adjustments=$(echo "$rank_adjustments_json" | jq 'length')
 
+# Used only to resolve pre-existing items (rank.after_issue, the position:
+# bottom last-item lookup, and rank_adjustments[] targets) — these already
+# have Status = Todo, so the filter is safe and unchanged from before.
 fetch_todo_items() {
   todo_items=$(gh project item-list "$proj_num" --owner "$owner" \
     --format json --limit 200 --query "is:issue status:Todo -label:type:external-blocker" 2>/dev/null) || \
     todo_items='{"items": []}'
 }
 
+# Used only to resolve the newly-created item's own node ID. Its Status is
+# assigned asynchronously by GitHub's "item added to project" workflow, so a
+# status:Todo-filtered query can race it and find nothing — this query is
+# intentionally unfiltered and paired with the retry loop below.
+fetch_all_items() {
+  all_items=$(gh project item-list "$proj_num" --owner "$owner" \
+    --format json --limit 200 --query "is:issue" 2>/dev/null) || \
+    all_items='{"items": []}'
+}
+
 resolve_item_id() {
-  local issue_n="$1"
-  echo "$todo_items" | jq -r \
+  local items_json="$1" issue_n="$2"
+  echo "$items_json" | jq -r \
     --argjson n "$issue_n" \
     '.items // [] | .[] | select(.content.number == $n) | .id' 2>/dev/null | head -1
 }
 
 if [[ "$rank_json" != "null" ]]; then
-  fetch_todo_items
+  item_id=""
+  retry_delays=(1 2 3 4)
+  for attempt in 1 2 3 4 5; do
+    fetch_all_items
+    item_id=$(resolve_item_id "$all_items" "$issue_num")
+    [[ -n "${item_id:-}" && "$item_id" != "null" ]] && break
+    if [[ $attempt -lt 5 ]]; then
+      sleep "$(( retry_delays[attempt-1] * CREATE_ITEM_RETRY_SLEEP ))"
+    fi
+  done
 
-  item_id=$(resolve_item_id "$issue_num")
   if [[ -z "${item_id:-}" || "$item_id" == "null" ]]; then
-    echo "Rank: could not find item for #$issue_num in Todo column" >> "$WARNINGS_FILE"
+    echo "Rank: item #$issue_num not found in Project after 5 attempts" >> "$WARNINGS_FILE"
   else
+    fetch_todo_items
+
     rank_pos=$(echo "$rank_json" | jq -r '.position // null')
     rank_after=$(echo "$rank_json" | jq -r '.after_issue // null')
 
@@ -141,7 +175,7 @@ if [[ "$rank_json" != "null" ]]; then
     if [[ "$rank_pos" == "top" ]]; then
       after_input=""
     elif [[ "$rank_after" != "null" ]]; then
-      after_id=$(resolve_item_id "$rank_after")
+      after_id=$(resolve_item_id "$todo_items" "$rank_after")
       [[ -n "${after_id:-}" && "$after_id" != "null" ]] && \
         after_input=", afterId: \"$after_id\""
     elif [[ "$rank_pos" == "bottom" ]]; then
@@ -166,7 +200,7 @@ if [[ "$n_adjustments" -gt 0 ]]; then
     adj_after=$(echo "$adj" | jq -r '.after_issue // null')
     adj_pos=$(echo "$adj" | jq -r '.position // null')
 
-    adj_item_id=$(resolve_item_id "$adj_issue")
+    adj_item_id=$(resolve_item_id "$todo_items" "$adj_issue")
     if [[ -z "${adj_item_id:-}" || "$adj_item_id" == "null" ]]; then
       echo "rank_adjustments[$i]: item #$adj_issue not found in Todo" >> "$WARNINGS_FILE"
       continue
@@ -176,7 +210,7 @@ if [[ "$n_adjustments" -gt 0 ]]; then
     if [[ "$adj_pos" == "top" ]]; then
       after_input=""
     elif [[ "$adj_after" != "null" ]]; then
-      after_id=$(resolve_item_id "$adj_after")
+      after_id=$(resolve_item_id "$todo_items" "$adj_after")
       [[ -n "${after_id:-}" && "$after_id" != "null" ]] && \
         after_input=", afterId: \"$after_id\""
     fi
@@ -215,3 +249,11 @@ jq -n \
     parent:                   (if $parent == "null" then null else ($parent | tonumber) end),
     warnings:                 $warnings
   }'
+
+# ─── 5. Exit code ─────────────────────────────────────────────────────────
+# The issue was always created by this point (gh issue create failures exit
+# 1 earlier and never reach here). A non-empty warnings file means some
+# post-creation step degraded — surface that generically as exit 2 so any
+# future warning-producing step inherits this for free.
+[[ -s "$WARNINGS_FILE" ]] && exit 2
+exit 0
