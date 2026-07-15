@@ -19,22 +19,37 @@ repo=$(jq -r '.repo' "$metadata_file")
 proj_num=$(jq -r '.project_number' "$metadata_file")
 
 # ─── 1. Active milestone ──────────────────────────────────────────────────────
-milestone_json=$(resolve-milestone 2>&1) || { echo "$milestone_json" >&2; exit 1; }
-ms_num=$(echo "$milestone_json" | jq -r '.number')
-ms_title=$(echo "$milestone_json" | jq -r '.title')
-ms_due=$(echo "$milestone_json" | jq -r '.due_on')
-active_milestone_out=$(jq -n --argjson n "$ms_num" --arg t "$ms_title" --arg d "$ms_due" \
-  '{number: $n, title: $t, due_on: $d}')
+milestone_json=$(resolve-milestone 2>&1)
+resolve_status=$?
+
+if [[ "$resolve_status" -eq 2 ]]; then
+  # No open milestones exist (none ever created, or all closed) — this is an
+  # ordinary state, not an error. Fall through to a milestone-less run: skip
+  # Tier 1 entirely and proceed straight to Tier 2 (no:milestone) selection.
+  active_milestone_out="null"
+  tier1_raw='{"items": []}'
+elif [[ "$resolve_status" -ne 0 ]]; then
+  echo "$milestone_json" >&2
+  exit 1
+else
+  ms_num=$(echo "$milestone_json" | jq -r '.number')
+  ms_title=$(echo "$milestone_json" | jq -r '.title')
+  ms_due=$(echo "$milestone_json" | jq -r '.due_on')
+  active_milestone_out=$(jq -n --argjson n "$ms_num" --arg t "$ms_title" --arg d "$ms_due" \
+    '{number: $n, title: $t, due_on: $d}')
+fi
 
 # ─── 2. Fetch project items (three queries) ───────────────────────────────────
 inprogress_raw=$(gh project item-list "$proj_num" --owner "$owner" \
   --format json --limit 200 --query 'is:issue status:"In Progress" assignee:@me' 2>&1) || {
   echo "Failed to fetch in-progress items: $inprogress_raw" >&2; exit 1
 }
-tier1_raw=$(gh project item-list "$proj_num" --owner "$owner" \
-  --format json --limit 200 --query "is:issue -label:type:external-blocker status:Todo milestone:\"${ms_title}\"" 2>&1) || {
-  echo "Failed to fetch Tier 1 items: $tier1_raw" >&2; exit 1
-}
+if [[ "$resolve_status" -ne 2 ]]; then
+  tier1_raw=$(gh project item-list "$proj_num" --owner "$owner" \
+    --format json --limit 200 --query "is:issue -label:type:external-blocker status:Todo milestone:\"${ms_title}\"" 2>&1) || {
+    echo "Failed to fetch Tier 1 items: $tier1_raw" >&2; exit 1
+  }
+fi
 tier2_raw=$(gh project item-list "$proj_num" --owner "$owner" \
   --format json --limit 200 --query "is:issue -label:type:external-blocker status:Todo no:milestone" 2>&1) || {
   echo "Failed to fetch Tier 2 items: $tier2_raw" >&2; exit 1

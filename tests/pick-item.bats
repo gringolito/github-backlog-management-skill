@@ -417,6 +417,114 @@ JSON
 # sub_issues_summary included in candidate
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# #189 — resolve-milestone exit 2 (no open milestones) falls through to a
+# milestone-less run instead of exiting fatally.
+# ---------------------------------------------------------------------------
+
+@test "#189: falls back to Tier 2 with active_milestone null when resolve-milestone exits 2" {
+  cat > "$MOCK_BIN/resolve-milestone" << 'SCRIPT'
+#!/usr/bin/env bash
+echo "No open milestones found." >&2
+exit 2
+SCRIPT
+  chmod +x "$MOCK_BIN/resolve-milestone"
+
+  # Tier 1 must never be queried in this fallback — error out if it is, to
+  # prove pick-item skips that call path entirely.
+  cat > "$MOCK_BIN/gh" << 'SCRIPT'
+#!/usr/bin/env bash
+subcmd="${1:-}"
+shift || true
+
+if [[ "$subcmd" == "api" ]]; then
+  path="${1:-}"
+  if [[ "$path" =~ ^repos/[^/]+/[^/]+/issues/[0-9]+/dependencies/blocked_by$ ]]; then
+    num=$(echo "$path" | grep -oE '/issues/[0-9]+/' | grep -oE '[0-9]+')
+    file="$GH_MOCK_DIR/blockers_${num}.json"
+    if [[ -f "${file}.404" ]]; then
+      echo "HTTP 404: Not Found" >&2; exit 1
+    fi
+    cat "$file"
+  elif [[ "$path" =~ ^repos/[^/]+/[^/]+/issues/[0-9]+/sub_issues$ ]]; then
+    num=$(echo "$path" | grep -oE '/issues/[0-9]+/sub_issues' | grep -oE '[0-9]+')
+    cat "$GH_MOCK_DIR/sub_issues_${num}.json"
+  elif [[ "$path" =~ ^repos/[^/]+/[^/]+/issues/[0-9]+/parent$ ]]; then
+    num=$(echo "$path" | grep -oE '/issues/[0-9]+/parent' | grep -oE '[0-9]+')
+    file="$GH_MOCK_DIR/parent_${num}.json"
+    if [[ ! -f "$file" ]]; then
+      echo "HTTP 404: Not Found" >&2; exit 1
+    fi
+    cat "$file"
+  elif [[ "$path" =~ ^repos/[^/]+/[^/]+/issues/[0-9]+$ ]]; then
+    num=$(echo "$path" | grep -oE '/issues/[0-9]+$' | grep -oE '[0-9]+')
+    file="$GH_MOCK_DIR/issue_${num}.json"
+    if [[ -f "${file}.404" ]]; then
+      echo "HTTP 404: Not Found" >&2; exit 1
+    fi
+    cat "$file"
+  else
+    echo "Unhandled api path: $path" >&2; exit 1
+  fi
+
+elif [[ "$subcmd" == "project" ]]; then
+  subcmd2="${1:-}"
+  shift || true
+  if [[ "$subcmd2" == "item-list" ]]; then
+    args="$*"
+    if echo "$args" | grep -qF "In Progress"; then
+      cat "$GH_MOCK_DIR/items_inprogress.json"
+    elif echo "$args" | grep -qF "no:milestone"; then
+      cat "$GH_MOCK_DIR/items_tier2.json"
+    elif echo "$args" | grep -qF "milestone:"; then
+      echo "FATAL: Tier 1 (milestone-scoped) query must not run when there is no Active Release" >&2
+      exit 1
+    else
+      echo "Unhandled item-list args: $args" >&2
+      exit 1
+    fi
+  else
+    echo "Unhandled project subcmd: $subcmd2" >&2; exit 1
+  fi
+else
+  echo "Unhandled gh subcmd: $subcmd ($*)" >&2; exit 1
+fi
+SCRIPT
+  chmod +x "$MOCK_BIN/gh"
+
+  cat > "$GH_MOCK_DIR/items_tier2.json" << 'JSON'
+{"items": [{"id": "PVTI_99", "type": null, "content": {"number": 99, "title": "No-milestone item", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/99"}, "labels": ["type:feature", "priority:P2", "effort:S"], "milestone": null, "status": "Todo", "linked pull requests": []}]}
+JSON
+
+  no_blockers_summary 99 "No-milestone item" > "$GH_MOCK_DIR/issue_99.json"
+  echo '[]' > "$GH_MOCK_DIR/sub_issues_99.json"
+
+  run "$PICK_ITEM"
+  [[ "$status" -eq 0 ]]
+
+  active_milestone=$(echo "$output" | jq -r '.active_milestone')
+  [[ "$active_milestone" == "null" ]]
+
+  candidate_num=$(echo "$output" | jq -r '.candidate.number')
+  [[ "$candidate_num" == "99" ]]
+
+  candidate_tier=$(echo "$output" | jq -r '.candidate.tier')
+  [[ "$candidate_tier" == "2" ]]
+}
+
+@test "#189: still exits fatally for other resolve-milestone failures (missing metadata)" {
+  cat > "$MOCK_BIN/resolve-milestone" << 'SCRIPT'
+#!/usr/bin/env bash
+echo "No .claude/backlog-project.json found. Run /initialize first." >&2
+exit 1
+SCRIPT
+  chmod +x "$MOCK_BIN/resolve-milestone"
+
+  run "$PICK_ITEM"
+  [[ "$status" -ne 0 ]]
+  [[ "$status" -ne 2 ]]
+}
+
 @test "candidate includes sub_issues_summary with total and completed counts" {
   printf '{"items": [%s]}' "$(issue_item 42 'Parent with sub-issues done')" \
     > "$GH_MOCK_DIR/items_tier1.json"
