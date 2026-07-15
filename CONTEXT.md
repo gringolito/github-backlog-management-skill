@@ -114,6 +114,10 @@ case-insensitive title substring, then by stripping a leading `v` from both side
 Resolved at runtime by `resolve-milestone` (no-arg → Active Release; positional arg →
 named Release; `--exclude "<title>"` → Active Release skipping one Milestone by exact title).
 Output: `{"number": N, "title": "...", "due_on": "..."}` — `due_on` is `null` when unset.
+The Active Release is **undefined** when the backlog has zero open Milestones — whether
+none has ever been created, or all have been closed. This is an ordinary state, not an
+error: `/execute-item` continues to operate, scoped to un-milestoned items only, until a
+Milestone is opened.
 _Avoid_: current milestone, current release
 
 **Release artifact**:

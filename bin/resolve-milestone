@@ -77,7 +77,7 @@ fi
 count=$(echo "$milestones" | jq 'length')
 if [[ "$count" -eq 0 ]]; then
   echo "No open milestones found." >&2
-  exit 1
+  exit 2
 fi
 
 # Sort milestones:
