@@ -29,4 +29,4 @@
 
 6. **If "Create sub-issues for gaps":**
    - For each uncovered criterion (marked `[ ]` in the checklist), invoke `/add-item` with the parent issue number so the new items become sub-issues.
-   - Suggest re-running `/execute-item` to pick a new Workable Item.
+   - Suggest re-running `/pick-item` to pick a new Workable Item.

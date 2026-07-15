@@ -108,15 +108,15 @@ mean the planning concept.
 **Active Release**:
 The Release work currently targets by default: the earliest open Milestone by `due_on`,
 tie-broken by lowest version parsed from the title (`v1.2.0` < `v1.3.0`), falling back to
-Milestone `number`. `/execute-item`, `/add-item`, `/migrate`, and `/release-status` all
-resolve to this when no Release is named. When a Release name is given, it is matched by
+Milestone `number`. `/pick-item`, `/execute-item`, `/add-item`, `/migrate`, and
+`/release-status` all resolve to this when no Release is named. When a Release name is given, it is matched by
 case-insensitive title substring, then by stripping a leading `v` from both sides.
 Resolved at runtime by `resolve-milestone` (no-arg → Active Release; positional arg →
 named Release; `--exclude "<title>"` → Active Release skipping one Milestone by exact title).
 Output: `{"number": N, "title": "...", "due_on": "..."}` — `due_on` is `null` when unset.
 The Active Release is **undefined** when the backlog has zero open Milestones — whether
 none has ever been created, or all have been closed. This is an ordinary state, not an
-error: `/execute-item` continues to operate, scoped to un-milestoned items only, until a
+error: `/pick-item` continues to operate, scoped to un-milestoned items only, until a
 Milestone is opened.
 _Avoid_: current milestone, current release
 
@@ -171,15 +171,21 @@ body rewrite, INVEST gate, label/Rank/Dependency fixes, and clearing `needs-clar
 Run by `/refine` (session over many items) and `/refine-item` (a single item).
 _Avoid_: grooming
 
+**Selection**:
+Picking, validating, planning, and assigning the topmost unblocked Workable Item from the
+Queue — sets it to In Progress. Obeys Rank, skips blocked items, and descends into
+sub-issues. For a spike, extends through the full spike protocol to a PR. Run by `/pick-item`.
+
 **Execution**:
-Picking the topmost unblocked Workable Item from the Queue and carrying it through to a PR.
-Obeys Rank, skips blocked items, and descends into sub-issues. Run by `/execute-item`.
+Implementation-through-PR for a non-spike Workable Item already selected. Run by
+`/execute-item` — deprecated in favor of `/pick-item`, which now owns Selection and runs
+spikes end-to-end on its own.
 
 **Scope Completeness Review**:
 The verification step entered when a picked Backlog Item has sub-issues and all are closed.
 Cross-references the parent's Acceptance Criteria against closed sub-issues, presents a
 coverage analysis, then either closes the parent (scope complete) or creates new sub-issues
-for uncovered gaps. Part of `/execute-item`; triggered automatically, never run standalone.
+for uncovered gaps. Part of `/pick-item`; triggered automatically, never run standalone.
 
 **Migration**:
 The one-time bulk import of an existing `BACKLOG.md` into Issues — normalizes labels, skips

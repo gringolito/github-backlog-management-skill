@@ -20,7 +20,8 @@ A set of skills for a fully GitHub-native backlog workflow — Issues, Projects 
 | `/release-status` | Read-only milestone health dashboard — issue counts by Status, blocked items, unestimated items |
 | `/health` | Read-only strategic portfolio health report — distribution by type/priority/effort, age cohorts, overdue P0/P1 items, stale In-Progress, metadata debt |
 | `/audit` | Read-only audit — emits actionable `gh` commands; never mutates |
-| `/execute-item` | Pick the topmost unblocked Todo item and guide it through to a PR |
+| `/pick-item` | Select, validate, plan, and assign the topmost unblocked Todo item; runs spikes end-to-end through PR |
+| `/execute-item` | **Deprecated** — use `/pick-item`. Delegates selection to it, then carries a non-spike item through to a PR |
 
 ## Workflow
 
@@ -31,7 +32,7 @@ initialize ─► plan-release ─► add-item / migrate
                                       ├─► release-status (read-only)
                                       ├─► health (read-only)
                                       ├─► audit (read-only)
-                                      └─► execute-item
+                                      └─► pick-item ─► execute-item (deprecated)
 ```
 
 `initialize` is the bootstrap. Every other skill preflights for a linked Project and stops with a standard error if missing.
@@ -54,7 +55,7 @@ Every Workable Item passes INVEST (Independent, Negotiable, Valuable, Estimable,
 
 **Metadata file**: `.claude/backlog-project.json` — written by `initialize`, read during preflight.
 
-**Priority vs rank**: `priority:*` is severity classification. Project rank (topmost Todo item) is execution order. They should stay consistent but are independent concepts — `execute-item` sorts by rank only.
+**Priority vs rank**: `priority:*` is severity classification. Project rank (topmost Todo item) is execution order. They should stay consistent but are independent concepts — `pick-item` sorts by rank only.
 
 ## Skill Specs
 
