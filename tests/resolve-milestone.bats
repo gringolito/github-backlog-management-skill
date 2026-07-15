@@ -156,10 +156,10 @@ JSON
 # No-arg — no milestones
 # ---------------------------------------------------------------------------
 
-@test "no-arg no milestones: exits 1 with message on stderr" {
+@test "no-arg no milestones: exits 2 with message on stderr" {
   echo '[]' > "$GH_MOCK_DIR/milestones.json"
   run "$RESOLVE_MILESTONE"
-  [[ "$status" -ne 0 ]]
+  [[ "$status" -eq 2 ]]
   [[ "$output" == *"No open milestones found"* ]]
 }
 
