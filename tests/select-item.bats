@@ -2,7 +2,7 @@
 
 setup() {
   REPO_ROOT="$(dirname "$(dirname "$BATS_TEST_FILENAME")")"
-  PICK_ITEM="$REPO_ROOT/bin/pick-item"
+  SELECT_ITEM="$REPO_ROOT/bin/select-item"
 
   TEST_DIR="$(mktemp -d)"
   MOCK_BIN="$(mktemp -d)"
@@ -143,8 +143,8 @@ no_blockers_summary() {
 # AC1 — script exists and is executable
 # ---------------------------------------------------------------------------
 
-@test "AC1: bin/pick-item exists and is executable" {
-  [[ -x "$PICK_ITEM" ]]
+@test "AC1: bin/select-item exists and is executable" {
+  [[ -x "$SELECT_ITEM" ]]
 }
 
 # ---------------------------------------------------------------------------
@@ -153,7 +153,7 @@ no_blockers_summary() {
 
 @test "AC7a: in_progress is empty array when current user has no In Progress items" {
   # Default fixtures: empty items_inprogress.json
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -eq 0 ]]
   result=$(echo "$output" | jq -c '.in_progress')
   [[ "$result" == "[]" ]]
@@ -171,7 +171,7 @@ no_blockers_summary() {
   echo '[]' > "$GH_MOCK_DIR/sub_issues_42.json"
   # No parent file → 404
 
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -eq 0 ]]
 
   candidate_num=$(echo "$output" | jq -r '.candidate.number')
@@ -198,7 +198,7 @@ JSON
   no_blockers_summary 99 "No-milestone item" > "$GH_MOCK_DIR/issue_99.json"
   echo '[]' > "$GH_MOCK_DIR/sub_issues_99.json"
 
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -eq 0 ]]
 
   candidate_num=$(echo "$output" | jq -r '.candidate.number')
@@ -214,7 +214,7 @@ JSON
 
 @test "AC4a: candidate is null with message when no items exist" {
   # Default fixtures: all empty
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -eq 0 ]]
 
   candidate=$(echo "$output" | jq -r '.candidate')
@@ -235,7 +235,7 @@ JSON
 [{"number": 77, "title": "Open blocker", "html_url": "https://github.com/testowner/testrepo/issues/77", "state": "open", "labels": [{"name": "type:feature"}], "assignees": []}]
 JSON
 
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -eq 0 ]]
 
   candidate=$(echo "$output" | jq -r '.candidate')
@@ -268,7 +268,7 @@ JSON
   no_blockers_summary 20 "Unblocked item" > "$GH_MOCK_DIR/issue_20.json"
   echo '[]' > "$GH_MOCK_DIR/sub_issues_20.json"
 
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -eq 0 ]]
 
   candidate_num=$(echo "$output" | jq -r '.candidate.number')
@@ -306,7 +306,7 @@ JSON
 
   echo '[]' > "$GH_MOCK_DIR/sub_issues_42.json"
 
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -eq 0 ]]
 
   candidate_num=$(echo "$output" | jq -r '.candidate.number')
@@ -344,7 +344,7 @@ JSON
 {"number": 100, "title": "Parent item", "body": "### What\nBig thing\n\n### Why\nBecause", "html_url": "https://github.com/testowner/testrepo/issues/100"}
 JSON
 
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -eq 0 ]]
 
   candidate_num=$(echo "$output" | jq -r '.candidate.number')
@@ -369,7 +369,7 @@ JSON
 ]}
 JSON
 
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -eq 0 ]]
 
   count=$(echo "$output" | jq '.in_progress | length')
@@ -391,7 +391,7 @@ JSON
 
 @test "AC1b: exits non-zero when .claude/backlog-project.json is missing" {
   rm .claude/backlog-project.json
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -ne 0 ]]
 }
 
@@ -406,7 +406,7 @@ JSON
 ]}
 JSON
 
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -eq 0 ]]
 
   candidate=$(echo "$output" | jq -r '.candidate')
@@ -499,7 +499,7 @@ JSON
   no_blockers_summary 99 "No-milestone item" > "$GH_MOCK_DIR/issue_99.json"
   echo '[]' > "$GH_MOCK_DIR/sub_issues_99.json"
 
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -eq 0 ]]
 
   active_milestone=$(echo "$output" | jq -r '.active_milestone')
@@ -520,7 +520,7 @@ exit 1
 SCRIPT
   chmod +x "$MOCK_BIN/resolve-milestone"
 
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -ne 0 ]]
   [[ "$status" -ne 2 ]]
 }
@@ -538,7 +538,7 @@ SCRIPT
 ]
 JSON
 
-  run "$PICK_ITEM"
+  run "$SELECT_ITEM"
   [[ "$status" -eq 0 ]]
 
   total=$(echo "$output" | jq -r '.candidate.sub_issues_summary.total')

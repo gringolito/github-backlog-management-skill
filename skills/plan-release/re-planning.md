@@ -146,7 +146,7 @@ Print:
 - Final capacity estimate (points + qualitative band)
 - Pointer to next steps:
   - "Run `/add-item` to add more items to this milestone"
-  - "Run `/execute-item` to start working on this milestone"
+  - "Run `/pick-item` to start working on this milestone"
 
 ## Rules & Constraints
 

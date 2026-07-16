@@ -115,5 +115,5 @@ gh api "repos/<owner>/<repo>/issues/<N>/dependencies/blocked_by" \
 - **Still blocked** section — issues from step 3 that still have open blockers:
   - List each as `#N — <title> — still blocked by: #A, #B, ...`
   - If none: omit section
-- Reminder for newly unblocked items: `Re-run /execute-item to pick the next actionable item.`
+- Reminder for newly unblocked items: `Re-run /pick-item to pick the next actionable item.`
 - All `gh` errors surfaced verbatim

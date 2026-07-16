@@ -16,4 +16,4 @@ Rendered when all candidates are blocked (`candidate` null, `skipped_blocked` no
   - Blocker `open`, `assignees` empty → `Unassigned — assign or re-plan`
   - Blockers with `"type:external-blocker"` in labels: show as `External: <stub title>`.
 - Close with: `N of M blockers may be resolvable without new work` (stale + in-progress count as resolvable).
-- DO NOT pick a blocked item even with user confirmation. Re-run `/execute-item` after resolving a blocker.
+- DO NOT pick a blocked item even with user confirmation. Re-run `/pick-item` after resolving a blocker.
