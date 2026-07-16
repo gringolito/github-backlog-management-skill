@@ -20,7 +20,8 @@ A set of skills for a fully GitHub-native backlog workflow — Issues, Projects 
 | `/release-status` | Read-only milestone health dashboard — issue counts by Status, blocked items, unestimated items |
 | `/health` | Read-only strategic portfolio health report — distribution by type/priority/effort, age cohorts, overdue P0/P1 items, stale In-Progress, metadata debt |
 | `/audit` | Read-only audit — emits actionable `gh` commands; never mutates |
-| `/pick-item` | Select, validate, plan, and assign the topmost unblocked Todo item; runs spikes end-to-end through PR |
+| `/pick-item` | Select, validate, plan, and assign the topmost unblocked Todo item |
+| `/spike` | Runs a spike's investigation, findings doc, and follow-on items through PR |
 | `/execute-item` | **Deprecated** — use `/pick-item`. Delegates selection to it, then carries a non-spike item through to a PR |
 
 ## Workflow
@@ -32,7 +33,8 @@ initialize ─► plan-release ─► add-item / migrate
                                       ├─► release-status (read-only)
                                       ├─► health (read-only)
                                       ├─► audit (read-only)
-                                      └─► pick-item
+                                      ├─► pick-item
+                                      └─► spike
 ```
 
 `initialize` is the bootstrap. Every other skill preflights for a linked Project and stops with a standard error if missing.

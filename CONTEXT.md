@@ -174,12 +174,18 @@ _Avoid_: grooming
 **Selection**:
 Picking, validating, planning, and assigning the topmost unblocked Workable Item from the
 Queue — sets it to In Progress. Obeys Rank, skips blocked items, and descends into
-sub-issues. For a spike, extends through the full spike protocol to a PR. Run by `/pick-item`.
+sub-issues. Run by `/pick-item`, whose hand-off suggests `/spike` as the next step for a
+`type:spike` item.
 
 **Execution**:
 Implementation-through-PR for a non-spike Workable Item already selected. Run by
-`/execute-item` — deprecated in favor of `/pick-item`, which now owns Selection and runs
-spikes end-to-end on its own.
+`/execute-item` — deprecated in favor of `/pick-item`.
+
+**Spike Execution**:
+The investigate → findings document → follow-on items protocol for a `type:spike` Workable
+Item, run end-to-end through PR by `/spike`. Assumes the item is already selected and
+assigned — typically suggested by `/pick-item`'s hand-off, or run directly. Does not repeat
+preflight or Selection.
 
 **Scope Completeness Review**:
 The verification step entered when a picked Backlog Item has sub-issues and all are closed.

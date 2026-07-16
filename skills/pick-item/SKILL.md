@@ -106,7 +106,7 @@ Propose a concise implementation plan that:
 - Research the solution online if needed
 - Aligns with the parent context found
 
-When the item carries `type:spike`, apply the **Spike Lifecycle** described in Step 6 below and the plan should reflect the investigation approach and likely shape of the findings document, not a code change.
+When the item carries `type:spike`, the plan should reflect the investigation approach and likely shape of the findings document, not a code change — it is handed off to `/spike` for execution in Step 6 below.
 
 Evaluate the scope of the work and if you identify that the item is too large for a single iteration consider:
 
@@ -151,16 +151,7 @@ Branch name format: `<prefix>/<slug>` (e.g. `fix/null-pointer-in-authn`).
 
 ### 6. Handoff
 
-When the `candidate.labels` includes `type:spike` continue directly through the full spike protocol — do not stop or hand off to another skill.
-
-1. Create and check out branch `spike/<slug>`.
-2. Read the [Spike Lifecycle](./spike-lifecycle.md) and execute the full protocol end-to-end: investigate, author the findings document, get user sign-off, propose and create approved follow-on items.
-3. Commit using Conventional Commits format. Include `Refs #<issue-number>` in the commit body. Push the branch.
-4. Open a Pull Request via `gh pr create`, passing `--milestone "<milestone-title>"` when the issue has one. PR body MUST include `Closes #<issue-number>` and list every follow-on item created (per spike-lifecycle.md).
-5. Print: issue URL/number, PR URL/number, branch name, assignee, final Project Status, follow-on items created.
-6. STOP. This item's run is complete.
-
-Otherwise (non-spike) close with a hand-off including:
+Close with a hand-off including:
 
 - Issue URL and number
 - Suggested branch name (`<prefix>/<slug>`)

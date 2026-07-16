@@ -32,7 +32,7 @@ Skills moved from `commands/*.md` to `skills/<name>/SKILL.md` and were renamed i
 
 Backlogs rot. Items accumulate without acceptance criteria, blockers go unrecorded, priorities drift from execution order, and eventually the backlog stops reflecting reality — so people stop trusting it.
 
-This skill keeps a GitHub backlog honest. Every item is INVEST-validated before it lands in the queue. Blockers are tracked with GitHub's native dependency API, not buried in comments. `/execute-item` picks the topmost unblocked work automatically, so "what do I do next?" has a deterministic answer.
+This skill keeps a GitHub backlog honest. Every item is INVEST-validated before it lands in the queue. Blockers are tracked with GitHub's native dependency API, not buried in comments. `/pick-item` picks the topmost unblocked work automatically, so "what do I do next?" has a deterministic answer.
 
 Everything stays in GitHub — Issues, Projects v2, Milestones, Labels. No extra tools, no database, no webhooks.
 
@@ -181,7 +181,9 @@ Add one of the blocks below to `.claude/settings.json` in any repo where you use
 | `/release-status` | Read-only milestone health dashboard — issue counts by Project Status, % complete, blocked items, and unestimated items. Accepts an optional milestone argument; defaults to the active milestone. |
 | `/health` | Read-only strategic portfolio health report — open-issue distribution by type, priority, and effort; age cohorts; overdue P0/P1 items; stale In-Progress items; metadata debt. Suitable for leadership updates and retrospectives. |
 | `/audit` | Read-only audit. Emits actionable `gh issue edit ...` snippets. Never mutates anything. |
-| `/execute-item` | Picks the topmost unblocked Todo item, respects active milestone scope, skips blocked items, and walks you through to a PR. |
+| `/pick-item` | Picks the topmost unblocked Todo item, respects active milestone scope, skips blocked items, validates INVEST, assigns it to you, and proposes a plan. Suggests `/spike` as the next step for `type:spike` items. |
+| `/spike` | Runs a spike's investigation through a findings document, follow-on backlog items, and a PR, once an item is already selected and assigned — typically suggested by `/pick-item`, or run directly. |
+| `/execute-item` | **Deprecated** — use `/pick-item`. Delegates selection to it, then carries a non-spike item through implementation to a PR. |
 | `/setup-permissions` | Writes the `gh`/`git` allowlist block into your chosen Claude Code settings file. Idempotent — safe to re-run. |
 
 ### INVEST — the quality bar every backlog item must meet
@@ -225,7 +227,7 @@ Priority is severity classification. Execution order is the manual Project rank 
 
 #### External blocker stubs
 
-`type:external-blocker` is a special infrastructure label for lightweight stub issues that represent external constraints (API limitations, vendor issues, regulatory holds, etc.) blocking one or more backlog items. Stubs carry **only** the `type:external-blocker` label — no priority, no effort, no rank. They are created by `/add-external-blocker`, never appear as executable work in `/execute-item`, and are excluded from all milestone counts and planning scope. Close a stub with `/resolve-external-blocker` when the external constraint is lifted. Create stubs with `/add-external-blocker` and link items with `/block-item`.
+`type:external-blocker` is a special infrastructure label for lightweight stub issues that represent external constraints (API limitations, vendor issues, regulatory holds, etc.) blocking one or more backlog items. Stubs carry **only** the `type:external-blocker` label — no priority, no effort, no rank. They are created by `/add-external-blocker`, never appear as executable work in `/pick-item`, and are excluded from all milestone counts and planning scope. Close a stub with `/resolve-external-blocker` when the external constraint is lifted. Create stubs with `/add-external-blocker` and link items with `/block-item`.
 
 ### Workflow
 
@@ -237,7 +239,8 @@ Priority is severity classification. Execution order is the manual Project rank 
                                         ├──► /release-status    (read-only)
                                         ├──► /health            (read-only)
                                         ├──► /audit             (read-only)
-                                        └──► /execute-item
+                                        ├──► /pick-item
+                                        └──► /spike
 ```
 
 Run `/initialize` once. Every other skill preflights for the linked Project and stops with a clear error if it is missing.
@@ -322,13 +325,21 @@ Produces a Markdown strategic health report across all open Project issues: dist
 
 A read-only pass that surfaces missing labels, malformed issue bodies, dangling blockers, and cross-Project dependency smells. Outputs copy-pasteable `gh` commands — never applies fixes itself.
 
-### Executing next work
+### Picking next work
 
 ```
-/execute-item
+/pick-item
 ```
 
-Picks the topmost unblocked Todo item (active milestone first, unmilestoned fallback), reports which items were skipped and why, and walks you through implementation to a PR.
+Picks the topmost unblocked Todo item (active milestone first, unmilestoned fallback), reports which items were skipped and why, validates it against INVEST, assigns it to you, and proposes an implementation plan. Its hand-off suggests contextually relevant next skills — for a `type:spike` item, that's `/spike` (see [Spikes](#spikes) below). `/execute-item` is deprecated: it delegates this step to `/pick-item`, then carries a non-spike item through implementation to a PR.
+
+#### Spikes
+
+```
+/spike
+```
+
+Suggested by `/pick-item`'s hand-off for `type:spike` items, or run directly (`/spike 42`) once the item is already selected and assigned. A spike's deliverable is knowledge, not a shippable feature: it investigates the question in the issue's `### What` / `### Why`, produces a findings document at `docs/spikes/####-<slug>.md`, gets your sign-off, then proposes and creates approved follow-on backlog items before opening a PR.
 
 ---
 
