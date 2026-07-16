@@ -134,31 +134,26 @@ Ask the user once (before any issue is created) using AskUserQuestion with optio
 
 Issue creation is split into four discrete phases. Phase 1 gathers the confirmed set with zero GitHub mutations; Phases 2–3 build the dependency and rank plan against that confirmed set (still zero mutations); Phase 4 is the only phase that touches GitHub, and does so exclusively through `create-item`.
 
-#### 8c. Phase 1 — Per-item confirmation gate
+#### 8c. Phase 1 — Bulk confirmation gate
 
-For each non-Done item, in priority order (P0 → P3):
+Present all non-Done items, in priority order (P0 → P3), as a single review block (NOT one-by-one):
 
-1. **Confirmation gate** (skip this sub-step if the user already chose "Apply All Remaining"):
-
-   Display the normalized summary:
-
-   ```text
-   Title:    <title>
+```text
+1. <title>
    Labels:   type:<x> | priority:<y> | effort:<z>
    What:     <first line of ### What>
    Why:      <first line of ### Why>
    In Scope: <first line of ### In Scope>
    Out of Scope: <first line of ### Out of Scope> (omit if section is empty)
    AC:       <first line of ### Acceptance Criteria>
-   ```
 
-   Use AskUserQuestion with options:
-   - "Apply" — add this item to the confirmed set; continue to the next item
-   - "Skip" — skip this item; record as "skipped by user" in the Migration Report; continue to next item
-   - "Apply All Remaining" — set a flag so the prompt is not shown for any remaining items; add this item and every remaining non-Done item to the confirmed set
-   - "Stop Migration" — halt the entire migration immediately. Phases 2–4 have not run yet, so nothing has been created on GitHub — report zero items created, and how many items were confirmed vs. still pending when the user stopped.
+2. <title>
+   ...
+```
 
-Once every item has been shown (or "Apply All Remaining" fired), the confirmed set is final. Assign each confirmed item a local placeholder ID, in the order confirmed: `#1`, `#2`, ... These placeholder IDs exist only for this migration run — Phase 2's dependency-inferrer roster and Phase 3's batch rank call both use them, and Phase 4 resolves each one to a real issue number as that item is created.
+Use AskUserQuestion with options: "Accept all" / "Cherry-pick" / "Reject all". For "Cherry-pick", follow up with a numbered list so the user can identify which items to exclude — excluded items are recorded as "skipped by user" in the Migration Report. "Reject all" halts the migration immediately: nothing has been created on GitHub, so report zero items created.
+
+The accepted items form the confirmed set. Assign each confirmed item a local placeholder ID, in the order presented: `#1`, `#2`, ... These placeholder IDs exist only for this migration run — Phase 2's dependency-inferrer roster and Phase 3's batch rank call both use them, and Phase 4 resolves each one to a real issue number as that item is created.
 
 #### 8d. Phase 2 — Dependency inference (pre-creation)
 
@@ -239,7 +234,7 @@ After all items are processed, output a Migration Report containing:
 
 - Total items in source / created in GitHub / skipped (with reasons broken down by category)
 - **Skipped Done items** — list each by source title with its `PR shipped` reference (if any). These remain in the source BACKLOG.md only and are NOT in GitHub.
-- **Skipped by user** — list each item the user chose `N` for during the confirmation gate, by title and sequence number.
+- **Skipped by user** — list each item excluded via Cherry-pick during the Phase 1 confirmation gate, by title and sequence number.
 - Each created issue: `<source title>` → `<issue URL>` (with applied labels)
 - Items with `needs-clarification`: clarification questions inline
 - INVEST violations and suggested improvements
