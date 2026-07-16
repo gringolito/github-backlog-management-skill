@@ -1,11 +1,11 @@
 ---
 name: migrate
-description: Migrate items from a BACKLOG.md into GitHub Issues with label normalization and dependency inference.
+description: Migrate items from a local backlog into GitHub Issues with label normalization and dependency inference. Use this to bulk migrate to-do items from a local backlog to the Project.
 ---
 
 # migrate
 
-You are an AI agent acting as a Senior Project Manager responsible for migrating, normalizing, and validating backlog items into GitHub.
+You are an AI agent acting as a Project Manager responsible for migrating, normalizing, and validating backlog items into GitHub.
 
 Your goal is to convert an existing backlog (typically a `TODO.md` or `BACKLOG.md`-style markdown file the user provides) into a fully GitHub-native form: GitHub Issues with the canonical body shape, the standard `type:*`/`priority:*`/`effort:*` labels, added to the linked GitHub Project, and (optionally) assigned to the Active Release.
 
@@ -25,15 +25,15 @@ Transform ALL existing backlog items into GitHub Issues while:
 
 ### 0. Preflight (MANDATORY)
 
-Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
+Read the [preflight contract](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
 ### 1. Source Analysis
 
-- Parse the source backlog provided by the user (markdown, plain text, or any structured form)
-- Identify individual items (even if poorly structured)
-- Preserve original intent and wording
+Parse the source backlog provided by the user (markdown, plain text, or any structured form). Identify individual items (even if poorly structured) and preserve original intent and wording. Skip any Done/Completed item, those are historical items and would only clutter the Project.
+
+Detect duplicates or overlaps across the source backlog. DO NOT auto-merge or auto-split, list all dedup/split suggestions for user review in the Migration Report.
 
 If item boundaries are unclear:
 
@@ -42,26 +42,18 @@ If item boundaries are unclear:
 
 ### 2. Normalization
 
-For EACH item, derive the GitHub-native representation:
+For each item, derive the GitHub-native representation:
 
-- **Title** — concise; will be issue title
-- **Body** — delegate body authoring to the `issue-body-author` agent:
-  - **Mode**: `migrate`
-  - **Input**: the source prose for this item (as parsed in step 1)
-  - If the agent marks a section with `<!-- TODO: ... -->`, treat it as a `NEEDS CLARIFICATION` gap: retain the TODO comment in the relevant section, add a corresponding question to `### INVEST Notes`, and apply the `needs-clarification` label (per step 3)
-- **Status mapping** (Project field):
-  - Source `Todo` (or unspecified) → Project `Todo`
-  - Source `In Progress` → Project `In Progress`
-  - Source `Done` / `Completed` / shipped items → **SKIPPED** (see step 8). Done items are historical and are NOT migrated to GitHub.
+- Title: concise; will be issue title
+- Body: delegate body authoring to the `issue-body-author` agent:
+  - Mode: `migrate`
+  - Input: the source prose for the item
+
+When agent marks a section with `<!-- TODO: ... -->`, treat it as a `NEEDS CLARIFICATION` gap: retain the TODO comment in the relevant section, add a corresponding question to `### INVEST Notes`, and apply the `needs-clarification` label
 
 ### 3. Missing Information Handling (CRITICAL)
 
-If data is missing or unclear:
-
-- DO NOT invent details
-- Use `UNKNOWN` or `NEEDS CLARIFICATION` inline in the relevant section
-- Add the open question to the `### INVEST Notes` section
-- Apply the `needs-clarification` label so the item is filterable later
+When data is missing or unclear, do NOT invent details, use `UNKNOWN` or `NEEDS CLARIFICATION` inline in the relevant section instead. Add the open question to the `### INVEST Notes` section and apply the `needs-clarification` label so the item is filterable later.
 
 Additionally:
 
@@ -80,26 +72,13 @@ If `invest-gate` returns `Overall: FAIL`:
 
 ### 5. Label Application
 
-Delegate classification to the `label-classifier` agent:
+Delegate classification to the `label-classifier` agent providing: `owner`/`repo`, the normalized title and the body finalized from previous steps.
 
-- **Input**: `owner`/`repo`, the normalized title and the body finalized in steps 3–4
-- The agent returns a verdict for each of the three label groups (`type:*`, `priority:*`, `effort:*`) with one-line reasoning
+The agent returns a verdict for each of the three label groups (`type:*`, `priority:*`, `effort:*`) with one-line reasoning. Apply the returned verdicts to the candidate item. If `*:unclear` label was returned, note the ambiguity in `### INVEST Notes` and apply the `needs-clarification` label.
 
-Apply the returned verdicts:
+Never assign `type:external-blocker`. External blockers are infrastructure stubs and are never migrated from backlog files.
 
-- `type:*` — if `unclear: type` was returned, note the ambiguity in `### INVEST Notes` and apply the `needs-clarification` label
-- `priority:*` — if `unclear: priority` was returned, default to `priority:P2`, add `Priority needs validation` to `### INVEST Notes`, and apply the `needs-clarification` label
-- `effort:*` — if `unclear: effort` was returned, add an effort question to `### INVEST Notes` and apply the `needs-clarification` label
-
-Never assign `type:external-blocker` — stubs are infrastructure and are never migrated from backlog files.
-
-### 6. Deduplication & Structuring
-
-- Detect duplicates or overlaps across the source backlog
-- DO NOT auto-merge or auto-split
-- In the Migration Report, list all dedup/split suggestions for user review
-
-### 7. VALIDATION STEP (HARD GATE)
+### 6. Validation (HARD GATE)
 
 Before any issue is created, verify:
 
@@ -108,172 +87,141 @@ Before any issue is created, verify:
 - Acceptance Criteria are testable where possible
 - Effort is complexity-based (not time)
 - Each item fits exactly ONE type
-- Status values are one of `Todo` / `In Progress` / `Done`
 
-If any check fails:
+If any check fails STOP, report the validation errors and provide corrected version OR request clarification before any GitHub mutations happen.
 
-- STOP
-- Report validation errors
-- Provide corrected version OR request clarification before any GitHub mutations happen
-
-### 8. Migration Execution
-
-#### 8a. Filter out Done items
-
-Before any GitHub mutation, partition the validated items:
-
-- Items with source status `Done` / `Completed` / shipped → **SKIPPED** (recorded for the Migration Report, NOT created in GitHub)
-- All remaining items (`Todo`, `In Progress`, unspecified) → migrated below
-
-Done items are historical and would only clutter the Project. Their PR shipped references stay in the original BACKLOG.md as a record.
-
-#### 8b. Resolve Active Release
+### 7. Migration Execution
 
 Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON — `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
 
-Ask the user once (before any issue is created) using AskUserQuestion with options: "Yes, assign all" / "No, skip". Record the answer — it applies to all items uniformly.
+Ask the user once (before any issue is created) using AskUserQuestion if it wants to assign the candidates to the current Active Release with options: "Yes, assign all" / "No, skip". Record the answer — it applies to all items uniformly.
 
-#### 8c. Create issues
+Issue creation is split into four discrete phases. Phase 1 gathers the confirmed set with zero GitHub mutations; Phases 2–3 build the dependency and rank plan against that confirmed set (still zero mutations); Phase 4 is the only phase that touches GitHub, and does so exclusively through `create-item`.
 
-For each non-Done item, in priority order (P0 → P3):
+#### Phase 1 — Bulk confirmation gate
 
-0. **Confirmation gate** (skip this sub-step if the user already chose `All`):
+Present all non-Done items, in priority order (P0 → P3), as a single review block (NOT one-by-one):
 
-   Display the normalized summary:
-
-   ```text
-   Title:    <title>
+```text
+1. <title>
    Labels:   type:<x> | priority:<y> | effort:<z>
    What:     <first line of ### What>
    Why:      <first line of ### Why>
    In Scope: <first line of ### In Scope>
    Out of Scope: <first line of ### Out of Scope> (omit if section is empty)
    AC:       <first line of ### Acceptance Criteria>
-   ```
 
-   Use AskUserQuestion with options:
-   - "Apply" — proceed with creation for this item
-   - "Skip" — skip this item; record as "skipped by user" in the Migration Report; continue to next item
-   - "Apply All Remaining" — set a flag so the prompt is not shown for any remaining items; proceed with this item immediately
-   - "Stop Migration" — halt migration immediately; report how many items were created so far vs. how many remain; do NOT create any further issues
+2. <title>
+   ...
+```
 
-1. Write the constructed body to a temp file
-2. Create the issue:
-   - `gh issue create --title "<title>" --body-file <tmp> --label type:<x>,priority:<y>,effort:<z>`
-   - For items needing clarification, also `--label needs-clarification`
-3. Capture the returned issue URL and number
-4. Add to the Project:
-   - `gh project item-add <project-number> --owner <owner> --url <issue-url>`
-5. Set the Project `Status` field to the mapped value (`Todo` or `In Progress` only — Done items were skipped in 8a):
-   - Resolve field/option IDs via `gh project field-list <project-number> --owner <owner> --format json`
-   - `gh project item-edit --id <item-id> --project-id <project-id> --field-id <status-field-id> --single-select-option-id <option-id>`
-6. If the user confirmed milestone assignment in 8b:
-   - `gh issue edit <n> --milestone "<milestone-title>"`
+Use AskUserQuestion with options: "Accept all" / "Cherry-pick" / "Reject all". For "Cherry-pick", follow up with a numbered list so the user can identify which items to exclude — excluded items are recorded as "skipped by user" in the Migration Report. "Reject all" halts the migration immediately: nothing has been created on GitHub, so report zero items created.
 
-#### 8d. Build the source-title → issue-id lookup
+The accepted items form the confirmed set. Assign each confirmed item a local placeholder ID, in the order presented: `#C1`, `#C2`, ... These placeholder IDs exist only for this migration run — Phase 2's dependency-inferrer roster and Phase 3's batch rank call both use them, and Phase 4 resolves each one to a real issue number as that item is created.
 
-After all issues are created, build a mapping from source title (and any explicit identifiers used in the source) to the new issue's numeric `id` (database ID, not number):
+#### Phase 2 — Dependency inference (pre-creation)
 
-- For each created issue, capture `id` from the `gh issue create` response (or via `gh api "repos/<o>/<r>/issues/<n>" --jq '.id'`)
-- Skipped Done items are NOT in this map (they have no GitHub issue)
+1. Delegate to `dependency-inferrer`. Call the agent with:
 
-This map is used in 8e to resolve dependency hints to concrete issue IDs.
+   - Prose: the full source text of each confirmed item, one entry per item labeled with its placeholder ID
+   - Issue roster: the confirmed set formatted as `#<placeholder> "<title>"` per line
 
-#### 8e. Propose and apply dependencies (USER-CONFIRMED)
+   If the agent returns `CANDIDATES: none`, skip to sub-step 5 — the topological sort is then a no-op and creation order equals confirmed order.
 
-1. **Delegate to `dependency-inferrer`.** Call the `dependency-inferrer` agent with:
-   - **Prose**: the full source text of each migrated item (from Step 1 parsing), one entry per item labeled with its source title
-   - **Issue roster**: the source-title → issue-number map from Step 8d, formatted as `#<num> "<title>"` per line
-   If the agent returns `CANDIDATES: none`, skip the rest of this step.
-
-2. **Resolve each candidate against the source-title → issue-id map** (from Step 8d):
-   - `UNRESOLVED` targets: surface as "manual resolution needed" in the Migration Report — DO NOT guess
-   - Candidates pointing at a Done item (skipped in 8a): skip the candidate and note it in the Migration Report
-
-3. **Present all candidates to the user in a single review block** (NOT one-by-one) so they can scan and confirm in bulk. Format:
+2. Present all candidates to the user in a single review block (NOT one-by-one) so they can scan and confirm in bulk, grouped by relationship type:
 
    ```text
-   #<this-num> "<this-title>"
-     → blocked_by #<target-num> "<target-title>" (evidence: "depends on the API spec")
-     → sub-issue of #<parent-num> "<parent-title>" (evidence: "part of API rework")
+   #<this-placeholder> "<this-title>"
+     → blocked_by #<target-placeholder> "<target-title>" (evidence: "depends on the API spec")
+     → blocking #<target-placeholder> "<target-title>" (evidence: "must ship before X")
+     → sub-issue of #<target-placeholder> "<parent-title>" (evidence: "part of API rework")
    ```
 
-4. **Apply only after explicit confirmation.** Use AskUserQuestion with options: "Accept all" / "Cherry-pick" / "Reject all". For "Cherry-pick", follow up with a numbered list so the user can identify which candidates to apply. For each accepted candidate:
-   - `blocked_by`: delegate to `/block-item #<this-num> #<target-num>`
-   - `blocking`: `gh api -X POST "repos/<o>/<r>/issues/<this-num>/dependencies/blocking" -f issue_id=<target-id>`
-   - sub-issue parent: `gh api -X POST "repos/<o>/<r>/issues/<parent-num>/sub_issues" -f sub_issue_id=<this-id>`
+   `UNRESOLVED` targets (references outside the confirmed set) are surfaced as "manual resolution needed" in the Migration Report — DO NOT guess.
 
-NEVER auto-apply. Inferred dependencies have a high false-positive rate — a false `blocked_by` will gate `execute-item` on phantom work.
+3. Confirm only after explicit review. Use AskUserQuestion with options: "Accept all" / "Cherry-pick" / "Reject all". For "Cherry-pick", follow up with a numbered list so the user can identify which candidates to apply. Nothing is mutated on GitHub here — "accept" means recording the relationship for Phase 4's manifests.
 
-If the Dependencies API is unavailable on this repo (private repo without paid plan, returns `404`), skip this entire substep and emit one warning line in the Migration Report: `Issue Dependencies API unavailable — dependency inference skipped. Migrated <N> dependency hints retained as proposals only.`
+   NEVER auto-apply: inferred dependencies have a high false-positive rate, and a false `blocked_by` will gate `execute-item` on phantom work.
 
-#### 8f. Rank positioning (USER-CONFIRMED)
+4. Normalize each confirmed relationship into a `blocked_by`/`parent` edge for manifest purposes:
 
-After all issues are created and dependencies are applied, set the execution order for the migrated items:
+   - `blocked_by #<target>` → recorded directly as this item's `blocked_by`
+   - `sub-issue of #<target>` → recorded directly as this item's `parent`
+   - `blocking #<target>` → recorded as the **target's** `blocked_by` (pointing back at this item)
+   - A confirmed relationship whose target is a pre-existing GitHub issue skips this translation — that target already exists, so `blocking` can be recorded directly on the source item's own manifest.
 
-1. **Fetch the full current Todo column** (existing items plus newly migrated items):
-   `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`
-   Capture each item's title and `type:*`, `priority:*`, `effort:*` labels; the response order is the current rank (top first).
+5. Topological sort using the confirmed, normalized `blocked_by`/`parent` edges, compute the Phase 4 creation order: every blocker/parent is ordered before what it blocks/parents.
 
-2. **Call `rank-recommender` for each migrated item** (one agent call per item, in P0→P3 order) using:
-   - **Candidate item**: the migrated issue title, one-line `### What` summary, and its `type:*`, `priority:*`, `effort:*` labels
-   - **Current Todo column**: the ordered list from the most recent `item-list` fetch (update after each confirmed repositioning)
-   Collect all recommendations before presenting them to the user.
+   Items with no relationships keep their Phase 1 confirmed relative order. If the confirmed edges contain a cycle, STOP, show the cycle to the user, and ask them to reject one of the conflicting candidates (return to sub-step 3), the creation order cannot be computed otherwise.
 
-3. **Present the full proposed ordering** in a single block so the user can review and adjust:
+#### Phase 3 — Pre-flight batch rank
+
+1. Fetch the current Todo column with `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`. Capture each item's title and `type:*`, `priority:*`, `effort:*` labels; the response order is the current rank (top first).
+
+2. Call the `rank-recommender` agent once with the entire confirmed set as candidates:
+
+   - Candidates: one entry per confirmed item — `id` = its Phase 1 placeholder, plus title, one-line `### What` summary, and `type:*`/`priority:*`/`effort:*` labels — in placeholder order
+   - Current Todo column: the list from sub-step 1
+
+   The agent reasons holistically across all candidates and the existing column, and returns one block per candidate (its multi-candidate output shape). A candidate's position may reference an existing item (`after_issue: <N>`) or another candidate (`after_candidate: <placeholder>`).
+
+3. Present the full proposed ordering as a single merged list so the user can review and adjust:
+
    ```text
    Proposed Todo column order (top → bottom):
-     1. <title> [type:bug | priority:P0 | effort:S] — rank-recommender: top (existing)
-     2. <title> [type:feature | priority:P1 | effort:M] — rank-recommender: above "<title>" (migrated)
+     1. <title> [type:bug | priority:P0 | effort:S] — existing
+     2. <title> [type:feature | priority:P1 | effort:M] — rank-recommender: after #1 (migrated)
      ...
    ```
-   Do NOT apply any position changes before the user confirms.
 
-4. **Apply confirmed position changes** via GraphQL `updateProjectV2ItemPosition` mutations:
-   ```graphql
-   mutation {
-     updateProjectV2ItemPosition(input: {
-       projectId: "<project-node-id>",
-       itemId: "<item-node-id>",
-       afterId: "<existing-item-node-id-it-should-follow>"
-     }) {
-       items { totalCount }
-     }
-   }
-   ```
-   Use the `id` fields from the `item-list` response. To place an item at the very top, omit `afterId` (or set it to `null`). Apply positions top-to-bottom to avoid ordering conflicts.
+   Do NOT proceed with position changes before the user confirms.
 
-### 9. Migration Report (MANDATORY)
+4. Record the final confirmed order per confirmed item. This determines the `rank` field Phase 4 writes into each manifest.
+
+#### Phase 4 — Creation loop
+
+Create the confirmed set in the topological order from Phase 2, accumulating placeholder → real issue number resolutions as each item is created. This is the only phase that mutates GitHub, and it does so exclusively via `create-item` Bash tool.
+
+For each item, in creation order:
+
+1. Write the constructed body to a temp file.
+2. Build the manifest (see the [issue manifest](../add-item/issue-manifest.md) for the full schema), use the information form the previous phases, resolve any placeholder reference to its real issue number.
+3. Run `create-item --input <manifest>` and branch on the exit code:
+
+   - 0 — success. Capture the JSON blob (issue number/URL, applied rank, warnings). Record the issue number for resolution.
+   - 2 — the issue was still created, but a post-creation step warned. Record the issue number for resolution and the warning for the Migration Report and continue the loop, do NOT retry, the issue already exists.
+   - Any other non-zero exit — nothing was created for this item. STOP the loop immediately, do NOT roll back items already created, and report which items were created vs. not attempted.
+
+4. Continue to the next item in topological order.
+
+### 8. Migration Report (MANDATORY)
 
 After all items are processed, output a Migration Report containing:
 
 - Total items in source / created in GitHub / skipped (with reasons broken down by category)
-- **Skipped Done items** — list each by source title with its `PR shipped` reference (if any). These remain in the source BACKLOG.md only and are NOT in GitHub.
-- **Skipped by user** — list each item the user chose `N` for during the confirmation gate, by title and sequence number.
+- Skipped Done items
+- Skipped by user
 - Each created issue: `<source title>` → `<issue URL>` (with applied labels)
 - Items with `needs-clarification`: clarification questions inline
 - INVEST violations and suggested improvements
-- Duplicate / merge / split suggestions (NOT auto-applied)
+- Duplicate / merge / split suggestions
 - Re-prioritization notes
-- Validation issues encountered during the hard-gate step (if any were resolved)
-- Active milestone (if any) and how many items were assigned to it
-- **Dependencies** — three subsections:
-  - Applied: list of `<source-title>` → `blocked_by` / `blocking` / `parent` → `<target-source-title>` that the user confirmed and the API accepted
+- Validation issues encountered
+- Active milestone and how many items were assigned to it
+- Dependencies:
+  - Applied: list of `<source-title>` → `blocked_by` / `blocking` / `parent` → `<target-source-title>` that the user confirmed in Phase 2 and `create-item` accepted
   - Rejected: candidates the user declined
   - Unresolved: hints whose target couldn't be matched (manual resolution needed) OR whose target was a skipped Done item
 
 ## Rules & Constraints
 
-- NEVER fabricate requirements
-- Prefer `UNKNOWN` over guessing
-- Preserve intent over formatting
+- NEVER fabricate requirements, prefer `UNKNOWN` over guessing, be explicit about uncertainty
 - Do NOT drop active items (Todo / In Progress) — they MUST all be migrated unless explicitly excluded by the user
-- Done items ARE intentionally skipped (historical, not migrated). Always list them in the Migration Report so the user can confirm none should be revived.
-- Be explicit about uncertainty
+- Done items ARE intentionally skipped. Always list them in the Migration Report so the user can confirm none should be revived.
 - Keep items atomic
-- Do NOT mutate GitHub before the hard validation gate passes
+- Do NOT mutate GitHub before Phase 4 (the creation loop)
 - Do NOT delete or modify the source backlog file — it is input only
-- Issue body section headings MUST match the Issue Forms template exactly so `audit` can parse them
+- Issue body must be authored by the `issue-body-author` agent
 
 ## Output Expectations
 
