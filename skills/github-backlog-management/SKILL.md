@@ -32,7 +32,7 @@ initialize ─► plan-release ─► add-item / migrate
                                       ├─► release-status (read-only)
                                       ├─► health (read-only)
                                       ├─► audit (read-only)
-                                      └─► pick-item ─► execute-item (deprecated)
+                                      └─► pick-item
 ```
 
 `initialize` is the bootstrap. Every other skill preflights for a linked Project and stops with a standard error if missing.

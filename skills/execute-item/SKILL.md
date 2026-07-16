@@ -3,11 +3,9 @@ name: execute-item
 description: Pick and execute the topmost unblocked Workable Item from the Queue.
 ---
 
-## ⚠️ Deprecated
+## Deprecated
 
-This skill is kept only for backward compatibility and will be removed in an
-upcoming release. Use `/pick-item` to select, validate, and assign the next
-Workable Item.
+This skill is kept only for backward compatibility and will be removed in an upcoming release. Use `/pick-item` to select, validate, and assign the next Workable Item.
 
 # execute-item
 
@@ -17,11 +15,7 @@ You are an AI agent acting as a development lead. Execute the Workable Item sele
 
 ### 1. Item Selection (MANDATORY)
 
-Invoke `/pick-item` to select, validate, plan, and assign the next Workable Item. `pick-item` owns preflight, item selection, sub-issue/scope checks, INVEST validation, planning approval, self-assignment, the Project Status update to `In Progress`, and the resume-in-progress guard — `execute-item` does not duplicate any of that.
-
-Take `pick-item`'s resulting candidate and approved plan forward into the steps below.
-
-`pick-item` handles spikes end-to-end through PR creation on its own, so by the time control reaches this skill the item is guaranteed non-spike.
+Invoke `/pick-item` to select, validate, plan, and assign the next Workable Item. Take `pick-item`'s resulting candidate and approved plan forward into the steps below.
 
 If `pick-item` stops for any reason (INVEST failure, all candidates blocked, epic gate, sub-issue split, Scope Completeness Review, etc.), STOP here too — do not attempt to route around it.
 
