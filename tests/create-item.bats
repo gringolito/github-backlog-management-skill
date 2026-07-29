@@ -58,6 +58,7 @@ if [[ "$subcmd" == "issue" ]]; then
   subcmd2="${1:-}"; shift || true
   if [[ "$subcmd2" == "create" ]]; then
     [[ -f "$GH_MOCK_DIR/issue_create_fail" ]] && { echo "gh issue create: simulated failure" >&2; exit 1; }
+    printf '%s\n' "$@" > "$GH_MOCK_DIR/issue_create_args"
     # Flag-specific failures
     while [[ $# -gt 0 ]]; do
       case "$1" in
@@ -392,4 +393,163 @@ JSON
 
   run "$CREATE_ITEM" --input "$manifest"
   [[ "$status" -ne 0 ]]
+}
+
+# ---------------------------------------------------------------------------
+# Dependency reference resolution (#199)
+# ---------------------------------------------------------------------------
+
+# Helper: emit a manifest whose blocked_by/blocking are taken verbatim.
+write_dep_manifest() {
+  local blocked_by="$1" blocking="${2:-[]}"
+  cat > "$GH_MOCK_DIR/manifest.json" << JSON
+{
+  "title": "Dependency issue",
+  "body_file": "$GH_MOCK_DIR/body.txt",
+  "labels": ["type:bug", "priority:P1", "effort:S"],
+  "blocked_by": $blocked_by,
+  "blocking": $blocking
+}
+JSON
+  echo "$GH_MOCK_DIR/manifest.json"
+}
+
+# Helper: value passed to a given flag of `gh issue create`.
+flag_value() {
+  grep -A1 -x -- "$1" "$GH_MOCK_DIR/issue_create_args" | tail -1
+}
+
+@test "deps: same-repo short form {number} resolves to a bare number" {
+  local manifest; manifest="$(write_dep_manifest '[{"number": 68}]')"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 0 ]]
+  [[ "$(flag_value --blocked-by)" == "68" ]]
+}
+
+@test "deps: explicit local triple resolves identically to the short form" {
+  local manifest; manifest="$(write_dep_manifest \
+    '[{"owner": "testowner", "repo": "testrepo", "number": 68}]')"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 0 ]]
+  [[ "$(flag_value --blocked-by)" == "68" ]]
+}
+
+@test "deps: cross-repo triple still resolves to a full URL" {
+  local manifest; manifest="$(write_dep_manifest \
+    '[{"owner": "otherorg", "repo": "otherrepo", "number": 68}]')"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 0 ]]
+  [[ "$(flag_value --blocked-by)" == "https://github.com/otherorg/otherrepo/issues/68" ]]
+}
+
+@test "deps: mixed local and cross-repo entries join in manifest order" {
+  local manifest; manifest="$(write_dep_manifest \
+    '[{"number": 12}, {"owner": "otherorg", "repo": "otherrepo", "number": 68}]')"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 0 ]]
+  [[ "$(flag_value --blocked-by)" == "12,https://github.com/otherorg/otherrepo/issues/68" ]]
+}
+
+@test "deps: short form applies to blocking as well as blocked_by" {
+  local manifest; manifest="$(write_dep_manifest '[]' '[{"number": 77}]')"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 0 ]]
+  [[ "$(flag_value --blocking)" == "77" ]]
+}
+
+@test "deps: no null/null URL is ever constructed" {
+  local manifest; manifest="$(write_dep_manifest '[{"number": 68}]')"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$output" != *"null/null"* ]]
+  ! grep -q "null/null" "$GH_MOCK_DIR/issue_create_args"
+}
+
+@test "deps: repo without owner is rejected before gh runs" {
+  local manifest; manifest="$(write_dep_manifest '[{"repo": "other", "number": 68}]')"
+  rm -f "$GH_MOCK_DIR/issue_create_args"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 1 ]]
+  [[ "$output" == *"blocked_by[0]"* ]]
+  [[ "$output" == *"owner and repo must both be present or both be omitted"* ]]
+  [[ ! -f "$GH_MOCK_DIR/issue_create_args" ]]
+}
+
+@test "deps: owner without repo is rejected" {
+  local manifest; manifest="$(write_dep_manifest '[{"owner": "otherorg", "number": 68}]')"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 1 ]]
+  [[ "$output" == *"owner and repo must both be present or both be omitted"* ]]
+}
+
+@test "deps: bare integer entry is rejected with the received value" {
+  local manifest; manifest="$(write_dep_manifest '[68]')"
+  rm -f "$GH_MOCK_DIR/issue_create_args"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 1 ]]
+  [[ "$output" == *"blocked_by[0]"* ]]
+  [[ "$output" == *"entry must be an object with a number field, got 68"* ]]
+  [[ ! -f "$GH_MOCK_DIR/issue_create_args" ]]
+}
+
+@test "deps: quoted number is rejected" {
+  local manifest; manifest="$(write_dep_manifest '[{"number": "68"}]')"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 1 ]]
+  [[ "$output" == *'number must be an integer >= 1, got "68"'* ]]
+}
+
+@test "deps: zero and negative numbers are rejected" {
+  local manifest; manifest="$(write_dep_manifest '[{"number": 0}, {"number": -3}]')"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 1 ]]
+  [[ "$output" == *"blocked_by[0]: number must be an integer >= 1, got 0"* ]]
+  [[ "$output" == *"blocked_by[1]: number must be an integer >= 1, got -3"* ]]
+}
+
+@test "deps: missing number is rejected" {
+  local manifest; manifest="$(write_dep_manifest \
+    '[{"owner": "otherorg", "repo": "otherrepo"}]')"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 1 ]]
+  [[ "$output" == *"blocked_by[0]: missing required field: number"* ]]
+}
+
+@test "deps: errors accumulate across blocked_by and blocking in one run" {
+  local manifest; manifest="$(write_dep_manifest \
+    '[{"repo": "other", "number": 1}, 68]' \
+    '[{"number": 0}]')"
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 1 ]]
+  [[ "$output" == *"blocked_by[0]: owner and repo must both be present"* ]]
+  [[ "$output" == *"blocked_by[1]: entry must be an object"* ]]
+  [[ "$output" == *"blocking[0]: number must be an integer >= 1"* ]]
+}
+
+@test "deps: omitted dependency fields pass no flags to gh issue create" {
+  local manifest="$GH_MOCK_DIR/manifest.json"
+  cat > "$manifest" << JSON
+{
+  "title": "No deps",
+  "body_file": "$GH_MOCK_DIR/body.txt",
+  "labels": ["type:bug", "priority:P1", "effort:S"]
+}
+JSON
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 0 ]]
+  ! grep -q -x -- "--blocked-by" "$GH_MOCK_DIR/issue_create_args"
+  ! grep -q -x -- "--blocking" "$GH_MOCK_DIR/issue_create_args"
 }

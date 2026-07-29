@@ -183,5 +183,4 @@ Using the JSON blob returned by `create-item`, print:
 - Issue body section headings MUST match the Issue Forms template exactly (case + ordering) so `audit` can parse them
 - Never apply more than one label per group (one type, one priority, one effort)
 - Dependencies and sub-issue parent are NOT mirrored in the issue body — GitHub's native API is the only source of truth for these relationships
-- Cross-Project / cross-repo blockers ARE permitted but will be flagged as a smell by `audit`
 - Sub-issues stay independent — assigning a parent does NOT inherit the parent's milestone, priority, effort, type, or Project rank

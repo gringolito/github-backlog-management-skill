@@ -22,8 +22,8 @@ Manifest schema (title and body_file are required; all others are optional):
   labels          array of label strings
   rank            {"position": "top"|"bottom"} | {"after_issue": N}
   rank_adjustments array of {"issue": N, "position": "top"} | {"issue": N, "after_issue": M}
-  blocked_by      array of {"owner": "...", "repo": "...", "number": N}
-  blocking        array of {"owner": "...", "repo": "...", "number": N}
+  blocked_by      array of {"number": N} | {"owner": "...", "repo": "...", "number": N}
+  blocking        array of {"number": N} | {"owner": "...", "repo": "...", "number": N}
   parent          integer (issue number)
   milestone       string (milestone title)
 EOF
@@ -82,31 +82,90 @@ blocking_json=$(echo "$manifest" | jq -c '.blocking // []')
 parent_num=$(echo "$manifest" | jq -r '.parent // null')
 milestone_title=$(echo "$manifest" | jq -r '.milestone // null')
 
-n_blocked_by=$(echo "$blocked_by_json" | jq 'length')
-n_blocking=$(echo "$blocking_json" | jq 'length')
-
 [[ -z "$title" || "$title" == "null" ]] && { echo "Manifest missing required field: title" >&2; exit 1; }
 [[ -z "$body_file" || "$body_file" == "null" ]] && { echo "Manifest missing required field: body_file" >&2; exit 1; }
 [[ ! -f "$body_file" ]] && { echo "body_file not found: $body_file" >&2; exit 1; }
+
+# ─── Validate + normalize dependency references ───────────────────────────
+# blocked_by/blocking entries may omit owner/repo, in which case they mean
+# "this Project's repo". Resolve that default here and reject malformed
+# entries before any mutation — an entry missing owner/repo must never reach
+# the URL branch below, which would interpolate literal nulls into the ref.
+deps=$(jq -n \
+  --argjson blocked_by "$blocked_by_json" \
+  --argjson blocking   "$blocking_json" \
+  --arg     owner      "$owner" \
+  --arg     repo       "$repo" '
+  def present($k): has($k) and (.[$k] != null);
+
+  def entry_errors($p): [
+    (if present("number") | not then
+       $p + "missing required field: number"
+     elif (.number | type) != "number" then
+       $p + "number must be an integer >= 1, got " + (.number | tojson)
+     elif (.number | floor) != .number or .number < 1 then
+       $p + "number must be an integer >= 1, got " + (.number | tojson)
+     else empty end),
+    (if present("owner") != present("repo") then
+       $p + "owner and repo must both be present or both be omitted"
+     else empty end),
+    (if present("owner") and ((.owner | type) != "string" or .owner == "") then
+       $p + "owner must be a non-empty string"
+     else empty end),
+    (if present("repo") and ((.repo | type) != "string" or .repo == "") then
+       $p + "repo must be a non-empty string"
+     else empty end)
+  ];
+
+  def resolve($field): . as $arr
+    | if ($arr | type) != "array" then
+        {errors: [$field + " must be an array, got " + ($arr | type)], refs: []}
+      else
+        [ $arr | to_entries[]
+          | ($field + "[" + (.key | tostring) + "]: ") as $p
+          | .value
+          | if type != "object" then
+              {errors: [$p + "entry must be an object with a number field, got " + tojson], ref: null}
+            else
+              entry_errors($p) as $errs
+              | if ($errs | length) > 0 then {errors: $errs, ref: null}
+                else
+                  (if present("owner") then .owner else $owner end) as $o
+                  | (if present("repo") then .repo else $repo end) as $r
+                  | {errors: [],
+                     ref: (if $o == $owner and $r == $repo
+                           then (.number | tostring)
+                           else "https://github.com/\($o)/\($r)/issues/\(.number)" end)}
+                end
+            end
+        ] as $rows
+        | {errors: [$rows[].errors[]],
+           refs:   [$rows[] | select(.ref != null) | .ref]}
+      end;
+
+  ($blocked_by | resolve("blocked_by")) as $bb
+  | ($blocking | resolve("blocking")) as $bl
+  | {errors:          ($bb.errors + $bl.errors),
+     blocked_by_refs: ($bb.refs | join(",")),
+     blocking_refs:   ($bl.refs | join(","))}
+')
+
+dep_errors=$(echo "$deps" | jq -r '.errors[]')
+if [[ -n "$dep_errors" ]]; then
+  echo "$dep_errors" >&2
+  exit 1
+fi
+
+blocked_by_refs=$(echo "$deps" | jq -r '.blocked_by_refs')
+blocking_refs=$(echo "$deps" | jq -r '.blocking_refs')
 
 # ─── 1. Create the issue ───────────────────────────────────────────────────
 labels_csv=$(echo "$labels_json" | jq -r 'join(",")')
 create_args=(--title "$title" --body-file "$body_file" --project "$proj_title")
 [[ -n "$labels_csv" ]] && create_args+=(--label "$labels_csv")
 
-if [[ "$n_blocked_by" -gt 0 ]]; then
-  blocked_by_refs=$(echo "$blocked_by_json" | jq -r \
-    --arg owner "$owner" --arg repo "$repo" \
-    '[.[] | if .owner == $owner and .repo == $repo then (.number | tostring) else "https://github.com/\(.owner)/\(.repo)/issues/\(.number)" end] | join(",")')
-  create_args+=(--blocked-by "$blocked_by_refs")
-fi
-
-if [[ "$n_blocking" -gt 0 ]]; then
-  blocking_refs=$(echo "$blocking_json" | jq -r \
-    --arg owner "$owner" --arg repo "$repo" \
-    '[.[] | if .owner == $owner and .repo == $repo then (.number | tostring) else "https://github.com/\(.owner)/\(.repo)/issues/\(.number)" end] | join(",")')
-  create_args+=(--blocking "$blocking_refs")
-fi
+[[ -n "$blocked_by_refs" ]] && create_args+=(--blocked-by "$blocked_by_refs")
+[[ -n "$blocking_refs" ]]   && create_args+=(--blocking "$blocking_refs")
 
 [[ "$parent_num" != "null" ]] && create_args+=(--parent "$parent_num")
 [[ "$milestone_title" != "null" ]] && create_args+=(--milestone "$milestone_title")

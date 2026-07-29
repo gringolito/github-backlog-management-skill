@@ -11,8 +11,8 @@ The manifest is a JSON file passed to `create-item --input <file>`.
   "labels": ["type:<x>", "priority:<y>", "effort:<z>"],
   "rank": {"position": "top"} | {"position": "bottom"} | {"after_issue": N},
   "rank_adjustments": [{"issue": N, "position": "top"} | {"issue": N, "after_issue": M}],
-  "blocked_by": [{"owner": "...", "repo": "...", "number": N}],
-  "blocking":   [{"owner": "...", "repo": "...", "number": N}],
+  "blocked_by": [{"number": N} | {"owner": "...", "repo": "...", "number": N}],
+  "blocking":   [{"number": N} | {"owner": "...", "repo": "...", "number": N}],
   "parent": <integer issue number>,
   "milestone": "<milestone title>"
 }
@@ -21,4 +21,3 @@ The manifest is a JSON file passed to `create-item --input <file>`.
 ## Field Notes
 
 - `rank` / `rank_adjustments` — use `after_issue: N` with the issue number of the item to position after
-- `blocked_by` / `blocking` — cross-repo references are allowed; include `owner` and `repo` for cross-repo items; same-repo items need only `number`
