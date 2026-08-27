@@ -2,7 +2,7 @@
 
 Fetch the milestone's current state:
 
-- `gh api "repos/<owner>/<repo>/milestones/<number>"` — confirm title, `due_on`, open/closed issue counts
+- `gh api "repos/<owner>/<repo>/milestones/<number>"`: confirm title, `due_on`, open/closed issue counts
 - `gh project item-list <project-number> --owner <owner> --query "is:issue milestone:<milestone-title>" --format json --limit 200`
 
 Compute the current capacity estimate using Fibonacci weights (XS=1 / S=2 / M=3 / L=5 / XL=8; items with no effort label counted as M=3 with a note).
@@ -17,7 +17,7 @@ Done (N):        #n title [effort]  ...
 Todo (N):        #n title [effort]  ...
 ```
 
-Items with In Progress or Done status are shown as read-only context throughout the session — they cannot be added to or removed from the milestone via this skill.
+Items with In Progress or Done status are shown as read-only context throughout the session; they cannot be added to or removed from the milestone via this skill.
 
 ## Actions
 
@@ -33,7 +33,7 @@ options:
     description: "Remove items from this milestone with a disposition choice."
   - label: "Both"
     description: "Add items first, then remove items."
-  - label: "Done — show summary"
+  - label: "Done: show summary"
     description: "End the session and print the summary."
 ```
 
@@ -56,7 +56,7 @@ question: "Select items to add to <milestone title> (current capacity: N pts)."
 header: "Add items"
 multiSelect: true
 options:
-  - label: "#N — <title>"
+  - label: "#N: <title>"
     description: "<type> · <priority> · <effort>"
   # one entry per candidate
 ```
@@ -84,7 +84,7 @@ question: "Select items to remove from <milestone title>."
 header: "Remove items"
 multiSelect: true
 options:
-  - label: "#N — <title>"
+  - label: "#N: <title>"
     description: "<type> · <priority> · <effort>"
   # one entry per Todo item in this milestone
 ```
@@ -92,7 +92,7 @@ options:
 For each selected item, use `AskUserQuestion` (single-select) to collect its disposition:
 
 ```yaml
-question: "How should #N — <title> be handled?"
+question: "How should #N: <title> be handled?"
 header: "Disposition"
 options:
   - label: "Back to backlog"
@@ -107,12 +107,12 @@ Apply the disposition:
 
 - **Back to backlog**: `gh issue edit <n> --milestone ""`
 - **Carry forward**:
-  - `gh api "repos/<owner>/<repo>/milestones?state=open&per_page=100"` — collect other open milestones (exclude the current one)
+  - `gh api "repos/<owner>/<repo>/milestones?state=open&per_page=100"`: collect other open milestones (exclude the current one)
   - If no other open milestone exists: surface a clear error and fall back to "Back to backlog"
   - Otherwise, use `AskUserQuestion` to let the user pick the target milestone:
 
     ```yaml
-    question: "Which milestone should #N — <title> be moved to?"
+    question: "Which milestone should #N: <title> be moved to?"
     header: "Target milestone"
     options:
       - label: "<milestone title>"
@@ -131,18 +131,18 @@ After processing all selected items, recompute and display the updated capacity 
 
 After completing an Add or Remove flow, re-issue the main `AskUserQuestion` from the Actions step so the user can continue adjusting or exit.
 
-Proceed to the next step ONLY when the user chooses "Done — show summary".
+Proceed to the next step ONLY when the user chooses "Done: show summary".
 
 ## Session Summary
 
 Print:
 
 - Milestone title, number, `html_url`, `due_on`
-- Items added: `#number — title — effort` (or "None")
+- Items added: `#number, title, effort` (or "None")
 - Items removed by disposition:
-  - Back to backlog: list of `#number — title`
-  - Carry forward: list of `#number — title → milestone`
-  - Closed as won't fix: list of `#number — title`
+  - Back to backlog: list of `#number, title`
+  - Carry forward: list of `#number, title → milestone`
+  - Closed as won't fix: list of `#number, title`
 - Final capacity estimate (points + qualitative band)
 - Pointer to next steps:
   - "Run `/add-item` to add more items to this milestone"

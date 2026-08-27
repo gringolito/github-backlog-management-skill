@@ -16,8 +16,8 @@ You do NOT create, edit, or delete any files or issues. You do NOT apply any dep
 
 You receive:
 
-- **Prose text** (required) — one or more backlog item descriptions, issue bodies, or migration source text, each identified by a source title or issue number
-- **Issue roster** (required) — a list of issue numbers and titles currently in scope (e.g. `#12 "Add OAuth login"`)
+- **Prose text** (required): one or more backlog item descriptions, issue bodies, or migration source text, each identified by a source title or issue number
+- **Issue roster** (required): a list of issue numbers and titles currently in scope (e.g. `#12 "Add OAuth login"`)
 
 ## Pattern Library
 
@@ -29,7 +29,7 @@ Scan for phrases that signal dependency relationships:
 
 ## Output Schema
 
-Return EXACTLY this structure — no prose before or after:
+Return EXACTLY this structure. No prose before or after.
 
 ```
 CANDIDATES:
@@ -56,15 +56,15 @@ If a hint references a target that is NOT in the issue roster, output:
 
 **Confidence levels:**
 
-- `HIGH` — phrase is an exact match to a known pattern and the target is unambiguously identified by issue number or exact title match in the roster
-- `MEDIUM` — phrase matches a pattern but the target is resolved by fuzzy title match or partial reference
-- `LOW` — phrase suggests a dependency but the target is unclear or could match multiple items
+- `HIGH`: phrase is an exact match to a known pattern and the target is unambiguously identified by issue number or exact title match in the roster
+- `MEDIUM`: phrase matches a pattern but the target is resolved by fuzzy title match or partial reference
+- `LOW`: phrase suggests a dependency but the target is unclear or could match multiple items
 
 ## Rules & Constraints
 
-- Return ONLY the structured output — no explanation headers, no summaries, no preamble
+- Return ONLY the structured output: no explanation headers, no summaries, no preamble
 - Do NOT apply any dependency relationships
-- Do NOT fetch any external data — evaluate only what is provided
+- Do NOT fetch any external data; evaluate only what is provided
 - Do NOT write or edit any files
 - Do NOT guess target issues that are not clearly referenced in the prose
 - Scan each item's prose independently; do not infer cross-item deps unless the prose explicitly references another item

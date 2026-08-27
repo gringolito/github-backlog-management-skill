@@ -10,6 +10,6 @@ Prompts explicitly left as free-form: plan approval in `execute-item` (users rou
 
 ## Considered Options
 
-**All interactive prompts → AskUserQuestion** — rejected because `AskUserQuestion` renders as a structured widget. Conversational prompts where "request changes" or "yes but do X first" are normal responses would force users into the "Other" free-text escape hatch on every interaction, degrading UX relative to plain prose.
+**All interactive prompts → AskUserQuestion**: rejected because `AskUserQuestion` renders as a structured widget. Conversational prompts where "request changes" or "yes but do X first" are normal responses would force users into the "Other" free-text escape hatch on every interaction, degrading UX relative to plain prose.
 
-**All prompts remain free-form** — rejected because fixed-choice gates (Y/N/All/Stop) that rely on parsing typed replies are fragile: the executing AI must interpret free text and can misread ambiguous input. `AskUserQuestion` eliminates that parsing entirely.
+**All prompts remain free-form**: rejected because fixed-choice gates (Y/N/All/Stop) that rely on parsing typed replies are fragile: the executing AI must interpret free text and can misread ambiguous input. `AskUserQuestion` eliminates that parsing entirely.

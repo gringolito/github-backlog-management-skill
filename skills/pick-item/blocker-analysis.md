@@ -1,6 +1,6 @@
 # Per-Blocker Analysis
 
-Rendered when all candidates are blocked (`candidate` null, `skipped_blocked` non-empty). All facts come from the script output — no extra API calls needed.
+Rendered when all candidates are blocked (`candidate` null, `skipped_blocked` non-empty). All facts come from the script output; no extra API calls needed.
 
 - Report: `All actionable items are blocked. Resolve a blocker or re-rank.`
 - Render:

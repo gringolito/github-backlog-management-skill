@@ -9,7 +9,7 @@ You are an AI agent acting as a backlog analyst responsible for producing a stra
 
 The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
 
-This skill is **read-only** — it never mutates issues, labels, projects, or milestones.
+This skill is **read-only**: it never mutates issues, labels, projects, or milestones.
 
 ## Objective
 
@@ -30,7 +30,7 @@ Run these two queries:
 1. **All open issues**:
    `gh issue list --state open --json number,title,labels,assignees,createdAt,updatedAt,url --limit 200`
 
-   After fetching, **pre-filter**: discard any issue whose labels include `type:external-blocker` — these are Stubs, never Workable Items, and are excluded from all counts and metrics.
+   After fetching, **pre-filter**: discard any issue whose labels include `type:external-blocker`: these are Stubs, never Workable Items, and are excluded from all counts and metrics.
 
 2. **Project membership and Status**:
    `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue"`
@@ -48,7 +48,7 @@ All computations operate on the pre-filtered open-issue set (stubs excluded). Us
 
 #### 2b. Distribution by Label Group
 
-For each of the three label groups — `type:*`, `priority:*`, `effort:*` — in canonical order:
+For each of the three label groups (`type:*`, `priority:*`, `effort:*`) in canonical order:
 
 - `type:*`: use the discovered label list from `gh label list --repo <owner>/<repo> --json name --limit 100 | jq '[.[] | select(.name | startswith("type:")) | .name]'` as the value set; omit values with 0 count
 - `priority:*`: P0, P1, P2, P3
@@ -69,8 +69,8 @@ Report count and percentage per range.
 
 #### 2d. Overdue High-Priority Items
 
-- **P0 overdue**: issues with `priority:P0` open longer than 14 days — list with issue number, title, age in days, and assignee (or "unassigned")
-- **P1 overdue**: issues with `priority:P1` open longer than 30 days — list with issue number, title, age in days, and assignee (or "unassigned")
+- **P0 overdue**: issues with `priority:P0` open longer than 14 days: list with issue number, title, age in days, and assignee (or "unassigned")
+- **P1 overdue**: issues with `priority:P1` open longer than 30 days: list with issue number, title, age in days, and assignee (or "unassigned")
 
 If no overdue items exist in a tier, emit `✅ No overdue <P0/P1> items.`
 
@@ -178,15 +178,15 @@ Emit `✅ All open items have complete label metadata.` when empty.
 
 ## Rules & Constraints
 
-- This skill is **strictly read-only** — never mutate any issue, Project field, milestone, or label.
-- Discard `type:external-blocker` Stubs before all computations — they are not Workable Items.
+- This skill is **strictly read-only**: never mutate any issue, Project field, milestone, or label.
+- Discard `type:external-blocker` Stubs before all computations; they are not Workable Items.
 - Closed issues are excluded from all sections.
-- Surface all `gh` errors verbatim — never swallow.
+- Surface all `gh` errors verbatim; never swallow.
 - Percentages rounded to the nearest integer.
 - "Age" is computed from `createdAt` (UTC); "last activity" from `updatedAt` (UTC).
 - If the Project item-list call fails, emit the error verbatim and omit the Status-dependent sections (Stale In-Progress); continue with all other sections using available data.
-- Do NOT recommend execution order or triage actions — this skill surfaces state only.
+- Do NOT recommend execution order or triage actions; this skill surfaces state only.
 
 ## Output Expectations
 
-The entire output is the Markdown report — no preamble, no trailing summary, no conversational wrapping. The report must be valid GitHub-Flavored Markdown so the user can paste it directly into a standup document, Slack message, or GitHub comment or Discussion.
+The entire output is the Markdown report: no preamble, no trailing summary, no conversational wrapping. The report must be valid GitHub-Flavored Markdown so the user can paste it directly into a standup document, Slack message, or GitHub comment or Discussion.

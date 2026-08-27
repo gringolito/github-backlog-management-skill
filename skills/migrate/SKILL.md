@@ -92,13 +92,13 @@ If any check fails STOP, report the validation errors and provide corrected vers
 
 ### 7. Migration Execution
 
-Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON — `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
+Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON: `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
 
-Ask the user once (before any issue is created) using AskUserQuestion if it wants to assign the candidates to the current Active Release with options: "Yes, assign all" / "No, skip". Record the answer — it applies to all items uniformly.
+Ask the user once (before any issue is created) using AskUserQuestion if it wants to assign the candidates to the current Active Release with options: "Yes, assign all" / "No, skip". Record the answer; it applies to all items uniformly.
 
 Issue creation is split into four discrete phases. Phase 1 gathers the confirmed set with zero GitHub mutations; Phases 2–3 build the dependency and rank plan against that confirmed set (still zero mutations); Phase 4 is the only phase that touches GitHub, and does so exclusively through `create-item`.
 
-#### Phase 1 — Bulk confirmation gate
+#### Phase 1: Bulk confirmation gate
 
 Present all non-Done items, in priority order (P0 → P3), as a single review block (NOT one-by-one):
 
@@ -115,18 +115,18 @@ Present all non-Done items, in priority order (P0 → P3), as a single review bl
    ...
 ```
 
-Use AskUserQuestion with options: "Accept all" / "Cherry-pick" / "Reject all". For "Cherry-pick", follow up with a numbered list so the user can identify which items to exclude — excluded items are recorded as "skipped by user" in the Migration Report. "Reject all" halts the migration immediately: nothing has been created on GitHub, so report zero items created.
+Use AskUserQuestion with options: "Accept all" / "Cherry-pick" / "Reject all". For "Cherry-pick", follow up with a numbered list so the user can identify which items to exclude; excluded items are recorded as "skipped by user" in the Migration Report. "Reject all" halts the migration immediately: nothing has been created on GitHub, so report zero items created.
 
-The accepted items form the confirmed set. Assign each confirmed item a local placeholder ID, in the order presented: `#C1`, `#C2`, ... These placeholder IDs exist only for this migration run — Phase 2's dependency-inferrer roster and Phase 3's batch rank call both use them, and Phase 4 resolves each one to a real issue number as that item is created.
+The accepted items form the confirmed set. Assign each confirmed item a local placeholder ID, in the order presented: `#C1`, `#C2`, ... These placeholder IDs exist only for this migration run; Phase 2's dependency-inferrer roster and Phase 3's batch rank call both use them, and Phase 4 resolves each one to a real issue number as that item is created.
 
-#### Phase 2 — Dependency inference (pre-creation)
+#### Phase 2: Dependency inference (pre-creation)
 
 1. Delegate to `dependency-inferrer`. Call the agent with:
 
    - Prose: the full source text of each confirmed item, one entry per item labeled with its placeholder ID
    - Issue roster: the confirmed set formatted as `#<placeholder> "<title>"` per line
 
-   If the agent returns `CANDIDATES: none`, skip to sub-step 5 — the topological sort is then a no-op and creation order equals confirmed order.
+   If the agent returns `CANDIDATES: none`, skip to sub-step 5; the topological sort is then a no-op and creation order equals confirmed order.
 
 2. Present all candidates to the user in a single review block (NOT one-by-one) so they can scan and confirm in bulk, grouped by relationship type:
 
@@ -137,9 +137,9 @@ The accepted items form the confirmed set. Assign each confirmed item a local pl
      → sub-issue of #<target-placeholder> "<parent-title>" (evidence: "part of API rework")
    ```
 
-   `UNRESOLVED` targets (references outside the confirmed set) are surfaced as "manual resolution needed" in the Migration Report — DO NOT guess.
+   `UNRESOLVED` targets (references outside the confirmed set) are surfaced as "manual resolution needed" in the Migration Report; do NOT guess.
 
-3. Confirm only after explicit review. Use AskUserQuestion with options: "Accept all" / "Cherry-pick" / "Reject all". For "Cherry-pick", follow up with a numbered list so the user can identify which candidates to apply. Nothing is mutated on GitHub here — "accept" means recording the relationship for Phase 4's manifests.
+3. Confirm only after explicit review. Use AskUserQuestion with options: "Accept all" / "Cherry-pick" / "Reject all". For "Cherry-pick", follow up with a numbered list so the user can identify which candidates to apply. Nothing is mutated on GitHub here; "accept" means recording the relationship for Phase 4's manifests.
 
    NEVER auto-apply: inferred dependencies have a high false-positive rate, and a false `blocked_by` will gate `execute-item` on phantom work.
 
@@ -148,22 +148,22 @@ The accepted items form the confirmed set. Assign each confirmed item a local pl
    - `blocked_by #<target>` → recorded directly as this item's `blocked_by`
    - `sub-issue of #<target>` → recorded directly as this item's `parent`
    - `blocking #<target>` → recorded as the **target's** `blocked_by` (pointing back at this item)
-   - A confirmed relationship whose target is a pre-existing GitHub issue skips this translation — that target already exists, so `blocking` can be recorded directly on the source item's own manifest.
+   - A confirmed relationship whose target is a pre-existing GitHub issue skips this translation; that target already exists, so `blocking` can be recorded directly on the source item's own manifest.
 
 5. Topological sort using the confirmed, normalized `blocked_by`/`parent` edges, compute the Phase 4 creation order: every blocker/parent is ordered before what it blocks/parents.
 
    Items with no relationships keep their Phase 1 confirmed relative order. If the confirmed edges contain a cycle, STOP, show the cycle to the user, and ask them to reject one of the conflicting candidates (return to sub-step 3), the creation order cannot be computed otherwise.
 
-#### Phase 3 — Pre-flight batch rank
+#### Phase 3: Pre-flight batch rank
 
 1. Fetch the current Todo column with `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`. Capture each item's title and `type:*`, `priority:*`, `effort:*` labels; the response order is the current rank (top first).
 
 2. Call the `rank-recommender` agent once with the entire confirmed set as candidates:
 
-   - Candidates: one entry per confirmed item — `id` = its Phase 1 placeholder, plus title, one-line `### What` summary, and `type:*`/`priority:*`/`effort:*` labels — in placeholder order
+   - Candidates: one entry per confirmed item: `id` = its Phase 1 placeholder, plus title, one-line `### What` summary, and `type:*`/`priority:*`/`effort:*` labels, in placeholder order
    - Current Todo column: the list from sub-step 1
 
-   The agent reasons holistically across all candidates and the existing column, and returns one block per candidate (its multi-candidate output shape). A candidate's position may reference an existing item (`after_issue: <N>`) or another candidate (`after_candidate: <placeholder>`).
+   The agent reasons across all candidates and the existing column together, and returns one block per candidate (its multi-candidate output shape). A candidate's position may reference an existing item (`after_issue: <N>`) or another candidate (`after_candidate: <placeholder>`).
 
 3. Present the full proposed ordering as a single merged list so the user can review and adjust:
 
@@ -178,7 +178,7 @@ The accepted items form the confirmed set. Assign each confirmed item a local pl
 
 4. Record the final confirmed order per confirmed item. This determines the `rank` field Phase 4 writes into each manifest.
 
-#### Phase 4 — Creation loop
+#### Phase 4: Creation loop
 
 Create the confirmed set in the topological order from Phase 2, accumulating placeholder → real issue number resolutions as each item is created. This is the only phase that mutates GitHub, and it does so exclusively via `create-item` Bash tool.
 
@@ -188,9 +188,9 @@ For each item, in creation order:
 2. Build the manifest (see the [issue manifest](../add-item/issue-manifest.md) for the full schema), use the information form the previous phases, resolve any placeholder reference to its real issue number.
 3. Run `create-item --input <manifest>` and branch on the exit code:
 
-   - 0 — success. Capture the JSON blob (issue number/URL, applied rank, warnings). Record the issue number for resolution.
-   - 2 — the issue was still created, but a post-creation step warned. Record the issue number for resolution and the warning for the Migration Report and continue the loop, do NOT retry, the issue already exists.
-   - Any other non-zero exit — nothing was created for this item. STOP the loop immediately, do NOT roll back items already created, and report which items were created vs. not attempted.
+   - 0: success. Capture the JSON blob (issue number/URL, applied rank, warnings). Record the issue number for resolution.
+   - 2: the issue was still created, but a post-creation step warned. Record the issue number for resolution and the warning for the Migration Report and continue the loop, do NOT retry, the issue already exists.
+   - Any other non-zero exit: nothing was created for this item. STOP the loop immediately, do NOT roll back items already created, and report which items were created vs. not attempted.
 
 4. Continue to the next item in topological order.
 
@@ -216,11 +216,11 @@ After all items are processed, output a Migration Report containing:
 ## Rules & Constraints
 
 - NEVER fabricate requirements, prefer `UNKNOWN` over guessing, be explicit about uncertainty
-- Do NOT drop active items (Todo / In Progress) — they MUST all be migrated unless explicitly excluded by the user
+- Do NOT drop active items (Todo / In Progress); they MUST all be migrated unless explicitly excluded by the user
 - Done items ARE intentionally skipped. Always list them in the Migration Report so the user can confirm none should be revived.
 - Keep items atomic
 - Do NOT mutate GitHub before Phase 4 (the creation loop)
-- Do NOT delete or modify the source backlog file — it is input only
+- Do NOT delete or modify the source backlog file; it is input only
 - Issue body must be authored by the `issue-body-author` agent
 
 ## Output Expectations

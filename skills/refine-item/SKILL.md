@@ -9,7 +9,7 @@ You are an AI agent acting as a Senior Project Manager refining a single ambiguo
 
 The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
 
-Items carrying the `needs-clarification` label were created by `migrate` (or flagged later) because they are missing critical detail — typically with `UNKNOWN` / `NEEDS CLARIFICATION` markers in body sections and open questions parked in `### INVEST Notes`. Your goal is to walk this one item through interactive discovery, fill the gaps, re-evaluate severity / effort / type / Project rank using full relative analysis, and remove the `needs-clarification` label once validation passes.
+Items carrying the `needs-clarification` label were created by `migrate` (or flagged later) because they are missing critical detail, typically with `UNKNOWN` / `NEEDS CLARIFICATION` markers in body sections and open questions parked in `### INVEST Notes`. Your goal is to walk this one item through interactive discovery, fill the gaps, re-evaluate severity / effort / type / Project rank using full relative analysis, and remove the `needs-clarification` label once validation passes.
 
 ## Objective
 
@@ -33,10 +33,10 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
 ### 1. Resolve Target Issue
 
 - Read the argument passed to the skill. It may be:
-  - An issue number (e.g. `/refine-item 42`) — use directly
-  - A title or partial title (e.g. `/refine-item "add OAuth"`) — search with `gh issue list --search "<text>" --state open --json number,title,url --limit 10`, then present matches and ask the user to confirm which one
-  - No argument — ask: "Which issue should I refine? You can provide an issue number or a title."
-- Fetch issue data and verify the issue is a member of the linked Project: `gh project item-list <project-number> --owner <owner> --format json --query "#<n>"` — if the issue is NOT in the Project, STOP and output: `Issue #<n> is not in the linked Backlog project. Only Project members can be refined here.`
+  - An issue number (e.g. `/refine-item 42`): use directly
+  - A title or partial title (e.g. `/refine-item "add OAuth"`): search with `gh issue list --search "<text>" --state open --json number,title,url --limit 10`, then present matches and ask the user to confirm which one
+  - No argument: ask: "Which issue should I refine? You can provide an issue number or a title."
+- Fetch issue data and verify the issue is a member of the linked Project: `gh project item-list <project-number> --owner <owner> --format json --query "#<n>"`: if the issue is NOT in the Project, STOP and output: `Issue #<n> is not in the linked Backlog project. Only Project members can be refined here.`
 - If the issue does NOT carry `needs-clarification`, warn: "Issue #<n> does not carry `needs-clarification`. Proceed anyway? [Y/n]" and stop if the user declines.
 
 ### 2. Display Item
@@ -45,9 +45,9 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
 - Current labels: `type:*` / `priority:*` / `effort:*` (highlight any missing groups)
 - Milestone, Project Status
 - Full body sections, with every `UNKNOWN` / `NEEDS CLARIFICATION` marker highlighted
-- Existing `### INVEST Notes` content — this is where `migrate` parks open questions
+- Existing `### INVEST Notes` content: this is where `migrate` parks open questions
 - **Current relationships** (fetched via `gh api`):
-  - If the Dependencies API returns `404` on this repo (private repo without paid plan), skip blocker/blocking fields and emit one warning: `Issue Dependencies API unavailable on this repo — dependency display and updates skipped.`
+  - If the Dependencies API returns `404` on this repo (private repo without paid plan), skip blocker/blocking fields and emit one warning: `Issue Dependencies API unavailable on this repo; dependency display and updates skipped.`
   - Blockers (`blocked_by`):
     - First, check `gh api "repos/<owner>/<repo>/issues/<n>" --jq '.issue_dependencies_summary.blocked_by'`.
     - If the active count is `0` → display `No active blockers` (skip the full list fetch).
@@ -75,7 +75,7 @@ Reuse the discovery pattern from `add-item`:
   - Are existing blockers still relevant? Should any be removed via `gh api -X DELETE "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by/<blocker-id>"`?
   - Did refinement reveal NEW blockers? (issue numbers; cross-repo allowed)
   - Should the sub-issue parent change or be removed?
-- Challenge vague answers — DO NOT accept hand-waving like "improve performance" or "make it better"
+- Challenge vague answers: DO NOT accept hand-waving like "improve performance" or "make it better"
 - If the user genuinely cannot answer a question, capture it as a remaining gap (handled in step 5)
 
 ### 4. Reconstruct Body
@@ -86,9 +86,9 @@ Delegate body authoring to the `issue-body-author` agent:
 - **Input**: the existing issue body (as fetched in step 2) plus all corrections and answers discovered in step 3
 - **Existing body**: pass the full current body so the agent can preserve unchanged sections
 
-The agent returns an updated body with all `UNKNOWN` / `NEEDS CLARIFICATION` / `_No response_` markers replaced by the discovered content. Any sections where information is still missing will be marked with `<!-- TODO: ... -->` — those remain as open questions in `### INVEST Notes`.
+The agent returns an updated body with all `UNKNOWN` / `NEEDS CLARIFICATION` / `_No response_` markers replaced by the discovered content. Any sections where information is still missing will be marked with `<!-- TODO: ... -->`; those remain as open questions in `### INVEST Notes`.
 
-DO NOT introduce new headings or change ordering — `audit` parses these section headings.
+DO NOT introduce new headings or change ordering: `audit` parses these section headings.
 
 ### 5. INVEST Gate (MANDATORY)
 
@@ -100,7 +100,7 @@ If `invest-gate` returns `Overall: FAIL`:
 - Apply the partial body update (step 6), but SKIP steps 7–10
 - KEEP the `needs-clarification` label
 - Output the partial-refinement result: issue URL + per-letter INVEST verdict from `invest-gate` + what remains in `### INVEST Notes`
-- STOP — do not continue to label/rank re-evaluation or label removal
+- STOP: do not continue to label/rank re-evaluation or label removal
 
 If splitting is needed (S letter fails):
 
@@ -110,7 +110,7 @@ If splitting is needed (S letter fails):
 
 ### 6. Apply Body Update
 
-If INVEST passes (or partial — per step 5):
+If INVEST passes (or partial, per step 5):
 
 - Write the refined body to a temp file (avoids shell-escaping issues)
 - `gh issue edit <n> --body-file <tmp>`
@@ -129,9 +129,9 @@ Compare the agent's verdict against the currently applied labels and propose cha
 - `type:*` (if classification is now clearer)
 
 If the agent returns `unclear` for a group, surface the reasoning and use AskUserQuestion:
-- `unclear: type` — offer the 3–4 most contextually likely types (from `feature`, `bug`, `security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`); "Other" is automatically provided for anything not listed
-- `unclear: priority` — offer options: `P0` / `P1` / `P2` / `P3`
-- `unclear: effort` — offer the 4 most contextually relevant sizes (from `XS`, `S`, `M`, `L`, `XL`); "Other" is automatically provided for the fifth
+- `unclear: type`: offer the 3–4 most contextually likely types (from `feature`, `bug`, `security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`); "Other" is automatically provided for anything not listed
+- `unclear: priority`: offer options: `P0` / `P1` / `P2` / `P3`
+- `unclear: effort`: offer the 4 most contextually relevant sizes (from `XS`, `S`, `M`, `L`, `XL`); "Other" is automatically provided for the fifth
 
 Apply changes ONLY after explicit user confirmation:
 
@@ -146,12 +146,12 @@ If existing items appear misranked in their priority labels relative to the refi
 
 Delegate rank analysis to the `rank-recommender` agent:
 - **Candidate item**: the refined issue title, one-line `### What` summary, and the current (or updated) `type:*`, `priority:*`, `effort:*` labels from step 7
-- **Current Todo column**: the ordered list (top-to-bottom) from the `item-list` response — each item's title and `type:*`, `priority:*`, `effort:*` labels
+- **Current Todo column**: the ordered list (top-to-bottom) from the `item-list` response: each item's title and `type:*`, `priority:*`, `effort:*` labels
 
 The agent returns:
-- `position:` — `top` | `above: <item title>` | `below: <item title>` | `bottom`
-- `rationale:` — per-dimension Impact / Risk / Urgency / Frequency / Dependencies
-- `divergence_flag:` (if present) — surface to the user and ask them to confirm or override the divergence
+- `position:`: `top` | `above: <item title>` | `below: <item title>` | `bottom`
+- `rationale:`: per-dimension Impact / Risk / Urgency / Frequency / Dependencies
+- `divergence_flag:` (if present): surface to the user and ask them to confirm or override the divergence
 
 If the analysis reveals existing items that appear misranked relative to the refined item (e.g. a `priority:P3` sitting above a `priority:P1`), list each suggested move with rationale. DO NOT apply them silently.
 
@@ -174,9 +174,9 @@ Apply rank changes ONLY after explicit user confirmation, via:
 
   Use the `id` fields from the `item-list` response. To move an item to the very top, omit `afterId` (or set it to `null`).
 
-**Dependency / Sub-issue changes** — apply the relationship changes the user agreed to in step 3. Same API patterns as `add-item` step 9:
+**Dependency / Sub-issue changes**: apply the relationship changes the user agreed to in step 3. Same API patterns as `add-item` step 9:
 
-If the Dependencies API is unavailable on this repo (returns `404`), skip blocker add/remove steps and emit: `Issue Dependencies API unavailable on this repo — dependency updates skipped.`
+If the Dependencies API is unavailable on this repo (returns `404`), skip blocker add/remove steps and emit: `Issue Dependencies API unavailable on this repo; dependency updates skipped.`
 
 - **Remove a stale blocker**: `gh api -X DELETE "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by/<blocker-id>"`
 - **Add a new blocker**: delegate to `/block-item #<n> #<blocker-number>`
@@ -192,20 +192,20 @@ Before removing the `needs-clarification` label, re-fetch the current live state
 
 Run all of the following checks:
 
-- **Sections present** — all body headings exist in the exact order defined in [../github-backlog-management/issue-body-sections.md](../github-backlog-management/issue-body-sections.md)
-- **No stale markers** — no occurrences of `UNKNOWN`, `NEEDS CLARIFICATION`, or `_No response_` remain in any section
-- **Label completeness** — all three label groups are present: one `type:*`, one `priority:*`, one `effort:*`
-- **Project Status set** — the item has a non-empty Status value in the Project
-- **INVEST re-check** — re-evaluate the final live body (not the in-memory draft) against all six INVEST principles
-- **INVEST Notes clear** — `### INVEST Notes` is either empty or contains only acknowledged residual questions with no open action items
-- **Effort consistency** — assess whether the current `effort:*` label still fits the refined `### In Scope` and `### Acceptance Criteria`, using the same relative heuristics as step 7. If the label appears inconsistent with the refined scope: gate fails, explain the mismatch, and suggest the likely correct effort label. The user must correct the label (via step 7 flow) before the gate can pass.
+- **Sections present**: all body headings exist in the exact order defined in [../github-backlog-management/issue-body-sections.md](../github-backlog-management/issue-body-sections.md)
+- **No stale markers**: no occurrences of `UNKNOWN`, `NEEDS CLARIFICATION`, or `_No response_` remain in any section
+- **Label completeness**: all three label groups are present: one `type:*`, one `priority:*`, one `effort:*`
+- **Project Status set**: the item has a non-empty Status value in the Project
+- **INVEST re-check**: re-evaluate the final live body (not the in-memory draft) against all six INVEST principles
+- **INVEST Notes clear**: `### INVEST Notes` is either empty or contains only acknowledged residual questions with no open action items
+- **Effort consistency**: assess whether the current `effort:*` label still fits the refined `### In Scope` and `### Acceptance Criteria`, using the same relative heuristics as step 7. If the label appears inconsistent with the refined scope: gate fails, explain the mismatch, and suggest the likely correct effort label. The user must correct the label (via step 7 flow) before the gate can pass.
 
 If ANY check fails:
 
 - List each failure with the exact issue
 - Output: `Pre-removal validation failed — keeping \`needs-clarification\``
 - Document as **partially refined** in the session output
-- STOP — do not proceed to step 10
+- STOP: do not proceed to step 10
 
 If all checks pass, proceed to step 10.
 
@@ -224,10 +224,10 @@ Only after the pre-removal validation gate passes:
 ## Rules & Constraints
 
 - Do NOT remove `needs-clarification` until the pre-removal validation gate passes (step 9)
-- Do NOT silently mutate labels or rank — every change requires explicit confirmation
+- Do NOT silently mutate labels or rank: every change requires explicit confirmation
 - Do NOT operate on issues outside the linked Project
 - Do NOT reset milestone assignments unless the user explicitly asks
-- Do NOT introduce new body section headings — keep them aligned with the canonical Issue Forms template so `audit` can parse them
+- Do NOT introduce new body section headings: keep them aligned with the canonical Issue Forms template so `audit` can parse them
 - Effort must NEVER be expressed in time (no hours/days)
 - All `gh` errors surfaced verbatim
 - This skill operates on exactly one issue. Use `/refine` to drive a multi-item session.

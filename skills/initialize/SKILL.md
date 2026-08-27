@@ -23,9 +23,9 @@ Make the repository ready to host backlog items as GitHub Issues, prioritized in
 
 ### 0. Preflight (MANDATORY)
 
-**Re-run / idempotent case** — if `.claude/backlog-project.json` already exists run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surface the error verbatim. If it exits zero, continue to step 5.
+**Re-run / idempotent case:** if `.claude/backlog-project.json` already exists run `backlog-preflight` via the Bash tool. If it exits non-zero, STOP and surface the error verbatim. If it exits zero, continue to step 5.
 
-**Fresh bootstrap** — if `.claude/backlog-project.json` does not yet exist, verify the local environment can talk to GitHub:
+**Fresh bootstrap:** if `.claude/backlog-project.json` does not yet exist, verify the local environment can talk to GitHub:
 
 - Parse `<owner>/<repo>` from the origin URL (support both `git@github.com:owner/repo.git` and `https://github.com/owner/repo.git` forms)
 - Confirm Issues are enabled: `gh repo view <owner>/<repo> --json hasIssuesEnabled --jq '.hasIssuesEnabled'`. If `false`, STOP and instruct the user to enable Issues in repository settings.
@@ -57,8 +57,8 @@ Before creating anything:
 If no matching Project exists:
 
 - Use AskUserQuestion to ask which visibility the Project should have:
-  - **Private (Recommended)** — only members with explicit access can see the project
-  - **Public** — visible to anyone
+  - **Private (Recommended):** only members with explicit access can see the project
+  - **Public:** visible to anyone
 - Create a new Project (v2):
   - `gh project create --owner <owner> --title "<owner>/<repo> Backlog"`
 - If the user chose **public**, set the visibility:
@@ -76,7 +76,7 @@ If no matching Project exists:
   - `Todo`
   - `In Progress`
   - `Done`
-- If the user has customized the Status field options, STOP and use AskUserQuestion with options: "Add missing options" / "Rename existing options" / "Cancel" — DO NOT silently overwrite
+- If the user has customized the Status field options, STOP and use AskUserQuestion with options: "Add missing options" / "Rename existing options" / "Cancel"; DO NOT silently overwrite
 
 ### 3. Label Provisioning (IDEMPOTENT)
 
@@ -84,44 +84,44 @@ Create the standard label catalog. Use `gh label create --force` so existing lab
 
 #### Type labels (one of these must be on every backlog item)
 
-- `type:feature` — `"New capability or user-visible behaviour not yet present"`
-- `type:bug` — `"Incorrect behaviour deviating from a documented or expected contract"`
-- `type:security` — `"Vulnerability, auth gap, data-exposure risk, or compliance hardening"`
-- `type:performance` — `"Latency, throughput, memory, or resource-efficiency improvement"`
-- `type:dx` — `"Contributor-facing improvement: CI, tooling, contributing docs"`
-- `type:tech-debt` — `"Internal restructuring; no user-visible behaviour change"`
-- `type:reliability` — `"Uptime, error recovery, observability, or graceful-degradation improvement"`
-- `type:compliance` — `"Regulatory, legal, or contractual obligation"`
-- `type:spike` — `"Time-boxed investigation to reduce uncertainty; deliverable is knowledge"`
-- `type:epic` — `"A large, high-level body of work that is too big to complete in a single iteration or is large enough that it can be split into multiple sub-issues"`
-- `type:external-blocker` — `"External constraint blocking a backlog item (Stub)"`
+- `type:feature`: `"New capability or user-visible behaviour not yet present"`
+- `type:bug`: `"Incorrect behaviour deviating from a documented or expected contract"`
+- `type:security`: `"Vulnerability, auth gap, data-exposure risk, or compliance hardening"`
+- `type:performance`: `"Latency, throughput, memory, or resource-efficiency improvement"`
+- `type:dx`: `"Contributor-facing improvement: CI, tooling, contributing docs"`
+- `type:tech-debt`: `"Internal restructuring; no user-visible behaviour change"`
+- `type:reliability`: `"Uptime, error recovery, observability, or graceful-degradation improvement"`
+- `type:compliance`: `"Regulatory, legal, or contractual obligation"`
+- `type:spike`: `"Time-boxed investigation to reduce uncertainty; deliverable is knowledge"`
+- `type:epic`: `"A large, high-level body of work that is too big to complete in a single iteration or is large enough that it can be split into multiple sub-issues"`
+- `type:external-blocker`: `"External constraint blocking a backlog item (Stub)"`
 
 #### Priority labels (one of these must be on every backlog item)
 
-- `priority:P0` — `"Critical: system broken, data loss, or no viable workaround"`
-- `priority:P1` — `"High: major user or business impact"`
-- `priority:P2` — `"Medium: planned work; not blocking anything critical"`
-- `priority:P3` — `"Low: nice-to-have; easily deferred without consequence"`
+- `priority:P0`: `"Critical: system broken, data loss, or no viable workaround"`
+- `priority:P1`: `"High: major user or business impact"`
+- `priority:P2`: `"Medium: planned work; not blocking anything critical"`
+- `priority:P3`: `"Low: nice-to-have; easily deferred without consequence"`
 
 #### Effort labels (one of these must be on every backlog item)
 
-- `effort:XS` — `"Trivial: config tweak, one-liner, or doc edit"`
-- `effort:S` — `"Small: focused change in one file or component"`
-- `effort:M` — `"Medium: multiple files or components; some design thought"`
-- `effort:L` — `"Large: cross-cutting; multiple subsystems or substantial design"`
-- `effort:XL` — `"Extra large: major undertaking; probably needs a split plan"`
+- `effort:XS`: `"Trivial: config tweak, one-liner, or doc edit"`
+- `effort:S`: `"Small: focused change in one file or component"`
+- `effort:M`: `"Medium: multiple files or components; some design thought"`
+- `effort:L`: `"Large: cross-cutting; multiple subsystems or substantial design"`
+- `effort:XL`: `"Extra large: major undertaking; probably needs a split plan"`
 
 Effort label descriptions MUST NOT include time estimates (e.g. "2 hours", "1 day"). Use only relative size terms (e.g. "Extra small", "Small", "Medium", "Large", "Extra large").
 
 #### Operational labels
 
-- `needs-clarification` — `"Item needs more information before it can be worked"`
+- `needs-clarification`: `"Item needs more information before it can be worked"`
 
 Apply distinct color groupings (e.g. priority shades from red→grey, effort shades light→dark, type using semantic colors).
 
-### 4. Issue Forms Template (CANONICAL BODY SHAPE — VIA PR)
+### 4. Issue Forms Template (CANONICAL BODY SHAPE, VIA PR)
 
-The Issue Forms template at `.github/ISSUE_TEMPLATE/backlog-item.yml` is the **single source of truth for the backlog-item issue body shape** — every skill MUST construct issue bodies whose section headings match this template exactly.
+The Issue Forms template at `.github/ISSUE_TEMPLATE/backlog-item.yml` is the **single source of truth for the backlog-item issue body shape**; every skill MUST construct issue bodies whose section headings match this template exactly.
 
 This file MUST be added to the repository through a Pull Request, not committed directly to the default branch. The PR is the gate for review and adoption of the canonical body shape.
 
@@ -132,7 +132,7 @@ If `.github/ISSUE_TEMPLATE/backlog-item.yml` already exists on the default branc
 - Read its current contents
 - Compare against the canonical version below
 - If they match, SKIP step 4b
-- If they differ, STOP and use AskUserQuestion with options: "Open PR to replace" / "Keep existing" — do NOT silently overwrite user customizations
+- If they differ, STOP and use AskUserQuestion with options: "Open PR to replace" / "Keep existing"; do NOT silently overwrite user customizations
 
 When step 4b is reached: read [issue-forms-template.md](./issue-forms-template.md) for the template PR creation and canonical content (steps 4b–4d).
 
@@ -142,8 +142,8 @@ Persist project metadata to `.claude/backlog-project.json` so other skills can r
 
 Resolve the metadata via:
 
-- `gh project field-list <project-number> --owner <owner> --format json` — for the Status field's node ID and the option IDs for `Todo` / `In Progress` / `Done`
-- `gh project view <project-number> --owner <owner> --format json` — for the project's node ID
+- `gh project field-list <project-number> --owner <owner> --format json`: for the Status field's node ID and the option IDs for `Todo` / `In Progress` / `Done`
+- `gh project view <project-number> --owner <owner> --format json`: for the project's node ID
 
 Create the `.claude/` directory if needed: `mkdir -p .claude`
 
@@ -168,7 +168,7 @@ Write the file:
 
 Schema notes:
 
-- This file is the single source of truth for project metadata — all other skills read it directly with no fallback
+- This file is the single source of truth for project metadata; all other skills read it directly with no fallback
 - Re-running `initialize` on a fully-provisioned repo MUST refresh this file
 
 ### 6. Output Summary
@@ -178,7 +178,7 @@ Print a structured summary so the user can verify provisioning:
 - Project URL (`https://github.com/users/<owner>/projects/<n>` or `https://github.com/orgs/<owner>/projects/<n>`)
 - Project number (used by other skills)
 - Repository (`<owner>/<repo>`)
-- Visibility (`private` or `public`) — from the user's choice in Step 2 on fresh runs; derived from the `public` boolean in the `gh project view` JSON response (already fetched in Step 5) on idempotent re-runs
+- Visibility (`private` or `public`): from the user's choice in Step 2 on fresh runs; derived from the `public` boolean in the `gh project view` JSON response (already fetched in Step 5) on idempotent re-runs
 - Labels created or updated (count, with full list)
 - Issue Forms template PR URL (or "already present, no PR needed")
 - Status field options confirmed
@@ -190,8 +190,8 @@ Print a structured summary so the user can verify provisioning:
 - NEVER delete pre-existing labels, projects, or templates the user may have customized
 - NEVER skip the `gh auth status` and `git remote get-url origin` preflight checks
 - Stop and ask before opening a PR that would replace a pre-existing `.github/ISSUE_TEMPLATE/backlog-item.yml`
-- NEVER commit `.github/ISSUE_TEMPLATE/backlog-item.yml` directly to the default branch — always go through a PR
-- All `gh` errors must be surfaced verbatim to the user — do not swallow them
+- NEVER commit `.github/ISSUE_TEMPLATE/backlog-item.yml` directly to the default branch; always go through a PR
+- All `gh` errors must be surfaced verbatim to the user; do not swallow them
 
 ## Output Expectations
 

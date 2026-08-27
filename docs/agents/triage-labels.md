@@ -1,6 +1,6 @@
 # Triage Labels
 
-This repo uses the `github-backlog-management-skill`'s own label classification system rather than the canonical five triage roles. Do not apply `needs-triage`, `ready-for-agent`, etc. — use the labels defined by the skill instead.
+This repo uses the `github-backlog-management-skill`'s own label classification system rather than the canonical five triage roles. Do not apply `needs-triage`, `ready-for-agent`, etc.; use the labels defined by the skill instead.
 
 ## Label catalog
 

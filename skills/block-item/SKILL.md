@@ -11,7 +11,7 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 ## Objective
 
-Register a `blocked_by` dependency between two GitHub issues: mark issue `#N` as blocked by issue `#M`. Works for any two GitHub issues — not limited to items in the linked Project or the active Milestone.
+Register a `blocked_by` dependency between two GitHub issues: mark issue `#N` as blocked by issue `#M`. Works for any two GitHub issues, not limited to items in the linked Project or the active Milestone.
 
 ## Workflow
 
@@ -25,8 +25,8 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
 
 Accept two issue references from the user argument or conversation:
 
-- `#N` — the issue that will be marked as blocked (the dependent)
-- `#M` — the issue that is blocking it (the blocker)
+- `#N`: the issue that will be marked as blocked (the dependent)
+- `#M`: the issue that is blocking it (the blocker)
 
 Both may be in the same repo or in different repos. If a cross-repo reference is provided, expect a full URL or `<owner>/<repo>#<number>` format. If either reference is missing or ambiguous, STOP and ask the user to supply both.
 
@@ -71,7 +71,7 @@ If the API returns `404`:
 
 If the API returns any other error, surface it verbatim and STOP.
 
-Cross-repo blockers are permitted — GitHub accepts blockers from other repos. `audit` will flag them as a smell for visibility, but they are not rejected here.
+Cross-repo blockers are permitted. GitHub accepts blockers from other repos. `audit` will flag them as a smell for visibility, but they are not rejected here.
 
 ### 5. Verification (MANDATORY)
 
@@ -86,12 +86,12 @@ Confirm `<M>` appears in the response.
 
 ## Rules & Constraints
 
-- NEVER create the dependency in reverse (`#N` blocking `#M`) unless the user explicitly requests it — run `/block-item #M #N` for the reverse direction
+- NEVER create the dependency in reverse (`#N` blocking `#M`) unless the user explicitly requests it; run `/block-item #M #N` for the reverse direction
 - NEVER create a self-referencing dependency (`#N` blocked by `#N`)
-- Do NOT attempt to infer which issue is the blocker vs. the blocked if the user's intent is ambiguous — ask
+- Do NOT attempt to infer which issue is the blocker vs. the blocked if the user's intent is ambiguous; ask
 - Cross-Project / cross-repo blockers are permitted and will be flagged (not rejected) by `audit`
-- A closed blocker is technically valid — surface a warning but allow it (stale deps are cleaned up by `audit`)
-- Surface all `gh` errors verbatim — never swallow
+- A closed blocker is technically valid; surface a warning but allow it (stale deps are cleaned up by `audit`)
+- Surface all `gh` errors verbatim; never swallow
 
 ## Output Expectations
 

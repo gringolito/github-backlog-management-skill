@@ -25,8 +25,8 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
 
 Accept from the user argument or conversation:
 
-- `#stub` — the external-blocker stub issue to resolve
-- `"resolution"` — a short description of how the external constraint was resolved (free text)
+- `#stub`: the external-blocker stub issue to resolve
+- `"resolution"`: a short description of how the external constraint was resolved (free text)
 
 If either is missing, STOP and ask the user to supply both.
 
@@ -60,7 +60,7 @@ If the API returns `404`:
 - Output: `Issue Dependencies API unavailable on this repo — cannot determine which items were unblocked.`
 - Proceed to step 4 (close the stub) but skip step 5.
 
-Capture the list of issues returned. Filter to those with `state == "open"` — these are the items potentially unblocked by closing this stub.
+Capture the list of issues returned. Filter to those with `state == "open"`; these are the items potentially unblocked by closing this stub.
 
 ### 4. Resolution Comment, Closure & Project Status (STRICT)
 
@@ -83,7 +83,7 @@ gh project item-edit \
   --single-select-option-id <done-option-id>
 ```
 
-Resolve `<item-id>` via `gh project item-list <project-number> --owner <owner> --format json --query "#<stub>"` if not already known. Use `project_id`, `project_number`, `status_field_id`, and `status_options.Done` from `.claude/backlog-project.json`. If the Project Status update fails (e.g. the stub was never added to the Project), surface the error as a warning but do not abort — the stub is already closed.
+Resolve `<item-id>` via `gh project item-list <project-number> --owner <owner> --format json --query "#<stub>"` if not already known. Use `project_id`, `project_number`, `status_field_id`, and `status_options.Done` from `.claude/backlog-project.json`. If the Project Status update fails (e.g. the stub was never added to the Project), surface the error as a warning but do not abort: the stub is already closed.
 
 ### 5. Newly Unblocked Detection (MANDATORY)
 
@@ -99,20 +99,20 @@ gh api "repos/<owner>/<repo>/issues/<N>/dependencies/blocked_by" \
 
 ## Rules & Constraints
 
-- NEVER close a stub that lacks the `type:external-blocker` label — use the guard in step 2 strictly
-- NEVER skip the resolution comment — closing without a comment makes the reason invisible in the issue timeline
-- Do NOT reopen a closed stub — if the external constraint resurfaces, create a new stub via `/add-external-blocker`
-- If the Dependencies API is unavailable, close the stub anyway — the label guard still protects against mis-closes; the unblocked-detection step is skipped gracefully
-- Surface all `gh` errors verbatim — never swallow
+- NEVER close a stub that lacks the `type:external-blocker` label: use the guard in step 2 strictly
+- NEVER skip the resolution comment: closing without a comment makes the reason invisible in the issue timeline
+- Do NOT reopen a closed stub: if the external constraint resurfaces, create a new stub via `/add-external-blocker`
+- If the Dependencies API is unavailable, close the stub anyway: the label guard still protects against mis-closes; the unblocked-detection step is skipped gracefully
+- Surface all `gh` errors verbatim; never swallow
 
 ## Output Expectations
 
 - Stub issue URL, number, and title
 - Confirmation: `#<stub> "<title>" closed with resolution: "<resolution>"`
-- **Newly unblocked** section — issues that now have zero open blockers:
+- **Newly unblocked** section: issues that now have zero open blockers:
   - List each as `#N — <title> — <url>`
   - If none: `No items became fully unblocked.`
-- **Still blocked** section — issues from step 3 that still have open blockers:
+- **Still blocked** section: issues from step 3 that still have open blockers:
   - List each as `#N — <title> — still blocked by: #A, #B, ...`
   - If none: omit section
 - Reminder for newly unblocked items: `Re-run /pick-item to pick the next actionable item.`

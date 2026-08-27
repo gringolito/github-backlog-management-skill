@@ -1,4 +1,4 @@
-# Spike 0001 — Evaluate replacing `gh` CLI with the official GitHub MCP server
+# Spike 0001: Evaluate replacing `gh` CLI with the official GitHub MCP server
 
 - **Issue:** [#43](https://github.com/gringolito/github-backlog-management-skill/issues/43)
 - **Labels:** `type:spike` · `priority:P3` · `effort:S`
@@ -15,10 +15,10 @@ verdicts: **migrate fully**, **migrate partially**, or **stay on `gh`**.
 Sub-questions (from the issue):
 
 1. Does the MCP server cover every distinct GitHub operation the plugin performs today?
-2. Specifically — the **Issue Dependencies API**, the **Sub-issues API**, and the
+2. Specifically, the **Issue Dependencies API**, the **Sub-issues API**, and the
    **Projects v2 GraphQL** operations?
 3. How does install UX compare (today's `brew install gh && gh auth login` vs. Docker/binary + PAT)?
-4. How does permission UX compare — can the MCP path reproduce the README's `yolo` and `safe` modes?
+4. How does permission UX compare? Can the MCP path reproduce the README's `yolo` and `safe` modes?
 5. Does the MCP server reuse the existing `gh` token, or require a separate PAT / GitHub App?
 6. What is the rough migration cost, and can it be staged?
 
@@ -41,7 +41,7 @@ Sub-questions (from the issue):
    Plus the distinct `gh api` REST/GraphQL endpoints (milestones, sub-issues, dependencies,
    `updateProjectV2`, `releases/generate-notes`, `user`).
 
-2. **Researched the GitHub MCP server** — its README, `docs/remote-server.md`,
+2. **Researched the GitHub MCP server**: its README, `docs/remote-server.md`,
    `docs/server-configuration.md`, the DeepWiki "Projects Toolset" page, the GitHub Changelog
    entries for Projects support (2025-10-14, 2026-01-28) and tool-specific configuration
    (2025-12-10), and the open feature-request issues that mark current gaps.
@@ -50,30 +50,30 @@ Sub-questions (from the issue):
 
 ### Sources
 
-- GitHub MCP server — repo & README: <https://github.com/github/github-mcp-server>
+- GitHub MCP server: repo & README: <https://github.com/github/github-mcp-server>
 - Remote server & toolset URLs: <https://github.com/github/github-mcp-server/blob/main/docs/remote-server.md>
 - Server configuration (`--toolsets`, `GITHUB_TOOLSETS`, `--read-only`): <https://github.com/github/github-mcp-server/blob/main/docs/server-configuration.md>
 - Projects toolset reference: <https://deepwiki.com/github/github-mcp-server/3.6-projects-toolset>
-- Changelog — Projects support: <https://github.blog/changelog/2025-10-14-github-mcp-server-now-supports-github-projects-and-more/>
-- Changelog — new Projects tools / OAuth scope filtering: <https://github.blog/changelog/2026-01-28-github-mcp-server-new-projects-tools-oauth-scope-filtering-and-new-features/>
-- Changelog — tool-specific configuration: <https://github.blog/changelog/2025-12-10-the-github-mcp-server-adds-support-for-tool-specific-configuration-and-more/>
-- Feature request — issue relationships (parent / blocked-by): <https://github.com/github/github-mcp-server/issues/950>
-- Feature request — Create Milestone: <https://github.com/github/github-mcp-server/issues/258>
-- Feature request — ProjectV2 status read/write: <https://github.com/github/github-mcp-server/issues/1963>
-- Sub-issue support — issues [#154](https://github.com/github/github-mcp-server/issues/154), [#196](https://github.com/github/github-mcp-server/issues/196)
+- Changelog: Projects support: <https://github.blog/changelog/2025-10-14-github-mcp-server-now-supports-github-projects-and-more/>
+- Changelog: new Projects tools / OAuth scope filtering: <https://github.blog/changelog/2026-01-28-github-mcp-server-new-projects-tools-oauth-scope-filtering-and-new-features/>
+- Changelog: tool-specific configuration: <https://github.blog/changelog/2025-12-10-the-github-mcp-server-adds-support-for-tool-specific-configuration-and-more/>
+- Feature request: issue relationships (parent / blocked-by): <https://github.com/github/github-mcp-server/issues/950>
+- Feature request: Create Milestone: <https://github.com/github/github-mcp-server/issues/258>
+- Feature request: ProjectV2 status read/write: <https://github.com/github/github-mcp-server/issues/1963>
+- Sub-issue support: issues [#154](https://github.com/github/github-mcp-server/issues/154), [#196](https://github.com/github/github-mcp-server/issues/196)
 
 ## Findings
 
 ### The decisive architectural fact: no generic API passthrough
 
-`gh api` is an **escape hatch** — it can call *any* REST endpoint or *any* GraphQL query/mutation.
+`gh api` is an **escape hatch**: it can call *any* REST endpoint or *any* GraphQL query/mutation.
 The plugin leans on this heavily: milestones, sub-issues, issue dependencies, `updateProjectV2`,
 and `releases/generate-notes` are all reached through `gh api …`, not through a first-class `gh`
 subcommand.
 
 The GitHub MCP server has **no equivalent generic passthrough tool**. It exposes a fixed catalogue
 of typed tools grouped into toolsets. **If GitHub has not written a tool for an endpoint, that
-endpoint is simply unreachable through the MCP server** — there is no `mcp api <path>` fallback.
+endpoint is simply unreachable through the MCP server**; there is no `mcp api <path>` fallback.
 This single fact dominates the whole evaluation: coverage is bounded by what GitHub has chosen to
 implement, with no workaround.
 
@@ -103,21 +103,21 @@ Legend:
 | `gh project item-list` | execute-item, add-item, status, health, audit | `projects_get` / list project items | **COVERED** (read) |
 | `gh project item-add` | add-item, migrate | `projects_write` → `add_project_item` | **COVERED** |
 | `gh project field-list` | execute-item, add-item | `list_project_fields` / `projects_get` | **COVERED** |
-| `gh project item-edit` (set **Status**) | execute-item, add-item, migrate | `projects_write` → `update_project_item` | **PARTIAL** — item-field write exists, but explicit ProjectV2 **status** read/write is still an open request ([#1963](https://github.com/github/github-mcp-server/issues/1963)); needs hands-on confirmation that the single-select Status option can be set |
-| `gh project create` | initialize | — | **MISSING** — no create-project tool |
-| `gh project link` (Project → repo) | initialize | — | **MISSING** |
-| `gh api graphql updateProjectV2` (shortDescription) | initialize | — | **MISSING** — `projects_write` operates on **items**, not project metadata |
-| `gh api graphql` **rank / item position** reorder | add-item (rank insertion) | — | **MISSING** — no position/reorder tool; the entire rank-ordering model (CLAUDE.md invariant 6) has no write path |
-| `gh api repos/.../milestones` **POST** (create) | plan-release | — | **MISSING** — open request ([#258](https://github.com/github/github-mcp-server/issues/258)) |
-| `gh api repos/.../milestones/<n>` **PATCH** state=closed | close-release | — | **MISSING** |
-| `gh api repos/.../milestones?state=…` (list/read `due_on`) | execute-item, add-item, status | — | **MISSING** — milestone metadata (esp. `due_on` for active-milestone resolution) has no read tool; `list_issues` filters by milestone but does not return milestone `due_on` |
+| `gh project item-edit` (set **Status**) | execute-item, add-item, migrate | `projects_write` → `update_project_item` | **PARTIAL**: item-field write exists, but explicit ProjectV2 **status** read/write is still an open request ([#1963](https://github.com/github/github-mcp-server/issues/1963)); needs hands-on confirmation that the single-select Status option can be set |
+| `gh project create` | initialize | n/a | **MISSING**: no create-project tool |
+| `gh project link` (Project → repo) | initialize | n/a | **MISSING** |
+| `gh api graphql updateProjectV2` (shortDescription) | initialize | n/a | **MISSING**: `projects_write` operates on **items**, not project metadata |
+| `gh api graphql` **rank / item position** reorder | add-item (rank insertion) | n/a | **MISSING**: no position/reorder tool; the entire rank-ordering model (CLAUDE.md invariant 6) has no write path |
+| `gh api repos/.../milestones` **POST** (create) | plan-release | n/a | **MISSING**: open request ([#258](https://github.com/github/github-mcp-server/issues/258)) |
+| `gh api repos/.../milestones/<n>` **PATCH** state=closed | close-release | n/a | **MISSING** |
+| `gh api repos/.../milestones?state=…` (list/read `due_on`) | execute-item, add-item, status | n/a | **MISSING**: milestone metadata (esp. `due_on` for active-milestone resolution) has no read tool; `list_issues` filters by milestone but does not return milestone `due_on` |
 | `gh api .../sub_issues` POST / DELETE | add-item, migrate, refine-item | `add_sub_issue` / `remove_sub_issue` / `reprioritize_sub_issue` (issues) | **COVERED** |
-| `gh api .../issues/<n>/parent` (read parent) | execute-item, add-item | — | **PARTIAL / MISSING** — `get_issue` does not return parent; tracked in [#950](https://github.com/github/github-mcp-server/issues/950) |
-| `gh api .../dependencies/blocked_by` (read) | **execute-item block-skipping**, block-item, audit, resolve-external-blocker | — | **MISSING** — [#950](https://github.com/github/github-mcp-server/issues/950) open |
-| `gh api .../dependencies/blocking` POST / DELETE | block-item, add-external-blocker, resolve-external-blocker | — | **MISSING** |
-| `gh api repos/.../releases/generate-notes` POST | close-release | — | **MISSING** (no release-notes generation tool verified) |
+| `gh api .../issues/<n>/parent` (read parent) | execute-item, add-item | n/a | **PARTIAL / MISSING**: `get_issue` does not return parent; tracked in [#950](https://github.com/github/github-mcp-server/issues/950) |
+| `gh api .../dependencies/blocked_by` (read) | **execute-item block-skipping**, block-item, audit, resolve-external-blocker | n/a | **MISSING**: [#950](https://github.com/github/github-mcp-server/issues/950) open |
+| `gh api .../dependencies/blocking` POST / DELETE | block-item, add-external-blocker, resolve-external-blocker | n/a | **MISSING** |
+| `gh api repos/.../releases/generate-notes` POST | close-release | n/a | **MISSING** (no release-notes generation tool verified) |
 | `gh api user` | preflight | `get_me` (context/users) | **COVERED** |
-| `gh auth status` | preflight | n/a — auth is via token/OAuth, not a tool | **N/A** |
+| `gh auth status` | preflight | n/a (auth is via token/OAuth, not a tool) | **N/A** |
 
 ### The three explicitly-required investigations
 
@@ -130,7 +130,7 @@ with **CLAUDE.md invariant 7** ("Native deps as source of truth") and is load-be
 
 **Sub-issues API → COVERED.** `add_sub_issue`, `remove_sub_issue`, and `reprioritize_sub_issue`
 exist (issues [#154](https://github.com/github/github-mcp-server/issues/154),
-[#196](https://github.com/github/github-mcp-server/issues/196) — now landed). The one soft spot is
+[#196](https://github.com/github/github-mcp-server/issues/196), now landed). The one soft spot is
 **reading** an issue's parent: `get_issue` does not surface it (part of
 [#950](https://github.com/github/github-mcp-server/issues/950)). `execute-backlog-item` Step 7.4 and
 the migrate re-parenting flow both read `/parent`, so this is a PARTIAL.
@@ -140,7 +140,7 @@ the migrate re-parenting flow both read `/parent`, so this is a PARTIAL.
 `list_project_fields`). Reads and item-add are well covered. But three things the plugin needs are
 **not** exposed: (a) **creating** a Project and **linking** it to a repo (`initialize`),
 (b) editing the Project's **shortDescription** (`updateProjectV2`), and (c) **reordering item rank /
-position** — the manual Todo-column ordering that CLAUDE.md invariant 6 makes the heart of execution
+position**, the manual Todo-column ordering that CLAUDE.md invariant 6 makes the heart of execution
 order. Status-field *writes* are plausibly covered by `update_project_item` but remain unconfirmed
 ([#1963](https://github.com/github/github-mcp-server/issues/1963)).
 
@@ -148,10 +148,10 @@ order. Status-field *writes* are plausibly covered by `update_project_item` but 
 
 **Today (`gh`):**
 1. `brew install gh` (or apt/winget/preinstalled in most CI).
-2. `gh auth login` — interactive browser/device flow, stores a token in the OS keychain.
+2. `gh auth login`: interactive browser/device flow, stores a token in the OS keychain.
 3. Done. One tool, ubiquitous in dev environments, no per-project config.
 
-**With the MCP server — two paths:**
+**With the MCP server, two paths:**
 
 *Remote hosted server* (lowest-friction MCP path):
 1. Add an `.mcp.json` entry pointing at `https://api.githubcopilot.com/mcp/` (or a per-toolset URL
@@ -176,10 +176,10 @@ This is the one place MCP is genuinely **better** than the status quo.
 - **`yolo`-equivalent:** today = `Bash(gh *)` + `Bash(git *)` blanket allow. MCP equivalent = grant the
   server's tools (or the `…/x/all` endpoint). Comparable, and arguably cleaner because it is scoped to
   GitHub tools rather than all of `gh`/shell.
-- **`safe`-equivalent:** today the README admits read-only mode is *leaky* — `gh api "repos/..."`
+- **`safe`-equivalent:** today the README admits read-only mode is *leaky*; `gh api "repos/..."`
   covers both reads and writes under one prefix, so the allowlist "cannot be cleanly separated by
   pattern" and those calls still prompt. The MCP server solves this cleanly:
-  - Local: `--read-only` flag / `GITHUB_READ_ONLY=1` — "a strict security filter that takes
+  - Local: `--read-only` flag / `GITHUB_READ_ONLY=1`: "a strict security filter that takes
     precedence over any other configuration," disabling all write tools.
   - Remote: append `/readonly` to any toolset URL.
   - Plus `--toolsets` / `GITHUB_TOOLSETS` and tool-specific config (Changelog 2025-12-10) for
@@ -187,10 +187,10 @@ This is the one place MCP is genuinely **better** than the status quo.
 
   This is a strictly better read-only story than the current leaky `gh api` prefix problem.
 
-So permission UX is the **one** column where MCP wins — but it wins on a problem (leaky `safe` mode)
+So permission UX is the **one** column where MCP wins, but it wins on a problem (leaky `safe` mode)
 that is minor relative to the coverage gaps.
 
-### Auth interplay
+### Auth token wiring
 
 The local server requires its **own** token: `GITHUB_PERSONAL_ACCESS_TOKEN`. It does **not**
 automatically discover or reuse the `gh` CLI's keychain token. You *can* bridge them manually
@@ -201,20 +201,20 @@ today's single `gh auth login`.
 
 ### Migration cost (if we did it)
 
-- **Read paths** (issue/project/label reads): ~5 of the heaviest call sites — mechanically swappable.
+- **Read paths** (issue/project/label reads): ~5 of the heaviest call sites, mechanically swappable.
 - **Write paths that are covered** (issue create/update, sub-issues, project item-add, PR create):
-  another large chunk — swappable.
+  another large chunk, swappable.
 - **Write/read paths that are MISSING** and would have to **stay on `gh`** regardless:
-  - Issue dependencies (read **and** write) — `execute-item`, `block-item`, both external-blocker skills, `audit`.
-  - Milestones create/close/read-`due_on` — `plan-release`, `close-release`, active-milestone resolution in `execute-item`/`add-item`/`release-status`.
-  - Project create + link + description — `initialize`.
-  - Project rank/position reorder — `add-item`.
-  - Release notes generation — `close-release`.
+  - Issue dependencies (read **and** write): `execute-item`, `block-item`, both external-blocker skills, `audit`.
+  - Milestones create/close/read-`due_on`: `plan-release`, `close-release`, active-milestone resolution in `execute-item`/`add-item`/`release-status`.
+  - Project create + link + description: `initialize`.
+  - Project rank/position reorder: `add-item`.
+  - Release notes generation: `close-release`.
 
 Because dependency **reads** are required for the most-used command (`execute-backlog-item`'s
 block-skipping), even a "reads-only" partial migration cannot eliminate the `gh` + Bash dependency.
 A partial migration would therefore yield a **hybrid** that still ships `gh`, still needs the Bash
-allowlist, **and** adds Docker/PAT/`.mcp.json` setup — strictly more moving parts, for the benefit of
+allowlist, **and** adds Docker/PAT/`.mcp.json` setup, strictly more moving parts, for the benefit of
 typed tool calls on a subset of operations. That is precisely the "messier than what we have now"
 outcome the issue warned about.
 
@@ -224,8 +224,8 @@ outcome the issue warned about.
 
 Rationale:
 
-1. **Coverage is disqualifying, not marginal.** The Issue Dependencies API — the spine of this
-   plugin's execution model (CLAUDE.md invariant 7) — has no MCP tool at all. Milestone create/close,
+1. **Coverage is disqualifying, not marginal.** The Issue Dependencies API, the spine of this
+   plugin's execution model (CLAUDE.md invariant 7), has no MCP tool at all. Milestone create/close,
    project create/link/description, and project rank reordering are also missing. There is no generic
    `api` passthrough to bridge the gaps, so these are hard blockers, not workarounds-away.
 2. **A partial migration makes things worse.** Since dependency reads gate the most-used command, the
@@ -236,9 +236,9 @@ Rationale:
 4. **Install UX regresses** from one ubiquitous binary to Docker-or-remote + bespoke PAT.
 
 **Revisit when** the following land (watch these issues):
-- Issue Dependencies read+write tools — [#950](https://github.com/github/github-mcp-server/issues/950).
-- Milestone create/close tools — [#258](https://github.com/github/github-mcp-server/issues/258).
-- ProjectV2 status + rank/position write — [#1963](https://github.com/github/github-mcp-server/issues/1963) and a position/reorder tool.
+- Issue Dependencies read+write tools: [#950](https://github.com/github/github-mcp-server/issues/950).
+- Milestone create/close tools: [#258](https://github.com/github/github-mcp-server/issues/258).
+- ProjectV2 status + rank/position write: [#1963](https://github.com/github/github-mcp-server/issues/1963) and a position/reorder tool.
 - Project create / link / metadata tools.
 
 When (if) those exist, re-run this spike: the calculus flips toward at least a partial migration for

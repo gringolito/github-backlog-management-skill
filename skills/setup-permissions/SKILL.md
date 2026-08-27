@@ -9,18 +9,18 @@ You are an AI agent acting as an installation assistant responsible for configur
 
 ## Objective
 
-Write the correct `permissions.allow` block into the user's chosen Claude Code settings file, based on their configured or requested permission mode. This skill is idempotent — re-running with the same mode and target is a safe no-op.
+Write the correct `permissions.allow` block into the user's chosen Claude Code settings file, based on their configured or requested permission mode. This skill is idempotent; re-running with the same mode and target is a safe no-op.
 
 ## Allowlist reference
 
 These are the canonical allowlist blocks for each mode:
 
-**yolo** — no prompts during any multi-step skill:
+**yolo**: no prompts during any multi-step skill:
 ```json
 ["Bash(gh *)", "Bash(git *)", "Bash(backlog-preflight)", "Bash(resolve-milestone*)"]
 ```
 
-**safe** — read-only `gh` calls run silently; write commands still prompt:
+**safe**: read-only `gh` calls run silently; write commands still prompt:
 ```json
 [
   "Bash(gh auth status *)",
@@ -42,7 +42,7 @@ These are the canonical allowlist blocks for each mode:
 
 ### 0. Preflight (MANDATORY)
 
-- `gh auth status` — if unauthenticated, STOP and output: `gh auth status failed. Run gh auth login and retry.`
+- `gh auth status`: if unauthenticated, STOP and output: `gh auth status failed. Run gh auth login and retry.`
 - Parse `<owner>/<repo>` from `gh repo view --json owner,name`
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
@@ -51,9 +51,9 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
 
 Determine the effective permission mode using this precedence:
 
-1. **Explicit argument** — if the user passed a mode as an argument to this skill (e.g. `/setup-permissions safe`), use it. This overrides the configured value for this invocation only; it does not change the stored `userConfig`.
-2. **`${CLAUDE_PLUGIN_OPTION_PERMISSION_MODE}`** — the value set at plugin enable time via `userConfig`.
-3. **Fallback** — treat as `off` if neither is set.
+1. **Explicit argument**: if the user passed a mode as an argument to this skill (e.g. `/setup-permissions safe`), use it. This overrides the configured value for this invocation only; it does not change the stored `userConfig`.
+2. **`${CLAUDE_PLUGIN_OPTION_PERMISSION_MODE}`**: the value set at plugin enable time via `userConfig`.
+3. **Fallback**: treat as `off` if neither is set.
 
 Valid values: `yolo`, `safe`, `off`. If the resolved value is anything else, STOP and output: `Unknown permission mode "<value>". Valid values: yolo, safe, off.`
 
@@ -61,16 +61,16 @@ Valid values: `yolo`, `safe`, `off`. If the resolved value is anything else, STO
 
 If the resolved mode is `off`:
 
-- Print exactly: `Permission mode is "off" — no settings written. See README "Authentication & Permissions" for manual configuration.`
+- Print exactly: `Permission mode is "off"; no settings written. See README "Authentication & Permissions" for manual configuration.`
 - STOP. Do not read, write, or touch any settings file.
 
 ### 3. Target file selection (MANDATORY)
 
 Ask the user which file to write. Present exactly three options:
 
-1. `.claude/settings.local.json` — per-project, gitignored (recommended for personal setups)
-2. `.claude/settings.json` — per-project, version-controlled (for shared team config)
-3. `~/.claude/settings.json` — user-global (applies to every Claude Code session)
+1. `.claude/settings.local.json`: per-project, gitignored (recommended for personal setups)
+2. `.claude/settings.json`: per-project, version-controlled (for shared team config)
+3. `~/.claude/settings.json`: user-global (applies to every Claude Code session)
 
 Wait for the user to select one before proceeding.
 
@@ -92,9 +92,9 @@ Re-read the target file and confirm all expected rules are present. Output the r
 
 - NEVER write to a settings file without explicit user confirmation of the target (step 3)
 - NEVER remove or reorder existing entries in `permissions.allow`
-- NEVER write settings when mode is `off` — that path is strictly read-only and exit-only
-- An explicit argument overrides `userConfig` for this invocation ONLY — do NOT persist or modify the stored `userConfig` value
-- Surface all `gh` errors and file I/O errors verbatim — never swallow
+- NEVER write settings when mode is `off`: that path is strictly read-only and exit-only
+- An explicit argument overrides `userConfig` for this invocation ONLY: do NOT persist or modify the stored `userConfig` value
+- Surface all `gh` errors and file I/O errors verbatim; never swallow
 - If the target file path contains `~`, expand it to the user's home directory using `$HOME`
 
 ## Output Expectations

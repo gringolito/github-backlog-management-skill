@@ -8,16 +8,16 @@ argument-hint: The target release version
 
 You are an AI agent acting as a Senior Project Manager responsible for planning the next release.
 
-Your goal is to inspect the current set of GitHub Releases and Milestones, select the scope of the next release, infer the appropriate version from that scope, and create a GitHub Milestone that represents the release — with backlog items assigned to it. When invoked with an existing open milestone as argument, you instead enter re-planning mode to adjust that milestone's scope.
+Your goal is to inspect the current set of GitHub Releases and Milestones, select the scope of the next release, infer the appropriate version from that scope, and create a GitHub Milestone that represents the release, with backlog items assigned to it. When invoked with an existing open milestone as argument, you instead enter re-planning mode to adjust that milestone's scope.
 
-A GitHub Milestone is the unit of version planning for this skill — backlog items (Issues) are assigned to a milestone to declare which release they belong to.
+A GitHub Milestone is the unit of version planning for this skill; backlog items (Issues) are assigned to a milestone to declare which release they belong to.
 
 ## Objective
 
 Either:
 
 - **Creation mode** (no argument, or argument that doesn't match an open milestone): Create a GitHub Milestone for the next release, with a release mode chosen by the user (Maintenance / Regular / Automated), a scope of backlog items, a coherent version name, a due date, a description, and all scoped items assigned.
-- **Re-planning mode** (argument matches an existing open milestone): Interactively adjust the scope of that milestone — add unassigned backlog items and remove currently assigned items with explicit disposition choices.
+- **Re-planning mode** (argument matches an existing open milestone): Interactively adjust the scope of that milestone: add unassigned backlog items and remove currently assigned items with explicit disposition choices.
 
 ## Workflow
 
@@ -31,10 +31,10 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
 
 Check whether the skill was invoked with an argument (a milestone identifier: title substring or version string).
 
-- **No argument** — proceed to Step 2 (creation mode).
-- **Argument provided** — run `resolve-milestone "<argument>"` via the Bash tool:
-  - **Exit 0 (match found)** — re-planning mode: read [re-planning.md](./re-planning.md).
-  - **Exit non-zero (no match)** — ask: "No open milestone found matching `<argument>`. Would you like to plan a new release instead?"
+- **No argument**: proceed to Step 2 (creation mode).
+- **Argument provided**: run `resolve-milestone "<argument>"` via the Bash tool:
+  - **Exit 0 (match found)**: re-planning mode: read [re-planning.md](./re-planning.md).
+  - **Exit non-zero (no match)**: ask: "No open milestone found matching `<argument>`. Would you like to plan a new release instead?"
     - If yes: proceed to Step 2 (creation mode), carrying the argument as a suggested version name for Step 6.
     - If no: STOP.
 
@@ -52,7 +52,7 @@ Present the user with:
 - Released versions (from `gh release list`)
 - Open milestones with their `due_on`, open/closed issue counts
 - Closed milestones (most recent 5) for naming-pattern reference
-- Detected naming scheme (semver / calendar / custom / unknown) — inferred from milestone titles and release tags
+- Detected naming scheme (semver / calendar / custom / unknown), inferred from milestone titles and release tags
 
 If multiple schemes are mixed (e.g. some `v1.x`, some `2026-Qx`):
 
@@ -63,13 +63,13 @@ If multiple schemes are mixed (e.g. some `v1.x`, some `2026-Qx`):
 
 Use `AskUserQuestion` to ask the user which release mode to use:
 
-- **Maintenance release**: scope is defined by the user (explicit list of issues). Targets any `major.minor` release — including the latest — when only bug fixes, security patches, or small corrections are intended. Version will be a patch on that release.
+- **Maintenance release**: scope is defined by the user (explicit list of issues). Targets any `major.minor` release, including the latest, when only bug fixes, security patches, or small corrections are intended. Version will be a patch on that release.
 - **Regular release**: fetch all unassigned backlog items and let the user select the scope interactively.
 - **Automated release planning**: fetch all unassigned backlog items, analyze them as an experienced Project Manager (priority, theme, dependencies), and propose a coherent release scope with rationale. User confirms or adjusts.
 
 ### 4. Scope Definition
 
-#### Mode A — Maintenance
+#### Mode A: Maintenance
 
 - Ask the user for: the target `major.minor` release (e.g. `1.5`) and optionally a list of issues to include (by number or title fragment).
 - If the user provides no issue list, fetch unassigned candidates with `type:bug` or `type:security` labels and present them for selection:
@@ -88,7 +88,7 @@ Use `AskUserQuestion` to ask the user which release mode to use:
 
   Require explicit confirmation before including the item in the scope.
 
-#### Mode B — Regular
+#### Mode B: Regular
 
 - Fetch unassigned candidates via `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo no:milestone -label:type:external-blocker" --format json --limit 200`
 - Present the candidate table in Project rank order:
@@ -100,18 +100,18 @@ Use `AskUserQuestion` to ask the user which release mode to use:
 - Ask the user to select items to include (accept all, or provide a list of issue numbers to include/exclude).
 - Display the confirmed scope and ask for final review before proceeding.
 
-#### Mode C — Automated
+#### Mode C: Automated
 
 - Fetch the same unassigned candidate set as Mode B (same `type:external-blocker` exclusion applies).
 - For each candidate, check blockers:
-  - `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"` — collect open blockers. If the API returns `404`, treat all items as unblocked and note the unavailability.
+  - `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`: collect open blockers. If the API returns `404`, treat all items as unblocked and note the unavailability.
   - Classify each blocked item:
-    - **Resolvable within scope**: all open blockers are themselves in the candidate pool — the item CAN be included, but its blocker(s) MUST also be included and ranked above it.
-    - **Externally blocked**: at least one open blocker is outside the candidate pool (closed issue, different repo, or untracked) — exclude from the suggestion and note as "externally blocked". If the blocking issue carries `type:external-blocker`, show the stub's title as the blocking reason (e.g. `blocked by external constraint: Vendor API rate limit freeze`).
+    - **Resolvable within scope**: all open blockers are themselves in the candidate pool; the item CAN be included, but its blocker(s) MUST also be included and ranked above it.
+    - **Externally blocked**: at least one open blocker is outside the candidate pool (closed issue, different repo, or untracked): exclude from the suggestion and note as "externally blocked". If the blocking issue carries `type:external-blocker`, show the stub's title as the blocking reason (e.g. `blocked by external constraint: Vendor API rate limit freeze`).
 - Analyze and group candidates by theme and cohesion:
   - Prefer P0/P1 items
   - Group by item type (e.g., a bug-fix release: `type:bug` + `type:security`; a feature release: `type:feature`)
-  - Respect effort — aim for a balanced, deliverable scope
+  - Respect effort: aim for a balanced, deliverable scope
   - When including a resolvable-within-scope item, pull its blocker(s) into the suggestion automatically and note the dependency chain
 - Present the suggested scope with rationale (why each item was included, overall release theme, dependency chains pulled in, items excluded due to external blockers).
 - Let the user confirm, remove items, or add items from the remaining pool (adding an externally-blocked item requires explicit user confirmation).
@@ -129,11 +129,11 @@ Scan the confirmed scope's item types and body signals:
 - Else (scope contains only `type:bug`, `type:security`, `type:reliability`, `type:performance`, `type:dx`, `type:tech-debt`, `type:compliance`, or `type:spike`) → **patch** bump.
 - For Mode A (maintenance): always a **patch** on the target `major.minor` release regardless of item types. Proposed patch must be strictly greater than the latest released patch (if no prior patch on that release exists, propose `patch = 1`).
 
-Present the inferred bump type with rationale (e.g. "Minor bump — scope contains 2 `type:feature` items: #12, #17") and ask for confirmation before computing the final version string.
+Present the inferred bump type with rationale (e.g. "Minor bump: scope contains 2 `type:feature` items: #12, #17") and ask for confirmation before computing the final version string.
 
 #### For calendar / custom schemes
 
-Follow the existing naming pattern (next period, continuation of observed naming) — scope content does not drive version naming for non-semver schemes.
+Follow the existing naming pattern (next period, continuation of observed naming); scope content does not drive version naming for non-semver schemes.
 
 ### 6. Version Proposal & Confirmation
 
@@ -153,9 +153,9 @@ Wait for explicit user confirmation of the version name before proceeding.
 
 Collect from the user (with sensible defaults):
 
-- **Title** — confirmed in step 6
-- **Due date** (`due_on`) — Used by `execute-item` to determine the Active Release (earliest `due_on` wins). Format: `YYYY-MM-DDTHH:MM:SSZ`.
-- **Description** — if the user does not provide one, generate a suggested description from the confirmed scope:
+- **Title**: confirmed in step 6
+- **Due date** (`due_on`): used by `execute-item` to determine the Active Release (earliest `due_on` wins). Format: `YYYY-MM-DDTHH:MM:SSZ`.
+- **Description**: if the user does not provide one, generate a suggested description from the confirmed scope:
   - Summarize the release theme (e.g. "Bug-fix and security hardening release", "Feature release: …", "Maintenance patch for v1.5.x")
   - List the top goals derived from the scoped items' `### Why` sections
   - Note any notable dependency chains or constraints surfaced during scope definition
@@ -185,7 +185,7 @@ After all issues are assigned, ask:
   - Title: `[Forward-port] <original title>`
   - Body: `Forward-port of #<n> — verify this change is needed in mainstream / adapt as appropriate.`
   - Add the clone to the Project with Status=`Todo` and no milestone assigned.
-- **If no**: skip — the scoped issues remain assigned to the maintenance milestone only.
+- **If no**: skip; the scoped issues remain assigned to the maintenance milestone only.
 
 ### 10. Output Summary
 
@@ -193,7 +193,7 @@ Print:
 
 - Milestone title, number, `html_url`, `due_on`
 - Release mode used (Maintenance / Regular / Automated)
-- Scoped items: `#number — title — effort` with milestone assignment confirmed
+- Scoped items: `#number, title, effort` with milestone assignment confirmed
 - **Milestone size estimate**: tally effort labels using Fibonacci weights (XS=1 / S=2 / M=3 / L=5 / XL=8). Report total points and qualitative band:
   - ≤8 pts → Small
   - 9–20 pts → Medium
