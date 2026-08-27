@@ -10,11 +10,11 @@ Issues and PRDs for this repo live as GitHub Issues, managed via the `github-bac
 - **Apply / remove labels**: `gh issue edit <number> --add-label "..."` / `--remove-label "..."`
 - **Close**: `gh issue close <number> --comment "..."`
 
-Infer the repo from `git remote -v` — `gh` does this automatically when run inside a clone.
+Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
 
 ## When a skill says "publish to the issue tracker"
 
-Call the `/add-backlog-item` skill — do not call `gh issue create` directly.
+Call the `/add-backlog-item` skill; do not call `gh issue create` directly.
 
 ## When a skill says "fetch the relevant ticket"
 

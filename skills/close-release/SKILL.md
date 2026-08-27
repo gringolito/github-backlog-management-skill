@@ -11,7 +11,7 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 ## Objective
 
-Close a GitHub Milestone cleanly: resolve every open issue interactively, satisfy all project-specific pre-closure requirements (version bumps, release instructions from project docs), compose and create a GitHub Release draft, and close the Milestone — in that order.
+Close a GitHub Milestone cleanly: resolve every open issue interactively, satisfy all project-specific pre-closure requirements (version bumps, release instructions from project docs), compose and create a GitHub Release draft, and close the Milestone, in that order.
 
 ## Workflow
 
@@ -27,7 +27,7 @@ The skill accepts an optional milestone argument (title substring or version str
 
 Run `resolve-milestone "<argument>"` if an argument was provided, or `resolve-milestone` (no argument) for the Active Release. If it exits non-zero, STOP and surface its output verbatim.
 
-Display the resolved milestone title, number, `due_on`, and open/closed issue counts. Use **AskUserQuestion** to ask for explicit confirmation before proceeding — **closing a milestone is irreversible**.
+Display the resolved milestone title, number, `due_on`, and open/closed issue counts. Use **AskUserQuestion** to ask for explicit confirmation before proceeding; **closing a milestone is irreversible**.
 
 ### 2. Open Issue Resolution (STRICT)
 
@@ -39,14 +39,14 @@ If there are no open issues, skip to Step 3.
 
 For each open issue, use **AskUserQuestion** to present it (number, title, labels, URL) and ask the user to choose exactly one of three options:
 
-**A — Carry forward**: reassign the issue to the next open milestone.
+**A: Carry forward**: reassign the issue to the next open milestone.
   - Run `resolve-milestone --exclude "<current-milestone-title>"` to find the next Active Release. If it exits non-zero (no other open milestones), STOP and output: `No next milestone exists to carry #<n> forward. Create one with /plan-release first.`
   - Execute: `gh issue edit <n> --milestone "<next-milestone-title>"`
 
-**B — Close as won't fix**: close the issue and record the disposition.
+**B: Close as won't fix**: close the issue and record the disposition.
   - Execute: `gh issue close <n> --comment "Closing as won't fix — not included in <milestone-title>."`
 
-**C — Return to backlog**: remove the milestone assignment and leave the issue open in the Project Todo column.
+**C: Return to backlog**: remove the milestone assignment and leave the issue open in the Project Todo column.
   - Execute: `gh issue edit <n> --milestone ""`
   - Verify the issue remains in the linked Project with Status = `Todo`. If it is absent from the Project, add it:
     `gh project item-add <project-number> --owner <owner> --url <issue-url>`
@@ -69,7 +69,7 @@ Call GitHub's native release notes API to produce a base draft from merged PRs:
 
 `gh api "repos/<owner>/<repo>/releases/generate-notes" -X POST -f tag_name=<milestone-title> -f target_commitish=<default-branch>`
 
-If the call fails (e.g. no PRs merged), use an empty base draft and note the failure — do not abort.
+If the call fails (e.g. no PRs merged), use an empty base draft and note the failure; do not abort.
 
 #### 4.2 Closed-issue enrichment
 
@@ -90,7 +90,7 @@ Compose an enrichment section that supplements the auto-generated PR list with i
 
 Use **AskUserQuestion** to ask:
 
-> Would you like to add a custom preamble or extra section to the release notes? (e.g. highlights, upgrade notes, known issues — leave blank to skip)
+> Would you like to add a custom preamble or extra section to the release notes? (e.g. highlights, upgrade notes, known issues; leave blank to skip)
 
 Accept freeform Markdown input, or empty input to skip.
 
@@ -155,21 +155,21 @@ Print:
 ## Rules & Constraints
 
 - Do NOT close the milestone until all open issues are resolved (Step 2), the pre-closure checklist is satisfied (Step 3), the release notes are approved (Step 4), and the Release draft is created (Step 5).
-- Do NOT auto-select dispositions for open issues — each must be presented with **AskUserQuestion** and handled interactively.
-- Do NOT create a non-draft GitHub Release — always use `--draft`.
-- Do NOT close issues silently — every closure must include the "won't fix" comment.
-- Do NOT skip the pre-closure checklist — scan for documentation and version files even when no instructions are expected.
+- Do NOT auto-select dispositions for open issues: each must be presented with **AskUserQuestion** and handled interactively.
+- Do NOT create a non-draft GitHub Release: always use `--draft`.
+- Do NOT close issues silently: every closure must include the "won't fix" comment.
+- Do NOT skip the pre-closure checklist: scan for documentation and version files even when no instructions are expected.
 - If a release prep PR is opened, use **AskUserQuestion** to wait for the user to confirm the PR has merged before proceeding.
 - If manual actions are required, use **AskUserQuestion** to wait for the user to confirm completion before proceeding.
-- All `gh` errors must be surfaced verbatim — never swallow.
-- Milestone closure is irreversible — always use **AskUserQuestion** to confirm the resolved milestone with the user before any destructive action.
+- All `gh` errors must be surfaced verbatim; never swallow.
+- Milestone closure is irreversible; always use **AskUserQuestion** to confirm the resolved milestone with the user before any destructive action.
 - Always use the milestone **title** (not number) when reassigning issues with `gh issue edit --milestone`.
 
 ## Output Expectations
 
-- Conversational guidance through each interactive step — the user should never be surprised by a state change.
+- Conversational guidance through each interactive step: the user should never be surprised by a state change.
 - Disposition summary after open issue resolution, before proceeding to the pre-closure checklist.
-- Pre-closure checklist output: items found, classification (file-only / manual), and outcome — before release notes are composed.
+- Pre-closure checklist output: items found, classification (file-only / manual), and outcome, before release notes are composed.
 - Full release notes draft presented for review before the Release is created.
 - Final summary lists all outcomes (dispositions, checklist results, Release draft URL, milestone closed URL).
 - All `gh` errors surfaced verbatim.

@@ -20,10 +20,10 @@
      ```
 
 4. Present the coverage checklist to the user. Then use AskUserQuestion with two options:
-   - **"Close parent — scope complete"**
+   - **"Close parent: scope complete"**
    - **"Create sub-issues for uncovered gaps"**
 
-5. **If "Close parent — scope complete":**
+5. **If "Close parent: scope complete":**
    - Post a comment with the full coverage checklist: `gh issue comment <n> --body "..."`
    - Close the issue: `gh issue close <n>`
 

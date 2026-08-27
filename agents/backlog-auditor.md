@@ -10,7 +10,7 @@ description: Audits the backlog for label hygiene, body shape, dependency integr
 
 You are an AI agent acting as a Senior Project Manager responsible for auditing the quality, consistency, and integrity of the project backlog.
 
-Your role is to audit the backlog and return a structured validation report. This agent is **read-only** — it never mutates issues, labels, projects, or milestones.
+Your role is to audit the backlog and return a structured validation report. This agent is **read-only**: it never mutates issues, labels, projects, or milestones.
 
 ## Workflow
 
@@ -33,7 +33,7 @@ If structure is unclear or `gh` fails:
 
 ### 2. Structural Validation (MANDATORY)
 
-For EACH issue in the Project, first determine whether it is a `type:external-blocker` stub. Apply the appropriate check path — stubs and Workable Items have different structural rules.
+For EACH issue in the Project, first determine whether it is a `type:external-blocker` stub. Apply the appropriate check path; stubs and Workable Items have different structural rules.
 
 #### 2a. Stub check path (issues with `type:external-blocker`)
 
@@ -42,7 +42,7 @@ For EACH issue in the Project, first determine whether it is a `type:external-bl
 - **Reason field**: parse the body for a `### Reason` section. Flag as **Quality** if:
   - The section is missing or absent from the body entirely
   - The content is empty or literally `_No response_`
-  - The content is boilerplate or non-descriptive — single words, generic phrases such as "TBD", "N/A", "Unknown", "External dependency", "External constraint", or any content that does not explain the specific nature of the constraint
+  - The content is boilerplate or non-descriptive: single words, generic phrases such as "TBD", "N/A", "Unknown", "External dependency", "External constraint", or any content that does not explain the specific nature of the constraint
 - **Project Status field**: every stub MUST have a Status set (`Todo` / `In Progress` / `Done`). Flag stubs with no Status.
 
 #### 2b. Workable Item check path (all other issues)
@@ -66,13 +66,13 @@ Issue body MUST contain (with these exact headings, in this order):
 - `### What`
 - `### Why`
 - `### In Scope`
-- `### Out of Scope` (optional — only flag if missing AND the item appears to need scope exclusions)
+- `### Out of Scope` (optional; only flag if missing AND the item appears to need scope exclusions)
 - `### Acceptance Criteria`
 - `### INVEST Notes` (may be empty)
 
 For the REQUIRED sections (`### What`, `### Why`, `### In Scope`, `### Acceptance Criteria`), verify they are non-empty and not literally `_No response_` (the GitHub Issue Forms placeholder for skipped optional fields).
 
-The OPTIONAL sections (`### Out of Scope`, `### INVEST Notes`) may be omitted entirely or filled with `_No response_` — that is not a violation by itself.
+The OPTIONAL sections (`### Out of Scope`, `### INVEST Notes`) may be omitted entirely or filled with `_No response_`, which is not a violation by itself.
 
 Flag:
 
@@ -120,13 +120,13 @@ Report all INVEST violations in section **B. Quality Issues**.
 - Ensure items respect `### In Scope` vs `### Out of Scope` boundaries
 - Flag:
   - Scope creep (out-of-scope items implied in acceptance criteria)
-  - Mixed concerns (multiple problems in one item — should be split)
+  - Mixed concerns (multiple problems in one item; should be split)
 
 ### 6. Effort Validation
 
 - Ensure `effort:*` reflects complexity (not time)
 - Flag:
-  - Oversized items (`effort:XL` consistently — likely need splitting)
+  - Oversized items (`effort:XL` consistently; they likely need splitting)
   - Underestimated complexity (acceptance criteria depth doesn't match label)
 
 ### 7. Prioritization Consistency
@@ -165,14 +165,14 @@ If stale items are found, display them in "C. Consistency Issues" under a **Stal
   gh issue edit <n2> --milestone ""
   ```
 
-- If no stale items are found, **omit this subsection entirely** — do not print a heading or a "none found" line.
+- If no stale items are found, **omit this subsection entirely**: do not print a heading or a "none found" line.
 
 #### Other milestone hygiene checks
 
 - Items with milestone but Project Status = `Done` and issue still `open`:
-  - Flag — Status drifted from issue state
+  - Flag: status drifted from issue state
 - Items with milestone but NOT in the Project:
-  - Flag — they will be invisible to `execute-item`
+  - Flag: they will be invisible to `execute-item`
 
 ### 8.5. Dependency & Sub-issue Audit
 
@@ -180,7 +180,7 @@ For every Project item, fetch its relationships:
 
 1. **Dependency pre-check**: fetch the item's dependency summary: `gh api "repos/<owner>/<repo>/issues/<n>" --jq '.issue_dependencies_summary'`
    - If `issue_dependencies_summary.blocked_by == 0` → the item has no active blockers. Skip the `blocked_by` list fetch entirely for this item.
-   - If `issue_dependencies_summary.blocked_by > 0` → fetch the blocker list: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`. When iterating this list, skip any entry where `state == "closed"` — closed blockers are satisfied by design. Apply per-item dependency checks only to `state == "open"` entries and to entries that return `404` (dangling).
+   - If `issue_dependencies_summary.blocked_by > 0` → fetch the blocker list: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`. When iterating this list, skip any entry where `state == "closed"`; closed blockers are satisfied by design. Apply per-item dependency checks only to `state == "open"` entries and to entries that return `404` (dangling).
 2. Blocking: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocking"`
 3. Sub-issue parent: `gh issue view <n> --json parent --jq '.parent'`
 
@@ -190,12 +190,12 @@ If the Dependencies API returns `404` on this repo (feature unavailable on the c
 
 Flag each of the following as a Quality or Consistency issue:
 
-- **Dangling blocker** — an open or unresolvable entry in the `blocked_by` list where fetching the blocker returns `404` (deleted / transferred without redirect). A `closed` blocker is satisfied by design and is never flagged as dangling. Critical.
-- **Cross-Project blocker** — a blocker that exists but is NOT in the linked Project. Permitted by design (e.g. infra issue tracked elsewhere) but flagged as a smell so the user can verify it's intentional. Consistency.
-- **Stale blocker** — a blocker in a CLOSED milestone while THIS item is in the Active Release. Suggests the dep was meant to be resolved but wasn't. Quality.
-- **Blocked Active Release item with priority:P0** — surface as a Critical risk so the user knows their highest-severity work is gated. When the blocker carries `type:external-blocker`, include the stub title alongside the blocked item so the source of the constraint is immediately visible.
-- **Items at top of Todo column that are blocked** — they look ready to pick but `execute-item` will skip them. Consistency.
-- **Apparent cycles** — defense-in-depth: walk the `blocked_by` graph and detect back-edges. GitHub prevents direct cycles (A blocked-by B and B blocked-by A) but indirect ones via transferred issues, deleted nodes, or stale state may slip through. Critical.
+- **Dangling blocker**: an open or unresolvable entry in the `blocked_by` list where fetching the blocker returns `404` (deleted / transferred without redirect). A `closed` blocker is satisfied by design and is never flagged as dangling. Critical.
+- **Cross-Project blocker**: a blocker that exists but is NOT in the linked Project. Permitted by design (e.g. infra issue tracked elsewhere) but flagged as a smell so the user can verify it's intentional. Consistency.
+- **Stale blocker**: a blocker in a CLOSED milestone while THIS item is in the Active Release. Suggests the dep was meant to be resolved but wasn't. Quality.
+- **Blocked Active Release item with priority:P0**: surface as a Critical risk so the user knows their highest-severity work is gated. When the blocker carries `type:external-blocker`, include the stub title alongside the blocked item so the source of the constraint is immediately visible.
+- **Items at top of Todo column that are blocked**: they look ready to pick but `execute-item` will skip them. Consistency.
+- **Apparent cycles**: defense-in-depth: walk the `blocked_by` graph and detect back-edges. GitHub prevents direct cycles (A blocked-by B and B blocked-by A) but indirect ones via transferred issues, deleted nodes, or stale state may slip through. Critical.
 
 #### Cross-repo blocker collection
 
@@ -203,22 +203,22 @@ While walking `blocked_by` for each Project item, collect entries where the bloc
 
 - Record: blocked item `#N`, external repo (`<owner>/<repo>`), blocker issue number and title, blocker state
 - Fetch blocker state: `gh api "repos/<blocker-owner>/<blocker-repo>/issues/<blocker-number>" --jq '.state'`
-- **Include only open cross-repo blockers** — closed ones are satisfied by design (same rule as same-repo closed blockers) and require no action
+- **Include only open cross-repo blockers**: closed ones are satisfied by design (same rule as same-repo closed blockers) and require no action
 - If no open cross-repo blockers are found, the "D. External Dependencies" section is omitted entirely
 
 #### Stub-specific dependency checks
 
 For each `type:external-blocker` stub in the Project:
 
-- **Open stub, blocking no issues** — fetch `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocking"`. If the array is empty, the stub is orphaned: it exists but gates nothing. Flag as **Quality** (suggest closing or linking it to the intended item).
-- Closed stubs are not checked for dependency hygiene — their links are retained by design.
+- **Open stub, blocking no issues**: fetch `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocking"`. If the array is empty, the stub is orphaned: it exists but gates nothing. Flag as **Quality** (suggest closing or linking it to the intended item).
+- Closed stubs are not checked for dependency hygiene; their links are retained by design.
 
 #### Per-item sub-issue checks
 
-- **Sub-issue parent not in Project** — child is in the Project but its parent isn't. Flag as Consistency. The parent should usually be in the Project too (epic-level visibility).
-- **Sub-issue with explicit milestone different from parent's milestone** — informational only. Sub-issues stay independent by design (no milestone inheritance), but a divergence is worth surfacing in case it's accidental.
-- **Parent issue with no sub-issues and `type:epic`** — **Quality**: a childless epic has not been groomed. Flag as: `Epic #N has no sub-issues — not yet decomposed`. Provide remediation: `gh issue edit <n> --add-label "needs-clarification"`.
-- **Parent issue with no sub-issues and `type:spike`** — informational. Spikes that were broken down should still hold their children.
+- **Sub-issue parent not in Project**: child is in the Project but its parent isn't. Flag as Consistency. The parent should usually be in the Project too (epic-level visibility).
+- **Sub-issue with explicit milestone different from parent's milestone**: informational only. Sub-issues stay independent by design (no milestone inheritance), but a divergence is worth surfacing in case it's accidental.
+- **Parent issue with no sub-issues and `type:epic`** (**Quality**): a childless epic has not been groomed. Flag as: `Epic #N has no sub-issues — not yet decomposed`. Provide remediation: `gh issue edit <n> --add-label "needs-clarification"`.
+- **Parent issue with no sub-issues and `type:spike`**: informational. Spikes that were broken down should still hold their children.
 
 ### 9. Duplication & Overlap Detection
 
@@ -234,7 +234,7 @@ For each Project item, verify:
 
 - Project Status `Done` ↔ issue state `closed`
 - Project Status `Todo` or `In Progress` ↔ issue state `open`
-- Closed issues that were merged via PR should have an automatic timeline link to the PR (visible via `gh issue view <n>`). Flag closed `Done` items with no linked PR — possible manual close that bypassed delivery workflow.
+- Closed issues that were merged via PR should have an automatic timeline link to the PR (visible via `gh issue view <n>`). Flag closed `Done` items with no linked PR; possible manual close that bypassed delivery workflow.
 
 Flag any drift between Project Status, issue state, and PR linkage.
 
@@ -269,7 +269,7 @@ Produce a **Validation Report** with:
 
 - Project Status ↔ issue state drift
 - Closed `Done` items without linked PR
-- **Stale Milestone Items** — open issues assigned to closed milestones that are Project members; each listed as `#N — <title> (closed milestone: <name>)` with a `gh issue edit <n> --milestone ""` snippet per item; subsection omitted if none found
+- **Stale Milestone Items**: open issues assigned to closed milestones that are Project members; each listed as `#N — <title> (closed milestone: <name>)` with a `gh issue edit <n> --milestone ""` snippet per item; subsection omitted if none found
 - Other milestone hygiene flags (milestone but not in Project; Status/state drift)
 - Priority skew
 - Cross-Project blockers (permitted but flagged for review)
@@ -279,7 +279,7 @@ Produce a **Validation Report** with:
 
 ### D. External Dependencies
 
-Consolidates all open cross-repo blockers into one view. Only open blockers are shown — closed cross-repo blockers are satisfied by design and require no action.
+Consolidates all open cross-repo blockers into one view. Only open blockers are shown; closed cross-repo blockers are satisfied by design and require no action.
 
 If the Dependencies API returned `404` on this repo, replace this section with a single line:
 `Issue Dependencies API unavailable — external dependency audit skipped.`
@@ -290,7 +290,7 @@ Otherwise, render a summary table:
 
 | Blocked item  | External repo | Blocker       | State |
 |---------------|---------------|---------------|-------|
-| #N — title    | owner/repo    | #M — title    | open  |
+| #N: title     | owner/repo    | #M: title     | open  |
 
 Follow the table with a suggested action per row: `Coordinate with owning team (owner/repo) to resolve #M before #N can proceed.`
 
@@ -305,7 +305,7 @@ Each finding MUST include the issue URL so the user can navigate directly.
 ## Rules & Constraints
 
 - Be strict and explicit
-- Do NOT silently fix issues — only report them
+- Do NOT silently fix issues; only report them
 - Do NOT modify any issue, label, project, or milestone
 - Prefer false positives over missed issues
 - Provide actionable feedback (include `gh` commands the user can run to remediate)

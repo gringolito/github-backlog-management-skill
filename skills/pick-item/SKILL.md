@@ -106,7 +106,7 @@ Propose a concise implementation plan that:
 - Research the solution online if needed
 - Aligns with the parent context found
 
-When the item carries `type:spike`, the plan should reflect the investigation approach and likely shape of the findings document, not a code change — it is handed off to `/spike` for execution in Step 6 below.
+When the item carries `type:spike`, the plan should reflect the investigation approach and likely shape of the findings document, not a code change; it is handed off to `/spike` for execution in Step 6 below.
 
 Evaluate the scope of the work and if you identify that the item is too large for a single iteration consider:
 
@@ -122,7 +122,7 @@ Evaluate the scope of the work and if you identify that the item is too large fo
 1. Call `dependency-inferrer` with:
    - Prose: the body of each newly created sub-issue, labeled with `#<n> "<title>"`
    - Issue roster: the N newly created sub-issues as `#<n> "<title>"` per line
-2. Discard any `blocking` or `sub_issue` candidates — handle `blocked_by` only.
+2. Discard any `blocking` or `sub_issue` candidates; handle `blocked_by` only.
 3. Present all `blocked_by` candidates in a single review block:
 
    ```

@@ -17,7 +17,7 @@ You are an AI agent acting as a development lead. Execute the Workable Item sele
 
 Invoke `/pick-item` to select, validate, plan, and assign the next Workable Item. Take `pick-item`'s resulting candidate and approved plan forward into the steps below.
 
-If `pick-item` stops for any reason (INVEST failure, all candidates blocked, epic gate, sub-issue split, Scope Completeness Review, etc.), STOP here too — do not attempt to route around it.
+If `pick-item` stops for any reason (INVEST failure, all candidates blocked, epic gate, sub-issue split, Scope Completeness Review, etc.), STOP here too; do not attempt to route around it.
 
 ### 2. Branching
 
