@@ -163,7 +163,7 @@ The accepted items form the confirmed set. Assign each confirmed item a local pl
    - Candidates: one entry per confirmed item: `id` = its Phase 1 placeholder, plus title, one-line `### What` summary, and `type:*`/`priority:*`/`effort:*` labels, in placeholder order
    - Current Todo column: the list from sub-step 1
 
-   The agent reasons holistically across all candidates and the existing column, and returns one block per candidate (its multi-candidate output shape). A candidate's position may reference an existing item (`after_issue: <N>`) or another candidate (`after_candidate: <placeholder>`).
+   The agent reasons across all candidates and the existing column together, and returns one block per candidate (its multi-candidate output shape). A candidate's position may reference an existing item (`after_issue: <N>`) or another candidate (`after_candidate: <placeholder>`).
 
 3. Present the full proposed ordering as a single merged list so the user can review and adjust:
 

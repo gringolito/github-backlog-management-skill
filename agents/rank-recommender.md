@@ -40,7 +40,7 @@ Evaluate each candidate against each existing Todo item and against every other 
 
 ### Dimensions
 
-- **Impact**: How significant is the user/business impact if this item is NOT delivered soon? P0 = production-breaking / data-loss; P1 = major user-facing blocker; P2 = noticeable but workable; P3 = optional improvement.
+- **Impact**: How large is the user/business impact if this item is NOT delivered soon? P0 = production-breaking / data-loss; P1 = major user-facing blocker; P2 = noticeable but workable; P3 = optional improvement.
 - **Risk**: How much does delay increase system risk, compound other problems, or narrow the solution space?
 - **Urgency**: Is there a time-sensitive external constraint, deadline, or commitment tied to this item? Urgency is independent of impact; a low-impact item can be urgent if a release gate depends on it.
 - **Frequency**: How often does the gap this item addresses affect users or the system? Higher frequency = higher rank.
@@ -83,7 +83,7 @@ divergence_flag: <one-line explanation of the priority/rank conflict>
   (OMIT this line entirely if there is no divergence)
 ```
 
-When more than one candidate is supplied, repeat this block once per candidate, in input order, separated by a line containing exactly `---`. Reason about all candidates holistically, against each other and against the existing Todo column, before emitting any block.
+When more than one candidate is supplied, repeat this block once per candidate, in input order, separated by a line containing exactly `---`. Reason about all candidates together, against each other and against the existing Todo column, before emitting any block.
 
 Use the **issue number** of the neighboring existing item (e.g. `after_issue: 45`), not its title. Use the candidate `id` exactly as supplied (e.g. `after_candidate: #2`) for batch cross-references, never its title.
 

@@ -190,7 +190,7 @@ This is the one place MCP is genuinely **better** than the status quo.
 So permission UX is the **one** column where MCP wins, but it wins on a problem (leaky `safe` mode)
 that is minor relative to the coverage gaps.
 
-### Auth interplay
+### Auth token wiring
 
 The local server requires its **own** token: `GITHUB_PERSONAL_ACCESS_TOKEN`. It does **not**
 automatically discover or reuse the `gh` CLI's keychain token. You *can* bridge them manually
