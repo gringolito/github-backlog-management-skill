@@ -11,7 +11,7 @@ The backlog lives in GitHub: items are GitHub Issues, prioritization happens ins
 
 ## Objective
 
-Create a lightweight stub issue (`type:external-blocker`) that represents an external constraint — an API limitation, vendor issue, regulatory hold, or any other blocker that cannot be expressed as a standard GitHub issue — and immediately register it as a `blocked_by` dependency on the target backlog item.
+Create a lightweight stub issue (`type:external-blocker`) that represents an external constraint, an API limitation, vendor issue, regulatory hold, or any other blocker that cannot be expressed as a standard GitHub issue, and immediately register it as a `blocked_by` dependency on the target backlog item.
 
 `type:external-blocker` stubs are **infrastructure only**: they are added to the Project board with Status=`Todo` so they can be tracked and have their health audited, but never milestoned, never assigned `priority:*` or `effort:*` labels, and skipped by execution and planning skills.
 
@@ -27,8 +27,8 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
 
 Accept from the user argument or conversation:
 
-- `#N` — the backlog item being blocked (must be an open issue in this repo)
-- `"reason"` — a short description of the external constraint (free text)
+- `#N`: the backlog item being blocked (must be an open issue in this repo)
+- `"reason"`: a short description of the external constraint (free text)
 
 If either is missing, STOP and ask the user to supply both. If `#N` is closed, STOP and output: `#N is already closed — external blockers apply only to open items.`
 
@@ -42,7 +42,7 @@ gh issue view <N> --json number,title,state,url
 
 If not found or closed, STOP and surface the error or state verbatim.
 
-Warn if `#N` already carries `type:external-blocker` — it is unusual to block a stub with another stub. Ask for confirmation before proceeding.
+Warn if `#N` already carries `type:external-blocker`; it is unusual to block a stub with another stub. Ask for confirmation before proceeding.
 
 ### 3. Stub Creation (STRICT)
 
@@ -111,13 +111,13 @@ If it reports `Issue Dependencies API unavailable on this repo — blocked_by no
 
 ## Rules & Constraints
 
-- `type:external-blocker` stubs MUST be added to the linked Project with Status=`Todo` — this makes them visible to `audit` for health auditing and project tracking
+- `type:external-blocker` stubs MUST be added to the linked Project with Status=`Todo`; this makes them visible to `audit` for health auditing and project tracking
 - NEVER assign `priority:*`, `effort:*`, or milestone to a stub
 - NEVER assign the stub to a user
-- One stub per external constraint — if the same external issue blocks multiple items, create one stub and run `/block-item` separately for each additional target
+- One stub per external constraint: if the same external issue blocks multiple items, create one stub and run `/block-item` separately for each additional target
 - If the user wants to block an item with an existing stub (already created), direct them to `/block-item #N #stub` instead of creating a duplicate
-- Stubs are resolved (closed) via `/resolve-external-blocker` — never close them manually
-- Surface all `gh` errors verbatim — never swallow
+- Stubs are resolved (closed) via `/resolve-external-blocker`; never close them manually
+- Surface all `gh` errors verbatim; never swallow
 
 ## Output Expectations
 

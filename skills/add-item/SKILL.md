@@ -25,9 +25,9 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
   - User/business impact
   - Constraints, risks, and edge cases
 - Ask about relationships to existing items:
-  - **Blocked by**: Is this item blocked by any open issue that must be done first? (provide issue numbers; cross-Project blockers are allowed — e.g. an infra issue tracked elsewhere)
+  - **Blocked by**: Is this item blocked by any open issue that must be done first? (provide issue numbers; cross-Project blockers are allowed, e.g. an infra issue tracked elsewhere)
   - **Blocking**: Does this item block any open issue? (issue numbers, optional)
-  - **Sub-issue parent**: Is this a sub-task of a parent issue / epic? (issue number, optional — sub-issues stay independent: they do NOT inherit the parent's milestone, priority, or rank)
+  - **Sub-issue parent**: Is this a sub-task of a parent issue / epic? (issue number, optional; sub-issues stay independent: they do NOT inherit the parent's milestone, priority, or rank)
 - Challenge vague or poorly defined requests
 - DO NOT create a backlog item until all critical ambiguities are resolved
 
@@ -44,11 +44,11 @@ If the agent marks any section with `<!-- TODO: ... -->`, STOP and resolve those
 
 Issue title: concise and descriptive.
 
-Type, Priority, and Effort are NOT in the body — they are applied as repository labels:
+Type, Priority, and Effort are NOT in the body; they are applied as repository labels:
 
-- `type:<one>` — exactly one type label
-- `priority:<P0|P1|P2|P3>` — exactly one priority label
-- `effort:<XS|S|M|L|XL>` — exactly one effort label, based on complexity (NOT time)
+- `type:<one>`: exactly one type label
+- `priority:<P0|P1|P2|P3>`: exactly one priority label
+- `effort:<XS|S|M|L|XL>`: exactly one effort label, based on complexity (NOT time)
 
 ### 3. INVEST Enforcement (MANDATORY)
 
@@ -70,11 +70,11 @@ Delegate classification to the `label-classifier` agent:
 
 Handle the returned verdict:
 
-- `type:*` — if the agent returns `unclear: type`, STOP and use AskUserQuestion, offering the 3–4 most contextually likely types as options (choose from: `feature`, `bug`, `security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`, `epic`, `external-blocker`); "Other" is automatically provided for anything not listed
-- `priority:*` — if the agent returns `unclear: priority`, present the reasoning and use AskUserQuestion with options: `P0` / `P1` / `P2` / `P3`; default to `priority:P2` only if the user explicitly selects it
-- `effort:*` — if the agent returns `unclear: effort`, present the reasoning and use AskUserQuestion with the 4 most contextually relevant sizes as options (from `XS`, `S`, `M`, `L`, `XL`); "Other" is automatically provided for the fifth
+- `type:*`: if the agent returns `unclear: type`, STOP and use AskUserQuestion, offering the 3–4 most contextually likely types as options (choose from: `feature`, `bug`, `security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`, `epic`, `external-blocker`); "Other" is automatically provided for anything not listed
+- `priority:*`: if the agent returns `unclear: priority`, present the reasoning and use AskUserQuestion with options: `P0` / `P1` / `P2` / `P3`; default to `priority:P2` only if the user explicitly selects it
+- `effort:*`: if the agent returns `unclear: effort`, present the reasoning and use AskUserQuestion with the 4 most contextually relevant sizes as options (from `XS`, `S`, `M`, `L`, `XL`); "Other" is automatically provided for the fifth
 
-`type:external-blocker` is reserved for Stubs created by `/add-external-blocker` — DO NOT classify Workable Items with this type; if the agent returns it or the user attempts to, STOP and redirect them to `/add-external-blocker`.
+`type:external-blocker` is reserved for Stubs created by `/add-external-blocker`. DO NOT classify Workable Items with this type; if the agent returns it or the user attempts to, STOP and redirect them to `/add-external-blocker`.
 
 These labels will be passed as `labels` in the manifest in step 9.
 
@@ -92,17 +92,17 @@ If too vague → request clarification
 
 ### 6. Dependencies & Sub-issue Linkage
 
-Include in the manifest any relationships gathered in step 1 (Discovery) — `blocked_by`, `blocking`, and `parent`.
+Include in the manifest any relationships gathered in step 1 (Discovery): `blocked_by`, `blocking`, and `parent`.
 
 If the user did not name any blockers, blocking items, or a sub-issue parent, omit these fields entirely.
 
 ### 7. Execution Rank (MANDATORY, RELATIVE)
 
-**Execution rank:** the order items are executed is determined by their Rank in the Queue — `execute-item` always picks the topmost item.
+**Execution rank:** the order items are executed is determined by their Rank in the Queue; `execute-item` always picks the topmost item.
 
 This skill is responsible for determining the appropriate rank by RELATIVE analysis against existing Todo items, NOT defaulting to bottom-of-column.
 
-The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next — execution order is set by Rank. Severity and rank should be **kept consistent**: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
+The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next; execution order is set by Rank. Severity and rank should be **kept consistent**: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
 
 #### 7a. Determine the new item's rank by delegating to `rank-recommender`
 
@@ -110,9 +110,9 @@ Call the `rank-recommender` agent with:
 - **Candidate item**: the issue title, one-line `### What` summary, and the `type:*`, `priority:*`, `effort:*` labels from step 4
 
 The agent fetches the current Todo list itself and returns:
-- `position:` — `top` | `after_issue: <N>` | `bottom`
-- `rationale:` — per-dimension Impact / Risk / Urgency / Frequency / Dependencies
-- `divergence_flag:` (if present) — the agent detected a priority/rank conflict; surface this to the user and ask them to confirm or override
+- `position:`: `top` | `after_issue: <N>` | `bottom`
+- `rationale:`: per-dimension Impact / Risk / Urgency / Frequency / Dependencies
+- `divergence_flag:` (if present): the agent detected a priority/rank conflict; surface this to the user and ask them to confirm or override
 
 Present the agent's recommendation and rationale to the user before proceeding. Normalize the output to the manifest `rank` field:
 - `position: top` → `{"position": "top"}`
@@ -131,7 +131,7 @@ If the user prefers to apply moves manually, omit `rank` and `rank_adjustments` 
 
 ### 8. Milestone Assignment (OPTIONAL, RECOMMENDED)
 
-Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON — `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
+Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON: `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
 
 Ask the user whether to assign this item to the Active Release:
 
@@ -148,13 +148,13 @@ After validation passes, invoke the `create-item` Bash tool to create the issue:
 See [issue-manifest.md](./issue-manifest.md) for the full manifest schema.
 
 3. Run: `create-item --input /tmp/add-item-manifest.json`
-4. Capture the JSON blob emitted to stdout — use it for Step 10.
+4. Capture the JSON blob emitted to stdout; use it for Step 10.
 
 Branch on the exit code:
 
-- **Exit 0** — success. Proceed to Step 10 as normal.
-- **Exit 2** — the issue **was created**, but a post-creation step warned. Parse the JSON blob from stdout anyway and proceed to Step 10, reporting the issue as created. Do NOT retry or re-run `create-item` for this request, retrying would create a duplicate.
-- **Any other non-zero exit** — nothing was created (e.g. `gh issue create` itself failed). STOP and surface its stderr output verbatim. It is safe to retry once the underlying input is fixed.
+- **Exit 0**: success. Proceed to Step 10 as normal.
+- **Exit 2**: the issue **was created**, but a post-creation step warned. Parse the JSON blob from stdout anyway and proceed to Step 10, reporting the issue as created. Do NOT retry or re-run `create-item` for this request, retrying would create a duplicate.
+- **Any other non-zero exit**: nothing was created (e.g. `gh issue create` itself failed). STOP and surface its stderr output verbatim. It is safe to retry once the underlying input is fixed.
 
 ### 10. Output
 
@@ -165,11 +165,11 @@ Using the JSON blob returned by `create-item`, print:
 - Project Status (`.status`)
 - Milestone assignment (`.milestone` or "unassigned")
 - Rank applied (`.rank.applied`) and any re-ranked items (`.rank_adjustments_applied`)
-  - If `.rank.applied == false`, do NOT fold this into the generic bullet — render a standalone, prominent line instead: `⚠️ Rank NOT applied — item landed at the bottom of Todo, not the requested position. <matching warning text from .warnings>`
-- Blockers (`.blocked_by` list, with cross-Project / cross-repo blockers explicitly flagged) — or "none"
-- Blocking (`.blocking` list) — or "none"
-- Sub-issue parent (`.parent`) — or "none"
-- Any warnings (`.warnings` — surface each one verbatim)
+  - If `.rank.applied == false`, do NOT fold this into the generic bullet: render a standalone, prominent line instead: `⚠️ Rank NOT applied — item landed at the bottom of Todo, not the requested position. <matching warning text from .warnings>`
+- Blockers (`.blocked_by` list, with cross-Project / cross-repo blockers explicitly flagged), or "none"
+- Blocking (`.blocking` list), or "none"
+- Sub-issue parent (`.parent`), or "none"
+- Any warnings (`.warnings`: surface each one verbatim)
 
 ## Rules & Constraints
 
@@ -182,5 +182,5 @@ Using the JSON blob returned by `create-item`, print:
 - Effort must NEVER be measured in time (no hours/days)
 - Issue body section headings MUST match the Issue Forms template exactly (case + ordering) so `audit` can parse them
 - Never apply more than one label per group (one type, one priority, one effort)
-- Dependencies and sub-issue parent are NOT mirrored in the issue body — GitHub's native API is the only source of truth for these relationships
-- Sub-issues stay independent — assigning a parent does NOT inherit the parent's milestone, priority, effort, type, or Project rank
+- Dependencies and sub-issue parent are NOT mirrored in the issue body; GitHub's native API is the only source of truth for these relationships
+- Sub-issues stay independent: assigning a parent does NOT inherit the parent's milestone, priority, effort, type, or Project rank
