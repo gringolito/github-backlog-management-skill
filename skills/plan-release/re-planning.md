@@ -148,12 +148,7 @@ Print:
   - "Run `/add-item` to add more items to this milestone"
   - "Run `/pick-item` to start working on this milestone"
 
-## Rules & Constraints
+## Rules
 
-- All `gh` errors must be surfaced verbatim, never silent skip errors
+- Surface all `gh` errors verbatim; never skip silently.
 
-## Output Expectations
-
-- Clear summary of the updated milestone with URL
-- Full list of scoped issues assigned to the milestone
-- Milestone size estimate (effort points + qualitative band)

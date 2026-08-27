@@ -7,20 +7,18 @@ description: Write the Claude Code permissions allowlist for this skill into the
 
 You are an AI agent acting as an installation assistant responsible for configuring Claude Code permission settings for the GitHub Backlog Management skill.
 
-## Objective
-
-Write the correct `permissions.allow` block into the user's chosen Claude Code settings file, based on their configured or requested permission mode. This skill is idempotent; re-running with the same mode and target is a safe no-op.
+This skill is idempotent: re-running with the same mode and target is a safe no-op.
 
 ## Allowlist reference
 
-These are the canonical allowlist blocks for each mode:
+Canonical allowlist blocks for each mode:
 
-**yolo**: no prompts during any multi-step skill:
+`yolo`: no prompts during any multi-step skill:
 ```json
 ["Bash(gh *)", "Bash(git *)", "Bash(backlog-preflight)", "Bash(resolve-milestone*)"]
 ```
 
-**safe**: read-only `gh` calls run silently; write commands still prompt:
+`safe`: read-only `gh` calls run silently; write commands still prompt:
 ```json
 [
   "Bash(gh auth status *)",
@@ -40,31 +38,31 @@ These are the canonical allowlist blocks for each mode:
 
 ## Workflow
 
-### 0. Preflight (MANDATORY)
+### 0. Preflight
 
 - `gh auth status`: if unauthenticated, STOP and output: `gh auth status failed. Run gh auth login and retry.`
 - Parse `<owner>/<repo>` from `gh repo view --json owner,name`
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
-### 1. Mode Resolution (MANDATORY)
+### 1. Mode resolution
 
 Determine the effective permission mode using this precedence:
 
-1. **Explicit argument**: if the user passed a mode as an argument to this skill (e.g. `/setup-permissions safe`), use it. This overrides the configured value for this invocation only; it does not change the stored `userConfig`.
-2. **`${CLAUDE_PLUGIN_OPTION_PERMISSION_MODE}`**: the value set at plugin enable time via `userConfig`.
-3. **Fallback**: treat as `off` if neither is set.
+1. Explicit argument: if the user passed a mode (e.g. `/setup-permissions safe`), use it. This overrides the configured value for this invocation only; it does not change the stored `userConfig`.
+2. `${CLAUDE_PLUGIN_OPTION_PERMISSION_MODE}`: the value set at plugin enable time via `userConfig`.
+3. Fallback: treat as `off` if neither is set.
 
 Valid values: `yolo`, `safe`, `off`. If the resolved value is anything else, STOP and output: `Unknown permission mode "<value>". Valid values: yolo, safe, off.`
 
-### 2. Off / Unset path (STRICT)
+### 2. Off / unset path
 
 If the resolved mode is `off`:
 
 - Print exactly: `Permission mode is "off"; no settings written. See README "Authentication & Permissions" for manual configuration.`
 - STOP. Do not read, write, or touch any settings file.
 
-### 3. Target file selection (MANDATORY)
+### 3. Target file selection
 
 Ask the user which file to write. Present exactly three options:
 
@@ -74,21 +72,21 @@ Ask the user which file to write. Present exactly three options:
 
 Wait for the user to select one before proceeding.
 
-### 4. Idempotent merge and write (STRICT)
+### 4. Idempotent merge and write
 
-1. **Read** the chosen target file. If it does not exist, treat its content as `{}`.
+1. Read the chosen target file. If it does not exist, treat its content as `{}`.
 2. Parse the JSON. If parsing fails, STOP and output: `Could not parse <target>: <parse error>. Fix the file manually before retrying.`
 3. Resolve `permissions.allow` as a list (default `[]` if absent).
-4. Determine the rules to add from the **Allowlist reference** section for the resolved mode.
-5. **Merge idempotently**: for each rule in the mode's list, append it only if it is not already present. Never remove or reorder existing entries.
+4. Determine the rules to add from the Allowlist reference section for the resolved mode.
+5. Merge idempotently: for each rule in the mode's list, append it only if not already present. Never remove or reorder existing entries.
 6. If no new rules were added (all already present): print `No changes — all rules already present in <target>.` and STOP.
 7. Write the updated JSON back to the target file with 2-space indentation.
 
-### 5. Verification (MANDATORY)
+### 5. Verification
 
-Re-read the target file and confirm all expected rules are present. Output the result summary (see Output Expectations).
+Re-read the target file and confirm all expected rules are present. Output the result summary (see Output expectations).
 
-## Rules & Constraints
+## Rules & constraints
 
 - NEVER write to a settings file without explicit user confirmation of the target (step 3)
 - NEVER remove or reorder existing entries in `permissions.allow`
@@ -97,14 +95,14 @@ Re-read the target file and confirm all expected rules are present. Output the r
 - Surface all `gh` errors and file I/O errors verbatim; never swallow
 - If the target file path contains `~`, expand it to the user's home directory using `$HOME`
 
-## Output Expectations
+## Output expectations
 
-**Off mode:**
+Off mode:
 ```
-Permission mode is "off" — no settings written. See README "Authentication & Permissions" for manual configuration.
+Permission mode is "off"; no settings written. See README "Authentication & Permissions" for manual configuration.
 ```
 
-**Successful write:**
+Successful write:
 ```
 ✓ Wrote <N> rules to <target> (mode: <mode>)
 Rules added:
@@ -113,12 +111,12 @@ Rules added:
 Rules already present: (none | <list>)
 ```
 
-**No-op (all rules already present):**
+No-op (all rules already present):
 ```
 No changes — all rules already present in <target>.
 ```
 
-**Error cases:**
+Error cases:
 - Auth failure: `gh auth status failed. Run gh auth login and retry.`
 - Unknown mode: `Unknown permission mode "<value>". Valid values: yolo, safe, off.`
 - JSON parse error: `Could not parse <target>: <parse error>. Fix the file manually before retrying.`

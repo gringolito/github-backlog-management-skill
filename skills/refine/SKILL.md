@@ -7,30 +7,32 @@ description: Orchestrate a refinement session over all backlog items flagged nee
 
 You are an AI agent acting as a Senior Project Manager orchestrating a backlog refinement session. You identify all items needing clarification or carrying incomplete metadata, present them to the user for selection, and drive the refinement loop, delegating each item to `/refine-item` and checking in between iterations whether to continue.
 
-The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
+Drive a backlog refinement session. Identify all items needing clarification or with incomplete metadata, present them for selection, then run the refinement loop by invoking `/refine-item` for each selected item.
+
+The backlog is GitHub Issues inside a linked Project (v2). Milestones handle version planning.
 
 ## Objective
 
-Walk every selected item from two candidate pools: `needs-clarification` issues and issues with incomplete metadata (missing `priority:*` or `effort:*` labels), through interactive refinement, one at a time, by invoking `/refine-item` for each. At the end, produce a structured report of what was refined, partially refined, or skipped, broken down by source pool.
+Walk every selected item from two candidate pools through interactive refinement, one at a time, via `/refine-item`. Pool A: `needs-clarification` issues. Pool B: issues missing `priority:*`, `effort:*`, or `type:*` labels. Produce a structured report at the end: refined / partially refined / skipped, broken down by pool.
 
 ## Workflow
 
-### 0. Preflight (MANDATORY)
+### 0. Preflight
 
-Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
+Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) and follow it exactly.
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
-### 1. Fetch Refinement Candidates
+### 1. Fetch refinement candidates
 
-**Pool A: Needs clarification:**
+Pool A: needs clarification
 
 - `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue label:needs-clarification"`
   - Items NOT in the linked Project are ignored, even if they carry `needs-clarification`
 
-**Pool B: Incomplete metadata:**
+Pool B: incomplete metadata
 
-- Collect open issues that are missing a `priority:*` OR `type:*` OR `effort:*` labels, and do NOT carry `needs-clarification`
+- Collect open issues missing a `priority:*` OR `type:*` OR `effort:*` label, that do NOT carry `needs-clarification`:
   - `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue -label:priority:*,needs-clarification"`
   - `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue -label:type:*,needs-clarification"`
   - `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue -label:effort:*,needs-clarification"`
@@ -48,7 +50,7 @@ If both pools are empty:
 - Print `No items need clarification or have incomplete metadata. Done.`
 - STOP
 
-### 2. Sort & Display Queue
+### 2. Sort & display queue
 
 Build the refinement queue:
 
@@ -56,7 +58,7 @@ Build the refinement queue:
 - Items WITHOUT a `priority:*` label sort LAST (after `priority:P3`)
 - Tie-break: Project rank ascending (top of column first), then issue number ascending
 
-Display the queue as a numbered table with two clearly labeled sections. Numbering is continuous across both sections:
+Display the queue as a numbered table with two labeled sections. Numbering is continuous across both sections:
 
 ```
 ## Needs clarification
@@ -76,12 +78,12 @@ Display the queue as a numbered table with two clearly labeled sections. Numberi
 
 Omit a section header entirely if its pool is empty.
 
-### 3. Candidate Selection
+### 3. Candidate selection
 
 After displaying the queue, select items to refine:
 
-- **Queue of ≤ 4 items**: use AskUserQuestion with multiSelect enabled, offering one option per queue item (`#N: <title>`) plus an "All" option. Build the ordered work list from the user's selections, preserving queue order.
-- **Queue of > 4 items**: present the queue and accept free-form input:
+- Queue of ≤ 4 items: use AskUserQuestion with multiSelect enabled, offering one option per queue item (`#N: <title>`) plus an "All" option. Build the ordered work list from the user's selections, preserving queue order.
+- Queue of > 4 items: present the queue and accept free-form input:
   - Issue numbers from the `#` column above, separated by commas (e.g. `1, 3`)
   - A range (e.g. `1-3`)
   - `all` to refine every item in the queue
@@ -89,7 +91,7 @@ After displaying the queue, select items to refine:
 
 Build the ordered work list from the user's answer, preserving queue order.
 
-### 4. Refinement Loop
+### 4. Refinement loop
 
 For each selected item in work-list order:
 
@@ -100,7 +102,7 @@ For each selected item in work-list order:
 
 The loop is safe to interrupt at any point; re-running `/refine` will rebuild the queue from scratch, and already-refined items (label removed) will drop out automatically.
 
-### 5. Refinement Report (MANDATORY)
+### 5. Refinement report
 
 After the loop ends (queue exhausted, user stopped, or all items processed), output a structured report:
 
@@ -125,22 +127,22 @@ For each: issue URL, reason (user skipped, too ambiguous to refine, etc.).
 
 #### Recommendations
 
-Items that emerged during refinement as candidates for split / merge / duplicate (NOT auto-applied: surface for follow-up via `/add-item` or manual triage).
+Items that emerged during refinement as candidates for split / merge / duplicate. NOT auto-applied. Surface for follow-up via `/add-item` or manual triage.
 
 If the loop ended before the full queue was processed, add:
 
 > Re-run `/refine` to continue: already-refined items drop out of the queue automatically.
 
-## Rules & Constraints
+## Rules & constraints
 
-- Do NOT perform any issue mutations directly: delegate all per-item work to `/refine-item`
-- Do NOT operate on issues outside the linked Project, even if they carry `needs-clarification`
-- The loop is safe to interrupt and resume: the sort is deterministic and idempotent on already-refined items
-- All `gh` errors surfaced verbatim
+- Never mutate issues directly. Delegate all per-item work to `/refine-item`.
+- Never operate on issues outside the linked Project, even if they carry `needs-clarification`.
+- The loop is safe to interrupt and resume. The sort is deterministic and idempotent on already-refined items.
+- Print all `gh` errors verbatim.
 
-## Output Expectations
+## Output expectations
 
 - The numbered queue before the loop starts, so the user can make an informed selection
 - A progress banner before each item: `--- Refining item N of M: #<n>: <title> ---`
 - The full refinement report at the end (totals + per-item breakdown + recommendations)
-- A clear final-state summary so the user knows whether more refinement is needed
+- A final-state summary so the user knows whether more refinement is needed

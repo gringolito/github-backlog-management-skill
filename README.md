@@ -40,10 +40,10 @@ Everything stays in GitHub: Issues, Projects v2, Milestones, Labels. No extra to
 
 Claude enforces structure; it doesn't set your priorities. Specifically:
 
-- **INVEST gate**: flags items with vague scope or missing acceptance criteria before they enter the queue
-- **Dependency inference**: reads prose ("depends on X"), surfaces candidates for you to confirm
-- **Next-item selection**: picks the topmost unblocked work; you decide whether to execute it
-- **Audit**: `/audit` is read-only and surfaces problems as ready-to-run `gh` commands
+- INVEST gate: flags items with vague scope or missing acceptance criteria before they enter the queue
+- Dependency inference: reads prose ("depends on X"), surfaces candidates for you to confirm
+- Next-item selection: picks the topmost unblocked work; you decide whether to execute it
+- Audit: `/audit` is read-only and surfaces problems as ready-to-run `gh` commands
 
 ### Already have a `TODO.md`, `BACKLOG.md`, or some other list?
 
@@ -77,7 +77,7 @@ Restart Claude Code if it was already running. All skills below are then availab
 
 ---
 
-## Authentication & Permissions
+## Authentication & permissions
 
 ### 1. Authenticate the GitHub CLI
 
@@ -87,7 +87,7 @@ If `gh auth status` reports that you are not logged in, run:
 gh auth login
 ```
 
-Choose **GitHub.com**, then **Login with a web browser**, the recommended option since it handles all scope grants in one step. If you prefer a token, select **Paste an authentication token** instead.
+Choose `GitHub.com`, then `Login with a web browser`, the recommended option since it handles all scope grants in one step. If you prefer a token, select `Paste an authentication token` instead.
 
 ### 2. Verify required token scopes
 
@@ -263,7 +263,7 @@ This provisions the GitHub Project v2, creates all labels, opens a PR with the I
 /plan-release
 ```
 
-Claude presents three release modes: **Maintenance** (patch an existing milestone), **Regular** (you select scope interactively), or **Automated** (Claude proposes scope from unassigned items). It infers a semver version from the scope and creates a Milestone with a due date.
+Claude presents three release modes: Maintenance (patch an existing milestone), Regular (you select scope interactively), or Automated (Claude proposes scope from unassigned items). It infers a semver version from the scope and creates a Milestone with a due date.
 
 ### Adding a backlog item
 
@@ -384,15 +384,17 @@ ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts
 
 ## Contributing
 
-Issues, improvement suggestions, and pull requests are all welcome.
+Issues, improvement suggestions, and pull requests are welcome.
 
-**Found a bug or unexpected behavior?**
+### Found a bug or unexpected behavior?
+
 Open a GitHub Issue describing what skill you ran, what you expected, and what actually happened. Include the relevant `gh` output if you have it.
 
-**Have an idea for a new feature or skill?**
+### Have an idea for a new feature or skill?
+
 Open an Issue with the `type:feature` label and describe the problem it solves. The best feature requests explain the workflow gap, not just the proposed solution.
 
-**Want to contribute a fix or improvement?**
+### Want to contribute a fix or improvement?
 
 1. Fork the repository
 2. Create a branch
@@ -402,7 +404,7 @@ Open an Issue with the `type:feature` label and describe the problem it solves. 
 
 This repository uses [Conventional Commits](https://www.conventionalcommits.org/). Commit messages must follow the `<type>: <description>` format. Common types: `feat` for new behavior, `fix` for corrections, `docs` for README/comment changes, `refactor` for rewrites that don't change behavior, `chore` for maintenance. Example: `feat: add needs-refinement label to audit report`.
 
-When editing skill specs, preserve the existing style: numbered workflow sections with `(MANDATORY)` / `(STRICT)` / `(RELATIVE)` flags, opening prose in the `You are an AI agent acting as...` form, and the standard preflight block. Label catalog, preflight stop string, and issue body section headings must stay consistent across all skill files.
+When editing skill specs, keep numbered workflow steps as plain prose headings (no annotation suffixes). Skill files open with a `You are an AI agent acting as...` persona line. The label catalog, preflight stop string, and issue body section headings must stay consistent across all skill files.
 
 ---
 

@@ -3,11 +3,11 @@ name: github-backlog-management
 description: Manage backlog, issues, and milestones with INVEST quality enforcement. Use for requests about backlog, issue, milestone, prioritize, INVEST, refine, audit, or clarify.
 ---
 
-# GitHub Backlog Management
+# GitHub backlog management
 
 A set of skills for a fully GitHub-native backlog workflow: Issues, Projects v2, Milestones, and Labels. No external tools, no database, no webhooks.
 
-## Skill Routing
+## Skill routing
 
 | Skill | When to use |
 |---------|-------------|
@@ -39,26 +39,26 @@ initialize ─► plan-release ─► add-item / migrate
 
 `initialize` is the bootstrap. Every other skill preflights for a linked Project and stops with a standard error if missing.
 
-## INVEST Quality Bar
+## INVEST quality bar
 
 Every Workable Item passes INVEST (Independent, Negotiable, Valuable, Estimable, Small, Testable) before entering the queue, enforced by the `invest-gate` agent.
 
-## Key Invariants (apply to all skills)
+## Key invariants (apply to all skills)
 
-**Label catalog**
+Label catalog
 - `type:`: `feature` `bug` `security` `performance` `dx` `tech-debt` `reliability` `compliance` `spike` `epic` `external-blocker` (plus any custom `type:*` labels present in the repository)
 - `priority:`: `P0` `P1` `P2` `P3`
 - `effort:`: `XS` `S` `M` `L` `XL`
 - Operational: `needs-clarification`
 
-**Issue body sections**: read [issue-body-sections.md](./issue-body-sections.md) for the canonical ordered headings.
+Issue body sections: read [issue-body-sections.md](./issue-body-sections.md) for the canonical ordered headings.
 
-**Standard preflight**: read [preflight-contract.md](./preflight-contract.md) for the preflight instruction.
+Standard preflight: read [preflight-contract.md](./preflight-contract.md) for the preflight instruction.
 
-**Metadata file**: `.claude/backlog-project.json`: written by `initialize`, read during preflight.
+Metadata file: `.claude/backlog-project.json`, written by `initialize`, read during preflight.
 
-**Priority vs rank**: `priority:*` is severity classification. Project rank (topmost Todo item) is execution order. They should stay consistent but are independent concepts; `pick-item` sorts by rank only.
+Priority vs rank: `priority:*` is severity classification. Project rank (topmost Todo item) is execution order. They stay consistent but are independent. `pick-item` sorts by rank only.
 
-## Skill Specs
+## Skill specs
 
 See [skills/](skills/) for full per-skill specs including exact `gh` CLI calls, workflow steps, and edge-case handling.

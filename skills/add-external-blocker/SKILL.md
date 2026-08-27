@@ -7,32 +7,28 @@ description: Record an external constraint as a stub issue that blocks a backlog
 
 You are an AI agent acting as a development lead responsible for recording external constraints that block backlog items.
 
-The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
+Create a `type:external-blocker` stub issue for an external constraint (API limitation, vendor issue, regulatory hold, or any out-of-repo blocker), then register it as a `blocked_by` dependency on the target backlog item.
 
-## Objective
-
-Create a lightweight stub issue (`type:external-blocker`) that represents an external constraint, an API limitation, vendor issue, regulatory hold, or any other blocker that cannot be expressed as a standard GitHub issue, and immediately register it as a `blocked_by` dependency on the target backlog item.
-
-`type:external-blocker` stubs are **infrastructure only**: they are added to the Project board with Status=`Todo` so they can be tracked and have their health audited, but never milestoned, never assigned `priority:*` or `effort:*` labels, and skipped by execution and planning skills.
+`type:external-blocker` stubs are infrastructure only: added to the Project board at Status=`Todo` for tracking and health auditing, never milestoned, never assigned `priority:*` or `effort:*` labels, skipped by execution and planning skills.
 
 ## Workflow
 
-### 0. Preflight (MANDATORY)
+### 0. Preflight
 
-Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
+Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) and follow it exactly.
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
-### 1. Input Parsing (MANDATORY)
+### 1. Input parsing
 
-Accept from the user argument or conversation:
+Accept from the user:
 
 - `#N`: the backlog item being blocked (must be an open issue in this repo)
 - `"reason"`: a short description of the external constraint (free text)
 
 If either is missing, STOP and ask the user to supply both. If `#N` is closed, STOP and output: `#N is already closed — external blockers apply only to open items.`
 
-### 2. Target Issue Validation (MANDATORY)
+### 2. Target issue validation
 
 Confirm `#N` is accessible and open:
 
@@ -42,15 +38,15 @@ gh issue view <N> --json number,title,state,url
 
 If not found or closed, STOP and surface the error or state verbatim.
 
-Warn if `#N` already carries `type:external-blocker`; it is unusual to block a stub with another stub. Ask for confirmation before proceeding.
+Warn if `#N` already carries `type:external-blocker`. Blocking a stub with another stub is unusual. Ask for confirmation before proceeding.
 
-### 3. Stub Creation (STRICT)
+### 3. Stub creation
 
 Create a stub issue with `type:external-blocker` label only (no `priority:*`, no `effort:*`):
 
-- **Title**: `External blocker: <reason>` (keep short and specific)
-- **Labels**: `type:external-blocker`
-- **Body**: match the external-blocker Issue Forms template shape exactly:
+- Title: `External blocker: <reason>` (keep short and specific)
+- Labels: `type:external-blocker`
+- Body: match the external-blocker Issue Forms template exactly:
 
   ```
   ### Reason
@@ -79,7 +75,7 @@ gh issue create \
 
 Capture the returned stub URL and number (`#stub`).
 
-Do NOT assign a milestone, do NOT assign the stub to any user.
+Do not assign a milestone. Do not assign the stub to any user.
 
 Add the stub to the linked Project and set its Status to `Todo`:
 
@@ -99,7 +95,7 @@ gh project item-edit \
 
 Use the `project_id`, `project_number`, and `status_field_id` / `status_options.Todo` values already loaded from `.claude/backlog-project.json`.
 
-### 4. Dependency Registration (STRICT)
+### 4. Dependency registration
 
 Delegate to `/block-item` to register the stub as a blocker of `#N`:
 
@@ -109,17 +105,17 @@ Delegate to `/block-item` to register the stub as a blocker of `#N`:
 
 If it reports `Issue Dependencies API unavailable on this repo — blocked_by not applied`, append: `Stub #<stub> was created but is not linked as a blocker.` and STOP.
 
-## Rules & Constraints
+## Rules
 
-- `type:external-blocker` stubs MUST be added to the linked Project with Status=`Todo`; this makes them visible to `audit` for health auditing and project tracking
-- NEVER assign `priority:*`, `effort:*`, or milestone to a stub
+- `type:external-blocker` stubs MUST be added to the linked Project with Status=`Todo` so `audit` can track and health-check them
+- NEVER assign `priority:*`, `effort:*`, or a milestone to a stub
 - NEVER assign the stub to a user
 - One stub per external constraint: if the same external issue blocks multiple items, create one stub and run `/block-item` separately for each additional target
-- If the user wants to block an item with an existing stub (already created), direct them to `/block-item #N #stub` instead of creating a duplicate
-- Stubs are resolved (closed) via `/resolve-external-blocker`; never close them manually
-- Surface all `gh` errors verbatim; never swallow
+- If the user wants to block an item with an existing stub, direct them to `/block-item #N #stub` instead of creating a duplicate
+- Close stubs only via `/resolve-external-blocker`, never manually
+- Surface all `gh` errors verbatim
 
-## Output Expectations
+## Output
 
 - Stub issue URL and number (`#stub`)
 - Stub title

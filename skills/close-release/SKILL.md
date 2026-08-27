@@ -7,21 +7,19 @@ description: "Orchestrate milestone closure: audit completion, cut the release t
 
 You are an AI agent acting as a release manager responsible for orchestrating a structured milestone closure ceremony.
 
-The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
-
 ## Objective
 
-Close a GitHub Milestone cleanly: resolve every open issue interactively, satisfy all project-specific pre-closure requirements (version bumps, release instructions from project docs), compose and create a GitHub Release draft, and close the Milestone, in that order.
+Close a GitHub Milestone: resolve every open issue interactively, satisfy all project-specific pre-closure requirements (version bumps, release instructions from project docs), compose and create a GitHub Release draft, and close the Milestone, in that order.
 
 ## Workflow
 
-### 0. Preflight (MANDATORY)
+### 0. Preflight
 
 Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
-### 1. Milestone Resolution (MANDATORY)
+### 1. Milestone resolution
 
 The skill accepts an optional milestone argument (title substring or version string).
 
@@ -29,7 +27,7 @@ Run `resolve-milestone "<argument>"` if an argument was provided, or `resolve-mi
 
 Display the resolved milestone title, number, `due_on`, and open/closed issue counts. Use **AskUserQuestion** to ask for explicit confirmation before proceeding; **closing a milestone is irreversible**.
 
-### 2. Open Issue Resolution (STRICT)
+### 2. Open issue resolution
 
 Fetch all open issues assigned to the milestone:
 
@@ -44,7 +42,7 @@ For each open issue, use **AskUserQuestion** to present it (number, title, label
   - Execute: `gh issue edit <n> --milestone "<next-milestone-title>"`
 
 **B: Close as won't fix**: close the issue and record the disposition.
-  - Execute: `gh issue close <n> --comment "Closing as won't fix — not included in <milestone-title>."`
+  - Execute: `gh issue close <n> --comment "Closing as won't fix, not included in <milestone-title>."`
 
 **C: Return to backlog**: remove the milestone assignment and leave the issue open in the Project Todo column.
   - Execute: `gh issue edit <n> --milestone ""`
@@ -57,11 +55,11 @@ After all open issues are resolved, print a disposition summary before proceedin
 - Closed as won't fix: #N list
 - Returned to backlog: #N list
 
-### 3. Pre-closure Checklist (MANDATORY)
+### 3. Pre-closure checklist
 
-When performing pre-closure verification: read [pre-closure.md](./pre-closure.md) for the full checklist.
+Read [pre-closure.md](./pre-closure.md) for the full checklist.
 
-### 4. Release Notes Composition (MANDATORY)
+### 4. Release notes composition
 
 #### 4.1 Auto-generated base draft
 
@@ -84,7 +82,7 @@ Scan each closed issue's `### What` and `### INVEST Notes` body sections for sig
 - Configuration or schema changes
 - Migration requirements
 
-Compose an enrichment section that supplements the auto-generated PR list with issue-level context the PR list would miss.
+Compose an enrichment section that adds issue-level context the auto-generated PR list would miss.
 
 #### 4.3 Custom preamble
 
@@ -104,7 +102,7 @@ Assemble the full release notes in this order:
 
 Present the composed draft to the user for review and use **AskUserQuestion** to ask for explicit approval or requested edits before proceeding. Do NOT create the GitHub Release until the notes are approved.
 
-### 5. GitHub Release Creation (MANDATORY)
+### 5. GitHub Release creation
 
 Create the GitHub Release in **draft** state with the approved notes:
 
@@ -127,7 +125,7 @@ git push origin "<milestone-title>"
 
 If the tag push fails (e.g. the tag already exists locally or on the remote), surface the error verbatim and use **AskUserQuestion** to prompt the user to resolve it before continuing. Do NOT proceed to Step 6 until the tag push succeeds.
 
-### 6. Milestone Closure (MANDATORY)
+### 6. Milestone closure
 
 Close the milestone only after Steps 2–5 are fully complete:
 
@@ -135,7 +133,7 @@ Close the milestone only after Steps 2–5 are fully complete:
 
 Surface any error verbatim. Do not proceed to Step 7 if this call fails.
 
-### 7. Output Summary
+### 7. Output summary
 
 Print:
 
@@ -152,7 +150,7 @@ Print:
   - "Run `/plan-release` to open the next milestone"
   - "Publish the Release draft on GitHub when ready: <release-url>"
 
-## Rules & Constraints
+## Rules & constraints
 
 - Do NOT close the milestone until all open issues are resolved (Step 2), the pre-closure checklist is satisfied (Step 3), the release notes are approved (Step 4), and the Release draft is created (Step 5).
 - Do NOT auto-select dispositions for open issues: each must be presented with **AskUserQuestion** and handled interactively.
@@ -165,9 +163,9 @@ Print:
 - Milestone closure is irreversible; always use **AskUserQuestion** to confirm the resolved milestone with the user before any destructive action.
 - Always use the milestone **title** (not number) when reassigning issues with `gh issue edit --milestone`.
 
-## Output Expectations
+## Output expectations
 
-- Conversational guidance through each interactive step: the user should never be surprised by a state change.
+- Guide the user through each interactive step. No state change should arrive unannounced.
 - Disposition summary after open issue resolution, before proceeding to the pre-closure checklist.
 - Pre-closure checklist output: items found, classification (file-only / manual), and outcome, before release notes are composed.
 - Full release notes draft presented for review before the Release is created.

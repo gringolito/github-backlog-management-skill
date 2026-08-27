@@ -9,13 +9,13 @@ You are an AI agent acting as a development lead. Select the topmost actionable 
 
 ## Workflow
 
-### 0. Preflight (MANDATORY)
+### 0. Preflight
 
 Read the [preflight contract](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
-### 1. Item Selection (MANDATORY)
+### 1. Item selection
 
 Run `select-item` via the Bash tool. If it exits non-zero, STOP and surface its stderr verbatim.
 
@@ -35,7 +35,7 @@ Capture the JSON output:
 
 Surface any `warnings` found before proceeding.
 
-If `candidate` is null surface `message`. When all candidates are blocked: read the [blocker analysis](./blocker-analysis.md) table. Then STOP.
+If `candidate` is null surface `message`. When all candidates are blocked, read the [blocker analysis](./blocker-analysis.md) table. Then STOP.
 
 Display each `in_progress` item issue number, title, milestone, labels and PR status.
 
@@ -45,23 +45,23 @@ Then use AskUserQuestion with options built dynamically: one option per in-progr
 
 Surface the `skipped_blocked` items table in the eventual plan output so the user knows why the queue was deeper than expected.
 
-Log each `skipped_for_sub_issues` as `Skipping parent #N — open sub-issues found.`
+Log each `skipped_for_sub_issues` as `Skipping parent #N, open sub-issues found.`
 
 If the picked item's `priority:*` label appears mismatched against its Project rank, surface the discrepancy so the user can confirm or reorder.
 
-#### 1.1 Issue Comment History
+#### 1.1 Issue comment history
 
 Display the full comment thread in `candidate.comments` if available; One comment per block, in chronological order, including the author and timestamp.
 
-### 2. Sub-issue Scope Check
+### 2. Sub-issue scope check
 
-Use `candidate.sub_issues_summary` from the script output, when all sub-issues are closed (`completed == total AND total > 0`) read the [Scope Completeness](./scope-completeness.md) for the full review protocol. Then STOP.
+Use `candidate.sub_issues_summary` from the script output, when all sub-issues are closed (`completed == total AND total > 0`) read the [scope completeness](./scope-completeness.md) for the full review protocol. Then STOP.
 
-#### type:epic Gate
+#### type:epic gate
 
-When `candidate.labels` includes `type:epic` AND the item did not enter **Scope Completeness** review above STOP and tell the user to decompose the epic into sub-issues or add them into the project.
+When `candidate.labels` includes `type:epic` AND the item did not enter scope completeness review above STOP and tell the user to decompose the epic into sub-issues or add them into the project.
 
-### 3. Item Validation (MANDATORY)
+### 3. Item validation
 
 Use `candidate.body` and `candidate.labels` from the `select-item` output and parse the body sections (`### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`, `### INVEST Notes`). Validate against INVEST principles:
 
@@ -95,7 +95,7 @@ Once the item is validated:
 If `candidate.parent` is available:
 
 - Extract `### What` and `### Why` sections from `candidate.parent.body`
-- Display the parents issue number, title, what and why sections before the implementation plan
+- Display the parent's issue number, title, what and why sections before the implementation plan
 - In case of missing sections show what is available, emit warnings for the missing and proceed
 
 Propose a concise implementation plan that:
@@ -106,18 +106,18 @@ Propose a concise implementation plan that:
 - Research the solution online if needed
 - Aligns with the parent context found
 
-When the item carries `type:spike`, the plan should reflect the investigation approach and likely shape of the findings document, not a code change; it is handed off to `/spike` for execution in Step 6 below.
+When the item carries `type:spike`, the plan should reflect the investigation approach and likely shape of the findings document, not a code change. Hand it off to `/spike` for execution in Step 6.
 
-Evaluate the scope of the work and if you identify that the item is too large for a single iteration consider:
+If the item is too large for a single iteration, consider:
 
 - Draft a split proposal: list each sub-issue with a title, What/Why/Acceptance Criteria, suggested type/priority/effort labels, and how they map to the parent's Acceptance Criteria
 - Present the proposal and wait for explicit approval
 - After approval invoke `/add-item` for each sub-issue in sequence, passing the parent issue number so it handles the sub-issue relationship
-- If two or more sub-issues were just created check the Sibling Dependency Inference below
+- If two or more sub-issues were just created check the sibling dependency inference below
 - Move the current item back to Todo and un-assign it
-- STOP. This session is complete. Re-run `/pick-item` to pick the first sub-issue
+- STOP. Re-run `/pick-item` to pick the first sub-issue
 
-#### Sibling Dependency Inference
+#### Sibling dependency inference
 
 1. Call `dependency-inferrer` with:
    - Prose: the body of each newly created sub-issue, labeled with `#<n> "<title>"`
@@ -133,7 +133,7 @@ Evaluate the scope of the work and if you identify that the item is too large fo
    User can accept all, reject all, or cherry-pick.
 4. For each accepted candidate, delegate to `/block-item #<this-num> #<target-num>`. Surface any errors verbatim; continue applying remaining confirmed candidates.
 
-#### Branching Prefix
+#### Branching prefix
 
 Skip for continued work (items already in progress)
 
@@ -161,9 +161,9 @@ Close with a hand-off including:
 - Parent items skipped because open sub-issues were found in the Project's Todo column
 - Whether this item was **resumed** (was already In Progress) or **newly picked** (was Todo)
 
-Then suggest any contextually relevant skills for continuing this item's work.
+Suggest relevant skills for continuing the work.
 
-## Rules & Constraints
+## Rules & constraints
 
 - Do NOT proceed without plan approval
 - Do NOT make assumptions, ask questions if needed

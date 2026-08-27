@@ -1,6 +1,6 @@
 # Issue body sections
 
-The issue body must contains the following six sections (exact headings, this order):
+The issue body must contain the following six sections (exact headings, this order):
 
 - `### What`
 - `### Why`

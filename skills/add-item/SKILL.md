@@ -7,19 +7,17 @@ description: Add a new backlog item to the GitHub Project with INVEST validation
 
 You are an AI agent acting as a Senior Project Manager responsible for maintaining the project backlog.
 
-Your goal is to define, refine, prioritize, and add high-quality backlog items to GitHub using strict product and engineering standards.
-
 ## Workflow
 
-### 0. Preflight (MANDATORY)
+### 0. Preflight
 
 Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
-### 1. Discovery (MANDATORY)
+### 1. Discovery
 
-- Ask clarifying questions to fully understand the request
+- Ask clarifying questions until ambiguities are resolved
 - Identify:
   - Desired outcome
   - User/business impact
@@ -31,18 +29,15 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
 - Challenge vague or poorly defined requests
 - DO NOT create a backlog item until all critical ambiguities are resolved
 
-### 2. Definition (STRICT)
+### 2. Definition
 
-Delegate body authoring to the `issue-body-author` agent:
-
-- **Mode**: `create`
-- **Input**: the title and all context gathered in step 1 (desired outcome, user/business impact, constraints, risks, edge cases, scope inclusions and exclusions, acceptance criteria, and classification notes)
+Delegate body authoring to the `issue-body-author` agent in `create` mode, passing the title and all context from step 1: desired outcome, user/business impact, constraints, risks, edge cases, scope inclusions/exclusions, acceptance criteria, and classification notes.
 
 The agent returns a fully structured body with canonical sections; read [../github-backlog-management/issue-body-sections.md](../github-backlog-management/issue-body-sections.md) for the exact headings and order.
 
 If the agent marks any section with `<!-- TODO: ... -->`, STOP and resolve those gaps with the user before proceeding to step 3.
 
-Issue title: concise and descriptive.
+Issue title: short and specific.
 
 Type, Priority, and Effort are NOT in the body; they are applied as repository labels:
 
@@ -50,9 +45,9 @@ Type, Priority, and Effort are NOT in the body; they are applied as repository l
 - `priority:<P0|P1|P2|P3>`: exactly one priority label
 - `effort:<XS|S|M|L|XL>`: exactly one effort label, based on complexity (NOT time)
 
-### 3. INVEST Enforcement (MANDATORY)
+### 3. INVEST enforcement
 
-Delegate to the `invest-gate` agent with the body constructed in step 2 and the issue title.
+Delegate to the `invest-gate` agent with the body from step 2 and the issue title.
 
 If `invest-gate` returns `Overall: FAIL`:
 
@@ -61,16 +56,13 @@ If `invest-gate` returns `Overall: FAIL`:
 - For any `FAIL` letter, propose a corrected version of the relevant section
 - Do NOT proceed to step 4 until the user approves corrections and `invest-gate` returns `Overall: PASS`
 
-### 4. Classification + Label Application
+### 4. Classification + label application
 
-Delegate classification to the `label-classifier` agent:
-
-- **Input**: `owner`/`repo`, the issue title and the body produced in step 2
-- The agent returns a verdict for each of the three label groups (`type:*`, `priority:*`, `effort:*`) with one-line reasoning
+Delegate classification to the `label-classifier` agent, passing `owner`/`repo`, the issue title, and the body from step 2. The agent returns a verdict for each label group (`type:*`, `priority:*`, `effort:*`) with one-line reasoning.
 
 Handle the returned verdict:
 
-- `type:*`: if the agent returns `unclear: type`, STOP and use AskUserQuestion, offering the 3–4 most contextually likely types as options (choose from: `feature`, `bug`, `security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`, `epic`, `external-blocker`); "Other" is automatically provided for anything not listed
+- `type:*`: if the agent returns `unclear: type`, STOP and use AskUserQuestion, offering the 3-4 most contextually likely types as options (choose from: `feature`, `bug`, `security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`, `epic`, `external-blocker`); "Other" is automatically provided for anything not listed
 - `priority:*`: if the agent returns `unclear: priority`, present the reasoning and use AskUserQuestion with options: `P0` / `P1` / `P2` / `P3`; default to `priority:P2` only if the user explicitly selects it
 - `effort:*`: if the agent returns `unclear: effort`, present the reasoning and use AskUserQuestion with the 4 most contextually relevant sizes as options (from `XS`, `S`, `M`, `L`, `XL`); "Other" is automatically provided for the fifth
 
@@ -87,27 +79,25 @@ Ensure:
 - Item is not a mix of multiple concerns
 - Effort matches complexity
 
-If too large → propose splitting
-If too vague → request clarification
+If too large, propose splitting. If too vague, request clarification.
 
-### 6. Dependencies & Sub-issue Linkage
+### 6. Dependencies & sub-issue linkage
 
-Include in the manifest any relationships gathered in step 1 (Discovery): `blocked_by`, `blocking`, and `parent`.
+Include in the manifest any relationships gathered in step 1: `blocked_by`, `blocking`, and `parent`.
 
 If the user did not name any blockers, blocking items, or a sub-issue parent, omit these fields entirely.
 
-### 7. Execution Rank (MANDATORY, RELATIVE)
+### 7. Execution rank
 
-**Execution rank:** the order items are executed is determined by their Rank in the Queue; `execute-item` always picks the topmost item.
+Execution order comes from Rank in the Queue; `execute-item` always picks the topmost item.
 
-This skill is responsible for determining the appropriate rank by RELATIVE analysis against existing Todo items, NOT defaulting to bottom-of-column.
+Determine rank by RELATIVE analysis against existing Todo items, NOT by defaulting to bottom-of-column.
 
-The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next; execution order is set by Rank. Severity and rank should be **kept consistent**: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
+The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next; execution order is set by Rank. Severity and rank should be kept consistent: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
 
 #### 7a. Determine the new item's rank by delegating to `rank-recommender`
 
-Call the `rank-recommender` agent with:
-- **Candidate item**: the issue title, one-line `### What` summary, and the `type:*`, `priority:*`, `effort:*` labels from step 4
+Call the `rank-recommender` agent, passing the issue title, one-line `### What` summary, and `type:*`, `priority:*`, `effort:*` labels from step 4.
 
 The agent fetches the current Todo list itself and returns:
 - `position:`: `top` | `after_issue: <N>` | `bottom`
@@ -121,15 +111,15 @@ Present the agent's recommendation and rationale to the user before proceeding. 
 
 #### 7b. Surface re-rank suggestions for existing items
 
-If the analysis reveals existing items that appear misranked relative to the new item OR relative to each other (e.g. a `priority:P3` sitting above a `priority:P1`), list each suggested move with rationale. DO NOT apply them silently.
+If the analysis reveals existing items that appear misranked relative to the new item or each other (e.g. a `priority:P3` sitting above a `priority:P1`), list each suggested move with rationale. DO NOT apply them silently.
 
-#### 7c. Apply rank (USER-CONFIRMED ONLY)
+#### 7c. Apply rank (user-confirmed only)
 
-After the user confirms the proposed Rank placements, include the confirmed `rank` in the manifest and any `rank_adjustments` for re-ranked existing items. 
+After the user confirms the proposed Rank placements, include the confirmed `rank` in the manifest and any `rank_adjustments` for re-ranked existing items.
 
 If the user prefers to apply moves manually, omit `rank` and `rank_adjustments` from the manifest and instruct the user to drag-drop in the Project's web UI.
 
-### 8. Milestone Assignment (OPTIONAL, RECOMMENDED)
+### 8. Milestone assignment (optional, recommended)
 
 Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON: `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
 
@@ -138,7 +128,7 @@ Ask the user whether to assign this item to the Active Release:
 - If yes: include `"milestone": "<milestone-title>"` in the manifest passed to `create-item`
 - If no: omit the `milestone` field (will be picked up by `execute-item` only after items in the Active Release are exhausted)
 
-### 9. Issue Creation & Project Setup (MANDATORY)
+### 9. Issue creation & project setup
 
 After validation passes, invoke the `create-item` Bash tool to create the issue:
 
@@ -148,12 +138,12 @@ After validation passes, invoke the `create-item` Bash tool to create the issue:
 See [issue-manifest.md](./issue-manifest.md) for the full manifest schema.
 
 3. Run: `create-item --input /tmp/add-item-manifest.json`
-4. Capture the JSON blob emitted to stdout; use it for Step 10.
+4. Capture the JSON blob emitted to stdout; use it for step 10.
 
 Branch on the exit code:
 
-- **Exit 0**: success. Proceed to Step 10 as normal.
-- **Exit 2**: the issue **was created**, but a post-creation step warned. Parse the JSON blob from stdout anyway and proceed to Step 10, reporting the issue as created. Do NOT retry or re-run `create-item` for this request, retrying would create a duplicate.
+- **Exit 0**: success. Proceed to step 10 as normal.
+- **Exit 2**: the issue **was created**, but a post-creation step warned. Parse the JSON blob from stdout anyway and proceed to step 10, reporting the issue as created. Do NOT retry or re-run `create-item` for this request; retrying would create a duplicate.
 - **Any other non-zero exit**: nothing was created (e.g. `gh issue create` itself failed). STOP and surface its stderr output verbatim. It is safe to retry once the underlying input is fixed.
 
 ### 10. Output
@@ -171,14 +161,13 @@ Using the JSON blob returned by `create-item`, print:
 - Sub-issue parent (`.parent`), or "none"
 - Any warnings (`.warnings`: surface each one verbatim)
 
-## Rules & Constraints
+## Rules & constraints
 
-- Always ask questions before creating items unless the request is perfectly clear
+- Ask questions before creating items unless the request is unambiguous
 - Never assume requirements
 - Keep items atomic and independently deliverable
 - Do NOT bundle multiple problems into a single item
-- Prefer clarity over brevity
-- If exploratory → classify as Spike (`type:spike`)
+- Exploratory work: classify as Spike (`type:spike`)
 - Effort must NEVER be measured in time (no hours/days)
 - Issue body section headings MUST match the Issue Forms template exactly (case + ordering) so `audit` can parse them
 - Never apply more than one label per group (one type, one priority, one effort)

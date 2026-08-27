@@ -13,11 +13,11 @@ You are an AI agent acting as a development lead. Execute the Workable Item sele
 
 ## Workflow
 
-### 1. Item Selection (MANDATORY)
+### 1. Item selection
 
-Invoke `/pick-item` to select, validate, plan, and assign the next Workable Item. Take `pick-item`'s resulting candidate and approved plan forward into the steps below.
+Invoke `/pick-item` to select, validate, plan, and assign the next Workable Item. Use the candidate and approved plan from `pick-item` in the steps below.
 
-If `pick-item` stops for any reason (INVEST failure, all candidates blocked, epic gate, sub-issue split, Scope Completeness Review, etc.), STOP here too; do not attempt to route around it.
+If `pick-item` stops for any reason (INVEST failure, all candidates blocked, epic gate, sub-issue split, Scope Completeness Review, etc.), stop here too. Do not work around it.
 
 ### 2. Branching
 
@@ -35,14 +35,14 @@ Branch name format: `<prefix>/<slug>` (e.g. `fix/null-pointer-in-authn`).
 
 ### 3. Implementation
 
-#### For Bugs
+#### For bugs
 
 - Use TDD and write/update tests to reproduce the issue
 - Ensure tests FAIL before fixing
 - Implement the fix
 - Ensure tests PASS after fix
 
-#### For Features / Others
+#### For features and others
 
 - Implement what was described following the existing project patterns
 - Add new tests that validate Acceptance Criteria
@@ -53,7 +53,7 @@ Branch name format: `<prefix>/<slug>` (e.g. `fix/null-pointer-in-authn`).
 - Run full test suite
 - Ensure no regressions
 
-### 5. Delivery Workflow
+### 5. Delivery workflow
 
 - Commit using Conventional Commits format. Include `Refs #<issue-number>` in the commit body.
 - Push the branch.
@@ -61,7 +61,7 @@ Branch name format: `<prefix>/<slug>` (e.g. `fix/null-pointer-in-authn`).
   - `Closes #<issue-number>` (so GitHub auto-links and auto-closes the issue on merge)
   - A summary of changes mapped to each Acceptance Criterion
 
-### 6. Status & Closure (POST-PR)
+### 6. Status and closure (post-PR)
 
 GitHub handles the rest automatically:
 
@@ -83,7 +83,7 @@ Print:
 - Assignee (the authenticated user, assigned by `pick-item`)
 - Final Project Status (typically `In Progress` until PR merges)
 
-## Rules & Constraints
+## Rules and constraints
 
 - Do NOT exceed defined Scope
 - Do NOT ignore Acceptance Criteria

@@ -1,15 +1,13 @@
-# Backlog Management
+# Backlog management
 
-The domain of this plugin: managing a software backlog entirely through GitHub-native
-primitives (Issues, Projects v2, Milestones, Labels). The language below is the shared
-vocabulary every skill, agent, and doc in this repo must speak.
+This plugin manages a software backlog through GitHub-native primitives: Issues, Projects v2, Milestones, Labels. The language below is the shared vocabulary every skill, agent, and doc in this repo must speak.
 
 ## Language
 
 ### Records
 
 **Issue**:
-The GitHub Issue. This is the backing record for every Backlog Item; there is no separate data store.
+The GitHub Issue. The backing record for every Backlog Item. No separate data store.
 "Backlog Item" is the domain reading of an Issue tracked in the Project.
 
 **Project**:
@@ -31,7 +29,7 @@ _Avoid_: work item (reads like a generic synonym for "task" and obscures the wor
 
 **Non-Workable Item**:
 A Backlog Item that is never built, excluded from all counts, metrics, release scope, and
-execution. The branch opposite a Workable Item. Today its only kind is the **Stub**; future
+execution. The branch opposite a Workable Item. Today its only kind is the **Stub**. Future
 kinds (e.g. an **Epic**: a container that organizes work without itself being built) belong
 here too.
 
@@ -39,7 +37,7 @@ here too.
 The one current kind of Non-Workable Item: the encapsulation of an **External Blocker**, an
 out-of-team-control constraint recorded so it can block Workable Items. Carries
 `type:external-blocker` and is created only by `/add-external-blocker` (cleared by `/resolve-external-blocker`).
-_Avoid_: using "Stub" as a synonym for the whole Non-Workable Item category; it is one kind of it
+_Avoid_: using "Stub" as a synonym for the whole Non-Workable Item category. It is one kind of it.
 
 ### Classification
 
@@ -72,18 +70,18 @@ The queue `/refine-backlog` works from. Removed only after a passing INVEST gate
 ### Ordering & lifecycle
 
 **Backlog**:
-The full collection of Backlog Items tracked in the linked Project. An umbrella, *not* a
-lifecycle state; there is no "Backlog" Status.
-_Avoid_: Backlog (as a Status value; the states are Todo / In Progress / Done)
+The full collection of Backlog Items tracked in the linked Project. An umbrella, not a
+lifecycle state. There is no "Backlog" Status.
+_Avoid_: Backlog (as a Status value. The states are Todo / In Progress / Done)
 
 **Status**:
 The single custom field on the Project, and the lifecycle state of a Backlog Item: one of
-`Todo`, `In Progress`, `Done`. The only Project-level field; Type, Priority, and Effort live
+`Todo`, `In Progress`, `Done`. The only Project-level field. Type, Priority, and Effort live
 as repo labels, not Status.
 
 **Rank**:
-The manual execution order of items in the Project's Todo column; topmost wins. Answers
-"what do we do next?". The sole input to execution order; `/execute-backlog-item` reads
+The manual execution order of items in the Project's Todo column. Topmost wins. Answers
+"what do we do next?". The sole input to execution order. `/execute-backlog-item` reads
 Rank only and ignores Priority for ordering.
 _Avoid_: position (the GitHub Projects API term), priority (a different concept)
 
@@ -96,17 +94,15 @@ _Avoid_: Todo column (acceptable informally, but "Queue" names the ordered inten
 
 **Release**:
 A versioned increment of work: a scope of Backlog Items, a target version, and a due date.
-The canonical planning unit. Realized as a **Milestone**; culminating in a published
-**Release artifact** at closure.
+The canonical planning unit. Realized as a **Milestone**. Closes with a published **Release artifact**.
 _Avoid_: sprint, iteration
 
 **Milestone**:
 The GitHub object that realizes a Release (carries `due_on`, scope, and open/closed state).
-Use "Milestone" when you mean the concrete GitHub thing specifically; use "Release" when you
-mean the planning concept.
+Use "Milestone" when you mean the concrete GitHub thing. Use "Release" when you mean the planning concept.
 
 **Active Release**:
-The Release work currently targets by default: the earliest open Milestone by `due_on`,
+The Release targeted by default: the earliest open Milestone by `due_on`,
 tie-broken by lowest version parsed from the title (`v1.2.0` < `v1.3.0`), falling back to
 Milestone `number`. `/pick-item`, `/execute-item`, `/add-item`, `/migrate`, and
 `/release-status` all resolve to this when no Release is named. When a Release name is given, it is matched by
@@ -129,7 +125,7 @@ _Avoid_: using bare "Release" for the artifact when the planning unit is also in
 
 **Dependency**:
 A directed relationship between two Issues, recorded via GitHub Issue Dependencies
-(`blocked_by` / `blocking`). The source of truth for whether an item is gated; never mirrored
+(`blocked_by` / `blocking`). The source of truth for whether an item is gated. Never mirrored
 into the issue body. A blocked item is skipped by `/execute-backlog-item`.
 _Avoid_: link, relation
 
@@ -139,11 +135,11 @@ proceed. May be a Workable Item or a Stub.
 
 **External Blocker**:
 A Blocker that is a Stub, an out-of-team-control constraint. The role a `type:external-blocker`
-Stub plays. Created by `/add-external-blocker`; cleared by `/resolve-external-blocker`.
+Stub plays. Created by `/add-external-blocker`. Cleared by `/resolve-external-blocker`.
 
 **Sub-issue** / **Parent**:
 Hierarchical decomposition recorded via GitHub `sub_issues`. A sub-issue does NOT inherit its
-parent's Release, Priority, Effort, Type, or Rank; the two are independent. A sub-issue has at
+parent's Release, Priority, Effort, Type, or Rank. The two are independent. A sub-issue has at
 most one parent.
 _Avoid_: epic (for the parent), task (for the sub-issue) unless independently defined
 
@@ -172,7 +168,7 @@ _Avoid_: grooming
 
 **Selection**:
 Picking, validating, planning, and assigning the topmost unblocked Workable Item from the
-Queue; sets it to In Progress. Obeys Rank, skips blocked items, and descends into
+Queue. Sets it to In Progress. Obeys Rank, skips blocked items, and descends into
 sub-issues. Run by `/pick-item`, whose hand-off suggests `/spike` as the next step for a
 `type:spike` item.
 
@@ -190,18 +186,18 @@ preflight or Selection.
 The verification step entered when a picked Backlog Item has sub-issues and all are closed.
 Cross-references the parent's Acceptance Criteria against closed sub-issues, presents a
 coverage analysis, then either closes the parent (scope complete) or creates new sub-issues
-for uncovered gaps. Part of `/pick-item`; triggered automatically, never run standalone.
+for uncovered gaps. Part of `/pick-item`. Triggered automatically, never run standalone.
 
 **Migration**:
 The one-time bulk import of an existing `BACKLOG.md` into Issues: normalizes labels, skips
 Done items (historical work is not migrated), and offers opt-in Dependency inference. Run by
 `/migrate`.
-_Avoid_: import (acceptable informally; "Migration" is the named activity)
+_Avoid_: import (acceptable informally. "Migration" is the named activity)
 
 ## Flagged ambiguities
 
 **Priority vs Rank**: these are independent and must never be conflated. Priority is a
-severity _label_ (P0–P3); Rank is the _queue order_ in the Todo column. A P0 can sit below
+severity _label_ (P0–P3). Rank is the _queue order_ in the Todo column. A P0 can sit below
 a P2 in Rank if that's the deliberate order of work. Skills recommend keeping them roughly
 consistent, but execution obeys Rank alone.
 

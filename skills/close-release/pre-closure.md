@@ -12,11 +12,11 @@ Read the following files if they exist (in this priority order):
 - `CLAUDE.md` (repo root and `.claude/CLAUDE.md`)
 - `AGENTS.md` (repo root and `.claude/AGENTS.md`)
 
-Extract any instructions tagged with keywords: "release", "close release", "publish", "version bump", "before releasing", "pre-release", "checklist", or similar in meaning. Present each instruction found as a numbered checklist item.
+Extract any instructions tagged with keywords: "release", "close release", "publish", "version bump", "before releasing", "pre-release", "checklist", or similar. Present each instruction found as a numbered checklist item.
 
 ## Version consistency check
 
-Search the repository for files that commonly embed version literals. The table below is a starting-point reference, do not treat it as an exhaustive list. Also scan for any other project-specific files (custom manifests, config files, documentation) that appear to declare a version string.
+Search the repository for files that embed version literals. Treat the table below as a starting point, not an exhaustive list. Also scan for project-specific files (custom manifests, config files, documentation) that declare a version string.
 
 | File pattern | Version field |
 | --- | --- |
@@ -32,13 +32,13 @@ Search the repository for files that commonly embed version literals. The table 
 | `build.gradle` / `build.gradle.kts` | `version =` |
 | `pom.xml` | `<version>` (top-level project only) |
 
-For each found file, extract the version string and compare it against the milestone title (strip a leading `v` from both before comparing). Flag any mismatch as:
+For each file found, extract the version string and compare it against the milestone title (strip a leading `v` from both before comparing). Flag any mismatch as:
 
 > ⚠️ Version mismatch: `<file>` declares `<found-version>` but milestone is `<milestone-title>`.
 
 ## Action classification and execution
 
-Collect all items from the previous steps into a unified checklist. Classify each as one of:
+Collect all items from the previous steps into a checklist. Classify each as one of:
 
 - **File update change**: The action requires only committing updated files in the repository (e.g. bumping a version literal, updating a changelog file). For these:
 
