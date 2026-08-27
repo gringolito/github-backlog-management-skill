@@ -25,7 +25,7 @@ When you finish, output a summary of your findings, a recommendation on the best
    - `## Question`: restate the spike's investigative question
    - `## Approach`: what was investigated, sources consulted, prototypes built
    - `## Findings`: what was learned, including dead-ends
-   - `## Recommendation`: the recommended path forward (or "abandon — see Findings")
+   - `## Recommendation`: the recommended path forward (or "abandon; see Findings")
    - `## Follow-on Work`: bulleted list of new backlog items this spike surfaces (filled in step 6)
 4. Present a concise findings summary and recommendation. Pause and wait for explicit user approval before modifying the findings document or creating follow-on backlog items.
 5. Propose follow-on backlog items for each piece of surfaced work. Create one backlog item per independently deliverable piece of work. Avoid combining unrelated implementation tasks into a single issue. Present the full list to the user and wait for explicit approval per item (some may be discarded).
@@ -33,7 +33,7 @@ When you finish, output a summary of your findings, a recommendation on the best
 7. The spike's PR typically contains only the findings document. Code changes (if any) belong in the follow-on items, prototypes are throwaway code.
 8. Confirm the findings document exists at `docs/spikes/<number>-<slug>.md` with all required sections, every approved follow-on was created and referenced in `## Follow-on Work`.
 9. Commit using Conventional Commits format. Include `Refs #<issue-number>` in the commit body. Push the branch.
-10. Open a Pull Request via `gh pr create`, passing `--milestone "<milestone-title>"` when the issue has one. PR body MUST include `Closes #<issue-number>` and list every follow-on item created (`#<new-issue-number> — <title>`), so reviewers can audit that the surfaced work landed in the backlog. It is expected for a spike PR to contain no code changes.
+10. Open a Pull Request via `gh pr create`, passing `--milestone "<milestone-title>"` when the issue has one. PR body MUST include `Closes #<issue-number>` and list every follow-on item created (`#<new-issue-number>: <title>`), so reviewers can audit that the surfaced work landed in the backlog. It is expected for a spike PR to contain no code changes.
 11. Print: issue URL/number, PR URL/number, branch name, assignee, final Project Status, follow-on items created.
 12. STOP. This item's run is complete.
 

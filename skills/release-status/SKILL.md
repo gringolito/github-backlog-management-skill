@@ -9,11 +9,11 @@ You are an AI agent acting as a release manager responsible for producing a real
 
 The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
 
-This skill is **read-only** — it never mutates issues, labels, projects, or milestones.
+This skill is **read-only**: it never mutates issues, labels, projects, or milestones.
 
 ## Objective
 
-Produce a Markdown release health dashboard for a target milestone: issue counts by Project Status, percentage complete, blocked items, and unestimated items — aggregated with zero manual querying with zero manual querying.
+Produce a Markdown release health dashboard for a target milestone: issue counts by Project Status, percentage complete, blocked items, and unestimated items, aggregated with zero manual querying with zero manual querying.
 
 ## Workflow
 
@@ -33,13 +33,13 @@ Run `resolve-milestone "<argument>"` if an argument was provided, or `resolve-mi
 
 With the resolved milestone in hand, run these queries:
 
-1. **Issues assigned to the milestone** (two queries — state is inferred from which query returned the item):
+1. **Issues assigned to the milestone** (two queries; state is inferred from which query returned the item):
    - Open: `gh project item-list <project-number> --owner <owner> --query "is:issue state:open milestone:<milestone-title>" --format json --limit 500`
    - Closed: `gh project item-list <project-number> --owner <owner> --query "is:issue state:closed milestone:<milestone-title>" --format json --limit 500`
 
    All returned items are Project members by definition. The `status` field (`Todo` / `In Progress` / `Done`) is available directly on each item.
 
-   After fetching, **partition the results**: set aside any issue whose labels include `type:external-blocker` — these are Stubs and are **excluded from all Milestone counts and metrics**. They are retained only to enrich the blocked-items table with stub titles as blocker context (step 3).
+   After fetching, **partition the results**: set aside any issue whose labels include `type:external-blocker`; these are Stubs and are **excluded from all Milestone counts and metrics**. They are retained only to enrich the blocked-items table with stub titles as blocker context (step 3).
 
 2. **Blocker check** (open issues only):
    For each open issue, call: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`
@@ -94,29 +94,29 @@ If all open issues carry an `effort:*` label:
 
 Otherwise, a bulleted list of open issues missing `effort:*`:
 
-- `#N` — title (`<Status>`)
+- `#N`: title (`<Status>`)
 
 #### All Issues
 
 Issues grouped by Status:
 
 **✅ Done (N)**
-- [x] [#N](\<url\>) — title
+- [x] [#N](\<url\>): title
 
 **🔄 In Progress (N)**
-- [ ] [#N](\<url\>) — title
+- [ ] [#N](\<url\>): title
 
 **📋 Todo (N)**
-- [ ] [#N](\<url\>) — title
+- [ ] [#N](\<url\>): title
 
 ## Rules & Constraints
 
-- This skill is **strictly read-only** — never mutate any issue, Project field, milestone, or label.
-- Surface all `gh` errors verbatim — never swallow.
+- This skill is **strictly read-only**: never mutate any issue, Project field, milestone, or label.
+- Surface all `gh` errors verbatim; never swallow.
 - Issue Dependencies API `404` must emit one warning line and gracefully skip the blocked-items section; it must not abort the rest of the report.
 - % complete is computed over all non-stub issues returned by the project queries.
-- Do NOT pick or recommend execution order — this skill surfaces state only.
+- Do NOT pick or recommend execution order: this skill surfaces state only.
 
 ## Output Expectations
 
-The entire output is the Markdown report — no preamble, no trailing summary, no conversational wrapping. The report must be valid GitHub-Flavored Markdown so the user can paste it directly into a standup document, Slack message, or GitHub comment.
+The entire output is the Markdown report: no preamble, no trailing summary, no conversational wrapping. The report must be valid GitHub-Flavored Markdown so the user can paste it directly into a standup document, Slack message, or GitHub comment.
