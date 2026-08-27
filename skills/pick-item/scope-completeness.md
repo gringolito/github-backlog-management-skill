@@ -1,4 +1,4 @@
-# Scope Completeness Review
+# Scope completeness review
 
 1. Extract `### In Scope` and `### Acceptance Criteria` from `candidate.body` in the context.
 
@@ -11,7 +11,7 @@
    - Format as a checklist:
 
      ```text
-     **Coverage analysis — #N: <parent title>**
+     **Coverage analysis, #N: <parent title>**
 
      Acceptance Criteria:
      - [x] AC1: <text> → covered by #M (<sub-issue title>)
@@ -20,13 +20,13 @@
      ```
 
 4. Present the coverage checklist to the user. Then use AskUserQuestion with two options:
-   - **"Close parent: scope complete"**
-   - **"Create sub-issues for uncovered gaps"**
+   - "Close parent: scope complete"
+   - "Create sub-issues for uncovered gaps"
 
-5. **If "Close parent: scope complete":**
+5. If "Close parent: scope complete":
    - Post a comment with the full coverage checklist: `gh issue comment <n> --body "..."`
    - Close the issue: `gh issue close <n>`
 
-6. **If "Create sub-issues for gaps":**
+6. If "Create sub-issues for uncovered gaps":
    - For each uncovered criterion (marked `[ ]` in the checklist), invoke `/add-item` with the parent issue number so the new items become sub-issues.
    - Suggest re-running `/pick-item` to pick a new Workable Item.

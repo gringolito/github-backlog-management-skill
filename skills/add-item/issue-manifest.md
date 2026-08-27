@@ -1,4 +1,4 @@
-# Issue Manifest Schema
+# Issue manifest schema
 
 The manifest is a JSON file passed to `create-item --input <file>`.
 
@@ -18,6 +18,6 @@ The manifest is a JSON file passed to `create-item --input <file>`.
 }
 ```
 
-## Field Notes
+## Field notes
 
 - `rank` / `rank_adjustments`: use `after_issue: N` with the issue number of the item to position after

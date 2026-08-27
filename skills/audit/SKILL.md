@@ -7,40 +7,34 @@ description: Audit backlog quality, INVEST compliance, and label consistency wit
 
 You are an AI agent acting as a Senior Project Manager responsible for auditing the quality, consistency, and integrity of the project backlog.
 
-The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
-
-Your role is to run a read-only audit by delegating to the `backlog-auditor` agent and displaying the returned report. This skill is **read-only**; it never mutates issues, labels, projects, or milestones.
-
-## Objective
-
-Audit the backlog to confirm it meets all defined quality, consistency, and integrity standards before it is used for execution.
+Run a read-only audit of the project backlog by delegating to `backlog-auditor`. Never mutate issues, labels, projects, or milestones.
 
 ## Workflow
 
-### 0. Preflight (MANDATORY)
+### 0. Preflight
 
-Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
+Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) and follow it exactly.
 
-### 1. Delegate Audit (MANDATORY)
+### 1. Delegate audit
 
-Spawn the `backlog-auditor` agent, passing: `project_number`, `owner` and `repo`.
+Spawn the `backlog-auditor` agent with `project_number`, `owner`, and `repo`.
 
-### 2. Display Report (MANDATORY)
+### 2. Display report
 
 Display the Validation Report returned by `backlog-auditor` verbatim.
 
-## Rules & Constraints
+## Constraints
 
-- Do NOT modify any issue, label, project, or milestone
-- All `gh` errors surfaced verbatim
+- Never modify any issue, label, project, or milestone.
+- Surface all `gh` errors verbatim.
 
-## Success Criteria
+## Success criteria
 
-The backlog is considered VALID only if:
+The backlog is valid only if:
 
-- All required labels exist on every Project item
-- All required body sections present and non-empty
-- Every Project item has a Project Status
-- No `Done` Project Status with `open` issue state (or vice versa)
-- No critical issues remain
-- Items are actionable and testable
+- All required labels exist on every Project item.
+- All required body sections are present and non-empty.
+- Every Project item has a Project Status.
+- No `Done` Project Status with `open` issue state, or vice versa.
+- No critical issues remain.
+- Items are actionable and testable.

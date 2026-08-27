@@ -7,46 +7,40 @@ description: Produce a read-only strategic portfolio health report across all op
 
 You are an AI agent acting as a backlog analyst responsible for producing a strategic portfolio health report across all open issues in the linked GitHub Project.
 
-The backlog lives in GitHub: items are GitHub Issues, prioritization happens inside a linked GitHub Project (v2), and version planning happens through GitHub Milestones.
-
-This skill is **read-only**: it never mutates issues, labels, projects, or milestones.
-
-## Objective
-
-Produce a Markdown strategic portfolio health report covering: open-issue distribution by type, priority, and effort; age cohorts; overdue high-priority items; stale In-Progress items; and metadata debt (items missing label coverage). The report is suitable for weekly leadership updates, retrospectives, or health checks.
+Produce a Markdown strategic portfolio health report across all open issues in the linked GitHub Project, covering: open-issue distribution by type, priority, and effort; age cohorts; overdue high-priority items; stale in-progress items; and metadata debt. Read-only: never mutates issues, labels, projects, or milestones.
 
 ## Workflow
 
-### 0. Preflight (MANDATORY)
+### 0. Preflight
 
-Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
+Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) and follow it exactly.
 
 After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
-### 1. Data Collection (MANDATORY)
+### 1. Data collection
 
 Run these two queries:
 
-1. **All open issues**:
+1. Fetch all open issues:
    `gh issue list --state open --json number,title,labels,assignees,createdAt,updatedAt,url --limit 200`
 
-   After fetching, **pre-filter**: discard any issue whose labels include `type:external-blocker`: these are Stubs, never Workable Items, and are excluded from all counts and metrics.
+   Pre-filter: discard any issue whose labels include `type:external-blocker`. These are Stubs, not Workable Items, and are excluded from all counts and metrics.
 
-2. **Project membership and Status**:
+2. Fetch project membership and status:
    `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue"`
 
-   Build a lookup map: issue `number` → Project `Status` (`Todo` / `In Progress` / `Done`). Issues absent from the map are classified as "Not in Project."
+   Build a lookup map: issue `number` → project `Status` (`Todo` / `In Progress` / `Done`). Issues absent from the map are classified as "Not in Project."
 
-### 2. Compute Report Sections (MANDATORY)
+### 2. Compute report sections
 
 All computations operate on the pre-filtered open-issue set (stubs excluded). Use today's date (UTC) for all age calculations.
 
-#### 2a. Summary Counts
+#### 2a. Summary counts
 
 - Total open issues (stub-excluded)
-- Count in Project vs. count not in Project
+- Count in project vs. count not in project
 
-#### 2b. Distribution by Label Group
+#### 2b. Distribution by label group
 
 For each of the three label groups (`type:*`, `priority:*`, `effort:*`) in canonical order:
 
@@ -56,7 +50,7 @@ For each of the three label groups (`type:*`, `priority:*`, `effort:*`) in canon
 
 For each value present, report count and percentage of total open issues. Add an "_(unlabeled)_" row for issues with no label in that group.
 
-#### 2c. Age Cohorts
+#### 2c. Age cohorts
 
 Group all open issues by time elapsed since `createdAt` into four ranges:
 
@@ -67,26 +61,26 @@ Group all open issues by time elapsed since `createdAt` into four ranges:
 
 Report count and percentage per range.
 
-#### 2d. Overdue High-Priority Items
+#### 2d. Overdue high-priority items
 
-- **P0 overdue**: issues with `priority:P0` open longer than 14 days: list with issue number, title, age in days, and assignee (or "unassigned")
-- **P1 overdue**: issues with `priority:P1` open longer than 30 days: list with issue number, title, age in days, and assignee (or "unassigned")
+- P0: issues with `priority:P0` open longer than 14 days. List with issue number, title, age in days, and assignee (or "unassigned").
+- P1: issues with `priority:P1` open longer than 30 days. List with issue number, title, age in days, and assignee (or "unassigned").
 
 If no overdue items exist in a tier, emit `✅ No overdue <P0/P1> items.`
 
-#### 2e. Stale In-Progress Items
+#### 2e. Stale in-progress items
 
-Issues where Project Status = `In Progress` AND `updatedAt` is more than 7 days ago. List with issue number, title, and last-activity date (YYYY-MM-DD).
+Issues where project status = `In Progress` AND `updatedAt` is more than 7 days ago. List with issue number, title, and last-activity date (YYYY-MM-DD).
 
 If none exist, emit `✅ No stale In-Progress items.`
 
-#### 2f. Metadata Debt
+#### 2f. Metadata debt
 
 Issues missing any of `type:*`, `priority:*`, or `effort:*` labels. For each such issue, note which label group(s) are absent.
 
 If all issues have complete metadata, emit `✅ All open items have complete label metadata.`
 
-### 3. Report Assembly (MANDATORY)
+### 3. Report assembly
 
 Produce a Markdown report with the following sections in this exact order.
 
@@ -135,7 +129,7 @@ _By Effort_
 
 Omit the `_(unlabeled)_` row for a group when its count is 0.
 
-#### Age Cohorts
+#### Age cohorts
 
 | Age         | Count | %   |
 |-------------|-------|-----|
@@ -144,7 +138,7 @@ Omit the `_(unlabeled)_` row for a group when its count is 0.
 | 30–90 days  | N     | N%  |
 | > 90 days   | N     | N%  |
 
-#### Overdue High-Priority Items
+#### Overdue high-priority items
 
 _P0 (threshold: >14 days open)_
 
@@ -160,7 +154,7 @@ _P1 (threshold: >30 days open)_
 
 Emit `✅ No overdue P0 items.` / `✅ No overdue P1 items.` when a tier is empty.
 
-#### Stale In-Progress
+#### Stale in-progress
 
 | Issue        | Title | Last Activity |
 |--------------|-------|---------------|
@@ -168,7 +162,7 @@ Emit `✅ No overdue P0 items.` / `✅ No overdue P1 items.` when a tier is empt
 
 Emit `✅ No stale In-Progress items.` when empty.
 
-#### Metadata Debt
+#### Metadata debt
 
 | Issue        | Title | Missing      |
 |--------------|-------|--------------|
@@ -176,17 +170,17 @@ Emit `✅ No stale In-Progress items.` when empty.
 
 Emit `✅ All open items have complete label metadata.` when empty.
 
-## Rules & Constraints
+## Rules and constraints
 
-- This skill is **strictly read-only**: never mutate any issue, Project field, milestone, or label.
+- Never mutate any issue, project field, milestone, or label.
 - Discard `type:external-blocker` Stubs before all computations; they are not Workable Items.
 - Closed issues are excluded from all sections.
 - Surface all `gh` errors verbatim; never swallow.
 - Percentages rounded to the nearest integer.
 - "Age" is computed from `createdAt` (UTC); "last activity" from `updatedAt` (UTC).
-- If the Project item-list call fails, emit the error verbatim and omit the Status-dependent sections (Stale In-Progress); continue with all other sections using available data.
-- Do NOT recommend execution order or triage actions; this skill surfaces state only.
+- If the project item-list call fails, emit the error verbatim and omit the status-dependent sections (stale in-progress); continue with all other sections using available data.
+- Do not recommend execution order or triage actions. This skill surfaces state only.
 
-## Output Expectations
+## Output expectations
 
-The entire output is the Markdown report: no preamble, no trailing summary, no conversational wrapping. The report must be valid GitHub-Flavored Markdown so the user can paste it directly into a standup document, Slack message, or GitHub comment or Discussion.
+The entire output is the Markdown report: no preamble, no trailing summary, no conversational wrapping. The report must be valid GitHub-Flavored Markdown.

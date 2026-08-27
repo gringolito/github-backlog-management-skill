@@ -14,7 +14,7 @@ Your role is to audit the backlog and return a structured validation report. Thi
 
 ## Workflow
 
-### 1. Backlog Fetch
+### 1. Backlog fetch
 
 Gather the audit dataset:
 
@@ -31,7 +31,7 @@ If structure is unclear or `gh` fails:
 - Flag as a structural error in the report
 - Stop only if data cannot be fetched at all
 
-### 2. Structural Validation (MANDATORY)
+### 2. Structural validation
 
 For EACH issue in the Project, first determine whether it is a `type:external-blocker` stub. Apply the appropriate check path; stubs and Workable Items have different structural rules.
 
@@ -87,7 +87,7 @@ Flag:
 
 Flag items with no Status.
 
-### 3. Acceptance Criteria Quality Check
+### 3. Acceptance criteria quality check
 
 Within `### Acceptance Criteria`:
 
@@ -104,7 +104,7 @@ Flag:
 - Non-verifiable conditions
 - Free-form prose where a checklist is expected
 
-### 4. INVEST Validation (MANDATORY)
+### 4. INVEST validation
 
 For EACH item, delegate to the `invest-gate` agent with the item's full body and title.
 
@@ -113,23 +113,23 @@ Collect all `FAIL` verdicts across items. For each violation:
 - Include the per-letter reasoning returned by `invest-gate`
 - Suggest an improvement
 
-Report all INVEST violations in section **B. Quality Issues**.
+Report all INVEST violations in section **B. Quality issues**.
 
-### 5. Scope Control
+### 5. Scope control
 
 - Ensure items respect `### In Scope` vs `### Out of Scope` boundaries
 - Flag:
   - Scope creep (out-of-scope items implied in acceptance criteria)
   - Mixed concerns (multiple problems in one item; should be split)
 
-### 6. Effort Validation
+### 6. Effort validation
 
 - Ensure `effort:*` reflects complexity (not time)
 - Flag:
   - Oversized items (`effort:XL` consistently; they likely need splitting)
   - Underestimated complexity (acceptance criteria depth doesn't match label)
 
-### 7. Prioritization Consistency
+### 7. Prioritization consistency
 
 Evaluate priority correctness based on:
 
@@ -143,9 +143,9 @@ Flag:
 - Priority inversions (lower-priority items more critical than higher ones)
 - Priority skew (>50% of open items at `priority:P0` is a smell)
 
-### 8. Milestone Hygiene
+### 8. Milestone hygiene
 
-#### Stale Milestone Items
+#### Stale milestone items
 
 Fetch all closed milestones: `gh api "repos/<owner>/<repo>/milestones?state=closed&per_page=100"`
 
@@ -153,7 +153,7 @@ For each closed milestone, find open issues assigned to it that are also present
 
 - Filter the Step 1 project item-list result by `milestone.title` matching `<closed-milestone-title>`.
 
-If stale items are found, display them in "C. Consistency Issues" under a **Stale Milestone Items** heading:
+If stale items are found, display them in "C. Consistency issues" under a **Stale milestone items** heading:
 
 - Summary line: `<N> open issue(s) are assigned to closed milestones but not re-targeted.`
 - One line per item: `#<number> — <title> (closed milestone: <milestone-title>)`
@@ -174,13 +174,13 @@ If stale items are found, display them in "C. Consistency Issues" under a **Stal
 - Items with milestone but NOT in the Project:
   - Flag: they will be invisible to `execute-item`
 
-### 8.5. Dependency & Sub-issue Audit
+### 8.5. Dependency & sub-issue audit
 
 For every Project item, fetch its relationships:
 
 1. **Dependency pre-check**: fetch the item's dependency summary: `gh api "repos/<owner>/<repo>/issues/<n>" --jq '.issue_dependencies_summary'`
-   - If `issue_dependencies_summary.blocked_by == 0` → the item has no active blockers. Skip the `blocked_by` list fetch entirely for this item.
-   - If `issue_dependencies_summary.blocked_by > 0` → fetch the blocker list: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`. When iterating this list, skip any entry where `state == "closed"`; closed blockers are satisfied by design. Apply per-item dependency checks only to `state == "open"` entries and to entries that return `404` (dangling).
+   - If `issue_dependencies_summary.blocked_by == 0` — the item has no active blockers. Skip the `blocked_by` list fetch entirely for this item.
+   - If `issue_dependencies_summary.blocked_by > 0` — fetch the blocker list: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`. When iterating this list, skip any entry where `state == "closed"`; closed blockers are satisfied by design. Apply per-item dependency checks only to `state == "open"` entries and to entries that return `404` (dangling).
 2. Blocking: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocking"`
 3. Sub-issue parent: `gh issue view <n> --json parent --jq '.parent'`
 
@@ -204,7 +204,7 @@ While walking `blocked_by` for each Project item, collect entries where the bloc
 - Record: blocked item `#N`, external repo (`<owner>/<repo>`), blocker issue number and title, blocker state
 - Fetch blocker state: `gh api "repos/<blocker-owner>/<blocker-repo>/issues/<blocker-number>" --jq '.state'`
 - **Include only open cross-repo blockers**: closed ones are satisfied by design (same rule as same-repo closed blockers) and require no action
-- If no open cross-repo blockers are found, the "D. External Dependencies" section is omitted entirely
+- If no open cross-repo blockers are found, the "D. External dependencies" section is omitted entirely
 
 #### Stub-specific dependency checks
 
@@ -220,7 +220,7 @@ For each `type:external-blocker` stub in the Project:
 - **Parent issue with no sub-issues and `type:epic`** (**Quality**): a childless epic has not been groomed. Flag as: `Epic #N has no sub-issues — not yet decomposed`. Provide remediation: `gh issue edit <n> --add-label "needs-clarification"`.
 - **Parent issue with no sub-issues and `type:spike`**: informational. Spikes that were broken down should still hold their children.
 
-### 9. Duplication & Overlap Detection
+### 9. Duplication & overlap detection
 
 - Identify duplicate or overlapping issues by title similarity and body content
 - Suggest:
@@ -228,7 +228,7 @@ For each `type:external-blocker` stub in the Project:
   - Split (split into two issues)
   - Clarification
 
-### 10. Status & Closure Integrity
+### 10. Status & closure integrity
 
 For each Project item, verify:
 
@@ -240,9 +240,9 @@ Flag any drift between Project Status, issue state, and PR linkage.
 
 ## Output
 
-Produce a **Validation Report** with:
+Produce a validation report with:
 
-### A. Critical Issues (Must Fix)
+### A. Critical issues
 
 - Missing required labels (`type:*` / `priority:*` / `effort:*`) on Workable Items
 - Missing required body sections on Workable Items
@@ -253,7 +253,7 @@ Produce a **Validation Report** with:
 - Apparent dependency cycles
 - Blocked `priority:P0` items in the Active Release (include stub title when the blocker is a `type:external-blocker` stub)
 
-### B. Quality Issues
+### B. Quality issues
 
 - INVEST violations
 - Poor acceptance criteria
@@ -265,11 +265,11 @@ Produce a **Validation Report** with:
 - `type:external-blocker` stub that is open but blocking no issues (orphaned)
 - `type:*` labels with missing or blank GitHub description
 
-### C. Consistency Issues
+### C. Consistency issues
 
 - Project Status ↔ issue state drift
 - Closed `Done` items without linked PR
-- **Stale Milestone Items**: open issues assigned to closed milestones that are Project members; each listed as `#N — <title> (closed milestone: <name>)` with a `gh issue edit <n> --milestone ""` snippet per item; subsection omitted if none found
+- **Stale milestone items**: open issues assigned to closed milestones that are Project members; each listed as `#N — <title> (closed milestone: <name>)` with a `gh issue edit <n> --milestone ""` snippet per item; subsection omitted if none found
 - Other milestone hygiene flags (milestone but not in Project; Status/state drift)
 - Priority skew
 - Cross-Project blockers (permitted but flagged for review)
@@ -277,7 +277,7 @@ Produce a **Validation Report** with:
 - Sub-issue parents not in the linked Project
 - Sub-issue milestone divergence (informational)
 
-### D. External Dependencies
+### D. External dependencies
 
 Consolidates all open cross-repo blockers into one view. Only open blockers are shown; closed cross-repo blockers are satisfied by design and require no action.
 
@@ -302,11 +302,11 @@ Follow the table with a suggested action per row: `Coordinate with owning team (
 
 Each finding MUST include the issue URL so the user can navigate directly.
 
-## Rules & Constraints
+## Rules & constraints
 
-- Be strict and explicit
+- Flag every violation; never apply leniency or assume good intent
 - Do NOT silently fix issues; only report them
 - Do NOT modify any issue, label, project, or milestone
 - Prefer false positives over missed issues
-- Provide actionable feedback (include `gh` commands the user can run to remediate)
-- All `gh` errors surfaced verbatim
+- Include `gh` remediation commands for each finding
+- Print all `gh` errors verbatim

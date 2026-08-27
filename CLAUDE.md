@@ -6,17 +6,17 @@ Version bumps are controlled by `plugin.json:version`/`marketplace.json:plugins:
 
 ## Commit requirements
 
-All commits to this repository MUST be both signed (`-S`) and signed-off (`-s`). Use: `git commit -S -s -m "..."`
+All commits MUST be signed (`-S`) and signed-off (`-s`). Use: `git commit -S -s -m "..."`
 
 ## Agent skills
 
 ### Issue tracker
 
-Issues live in GitHub Issues, managed via the `github-backlog-management-skill`. See `docs/agents/issue-tracker.md`.
+GitHub Issues, managed via `github-backlog-management-skill`. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
-This repo uses the `github-backlog-management-skill`'s own label classification. See `docs/agents/triage-labels.md`.
+Labels follow `github-backlog-management-skill`'s classification. See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 

@@ -41,7 +41,7 @@ Sub-questions (from the issue):
    Plus the distinct `gh api` REST/GraphQL endpoints (milestones, sub-issues, dependencies,
    `updateProjectV2`, `releases/generate-notes`, `user`).
 
-2. **Researched the GitHub MCP server**: its README, `docs/remote-server.md`,
+2. Researched the GitHub MCP server: its README, `docs/remote-server.md`,
    `docs/server-configuration.md`, the DeepWiki "Projects Toolset" page, the GitHub Changelog
    entries for Projects support (2025-10-14, 2026-01-28) and tool-specific configuration
    (2025-12-10), and the open feature-request issues that mark current gaps.
@@ -72,8 +72,8 @@ and `releases/generate-notes` are all reached through `gh api …`, not through 
 subcommand.
 
 The GitHub MCP server has **no equivalent generic passthrough tool**. It exposes a fixed catalogue
-of typed tools grouped into toolsets. **If GitHub has not written a tool for an endpoint, that
-endpoint is simply unreachable through the MCP server**; there is no `mcp api <path>` fallback.
+of typed tools grouped into toolsets. If GitHub has not written a tool for an endpoint, that
+endpoint is simply unreachable through the MCP server; there is no `mcp api <path>` fallback.
 This single fact dominates the whole evaluation: coverage is bounded by what GitHub has chosen to
 implement, with no workaround.
 
@@ -146,20 +146,20 @@ order. Status-field *writes* are plausibly covered by `update_project_item` but 
 
 ### Install UX
 
-**Today (`gh`):**
+Today with `gh`:
 1. `brew install gh` (or apt/winget/preinstalled in most CI).
 2. `gh auth login`: interactive browser/device flow, stores a token in the OS keychain.
 3. Done. One tool, ubiquitous in dev environments, no per-project config.
 
-**With the MCP server, two paths:**
+The MCP server offers two paths.
 
-*Remote hosted server* (lowest-friction MCP path):
+Remote hosted server (lowest-friction MCP path):
 1. Add an `.mcp.json` entry pointing at `https://api.githubcopilot.com/mcp/` (or a per-toolset URL
    such as `…/mcp/x/issues`, with optional `/readonly` suffix).
 2. Authenticate via OAuth (in supporting clients) or supply a token.
 3. Reload the client so it discovers the toolset.
 
-*Local server* (Docker):
+Local server (Docker):
 1. Install and run Docker.
 2. Create a **GitHub Personal Access Token** with the right scopes.
 3. Add an `.mcp.json` entry: `docker run -i --rm -e GITHUB_PERSONAL_ACCESS_TOKEN=… ghcr.io/github/github-mcp-server` (optionally `-e GITHUB_READ_ONLY=1`, `-e GITHUB_TOOLSETS=…`).
@@ -173,12 +173,13 @@ what is currently a single ubiquitous binary. For a plugin meant to be `git clon
 
 This is the one place MCP is genuinely **better** than the status quo.
 
-- **`yolo`-equivalent:** today = `Bash(gh *)` + `Bash(git *)` blanket allow. MCP equivalent = grant the
-  server's tools (or the `…/x/all` endpoint). Comparable, and arguably cleaner because it is scoped to
-  GitHub tools rather than all of `gh`/shell.
-- **`safe`-equivalent:** today the README admits read-only mode is *leaky*; `gh api "repos/..."`
-  covers both reads and writes under one prefix, so the allowlist "cannot be cleanly separated by
-  pattern" and those calls still prompt. The MCP server solves this cleanly:
+For `yolo` mode, today's approach uses `Bash(gh *)` + `Bash(git *)` blanket allow. The MCP
+equivalent is granting the server's tools (or the `…/x/all` endpoint). Comparable, and arguably
+cleaner since it's scoped to GitHub tools rather than all of `gh`/shell.
+
+For `safe` mode, today the README admits read-only mode is *leaky*: `gh api "repos/..."` covers
+both reads and writes under one prefix, so the allowlist "cannot be cleanly separated by pattern"
+and those calls still prompt. The MCP server solves this:
   - Local: `--read-only` flag / `GITHUB_READ_ONLY=1`: "a strict security filter that takes
     precedence over any other configuration," disabling all write tools.
   - Remote: append `/readonly` to any toolset URL.
@@ -201,10 +202,10 @@ today's single `gh auth login`.
 
 ### Migration cost (if we did it)
 
-- **Read paths** (issue/project/label reads): ~5 of the heaviest call sites, mechanically swappable.
-- **Write paths that are covered** (issue create/update, sub-issues, project item-add, PR create):
+- Read paths (issue/project/label reads): ~5 of the heaviest call sites, mechanically swappable.
+- Write paths that are covered (issue create/update, sub-issues, project item-add, PR create):
   another large chunk, swappable.
-- **Write/read paths that are MISSING** and would have to **stay on `gh`** regardless:
+- Paths that are MISSING and would still require `gh`:
   - Issue dependencies (read **and** write): `execute-item`, `block-item`, both external-blocker skills, `audit`.
   - Milestones create/close/read-`due_on`: `plan-release`, `close-release`, active-milestone resolution in `execute-item`/`add-item`/`release-status`.
   - Project create + link + description: `initialize`.
@@ -231,11 +232,11 @@ Rationale:
 2. **A partial migration makes things worse.** Since dependency reads gate the most-used command, the
    plugin would still ship `gh` and the Bash allowlist, now *plus* a container/PAT/`.mcp.json`. More
    setup, more failure modes, split mental model.
-3. **The one real win (clean read-only mode) is small** relative to the cost, and the current leaky
-   `safe` mode is a documented, tolerable limitation.
-4. **Install UX regresses** from one ubiquitous binary to Docker-or-remote + bespoke PAT.
+3. **The one real win (clean read-only mode) is small.** The current leaky `safe` mode is a
+   documented, tolerable limitation.
+4. **Install UX regresses.** The path goes from one ubiquitous binary to Docker-or-remote + bespoke PAT.
 
-**Revisit when** the following land (watch these issues):
+Revisit when these land (watch these issues):
 - Issue Dependencies read+write tools: [#950](https://github.com/github/github-mcp-server/issues/950).
 - Milestone create/close tools: [#258](https://github.com/github/github-mcp-server/issues/258).
 - ProjectV2 status + rank/position write: [#1963](https://github.com/github/github-mcp-server/issues/1963) and a position/reorder tool.
@@ -244,7 +245,7 @@ Rationale:
 When (if) those exist, re-run this spike: the calculus flips toward at least a partial migration for
 the permission-UX and structured-output benefits.
 
-## Follow-on Work
+## Follow-on work
 
 None. The **stay on `gh`** verdict requires no implementation work. The revisit triggers are the
 upstream feature requests already linked above ([#950](https://github.com/github/github-mcp-server/issues/950),
