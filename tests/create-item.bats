@@ -559,20 +559,12 @@ JSON
 
 # ---------------------------------------------------------------------------
 # Ideas sit below every Workable Item: position: bottom means after the last
-# Workable Item, never after an Idea or a Stub.
+# Workable Item, never after an Idea or a Stub. GitHub appends the new item
+# (#42) at the very end, so it must not anchor to itself.
 # ---------------------------------------------------------------------------
 
-@test "rank bottom: lands after the last Workable Item, above Ideas and Stubs" {
-  cat > "$GH_MOCK_DIR/items_todo.json" << 'JSON'
-{"items": [
-  {"id": "PVTI_42", "content": {"number": 42}, "labels": ["type:feature", "priority:P2", "effort:S"]},
-  {"id": "PVTI_10", "content": {"number": 10}, "labels": ["type:bug", "priority:P3", "effort:M"]},
-  {"id": "PVTI_11", "content": {"number": 11}, "labels": ["type:idea"]},
-  {"id": "PVTI_12", "content": {"number": 12}, "labels": ["type:external-blocker"]}
-]}
-JSON
-  local manifest="$GH_MOCK_DIR/manifest.json"
-  cat > "$manifest" << JSON
+bottom_manifest() {
+  cat > "$1" << JSON
 {
   "title": "Bottom of the Workable Items",
   "body_file": "$GH_MOCK_DIR/body.txt",
@@ -580,8 +572,34 @@ JSON
   "rank": {"position": "bottom"}
 }
 JSON
+}
 
-  run "$CREATE_ITEM" --input "$manifest"
+@test "rank bottom: lands after the last other Workable Item, above Ideas and Stubs" {
+  cat > "$GH_MOCK_DIR/items_todo.json" << 'JSON'
+{"items": [
+  {"id": "PVTI_10", "content": {"number": 10}, "labels": ["type:bug", "priority:P3", "effort:M"]},
+  {"id": "PVTI_11", "content": {"number": 11}, "labels": ["type:idea"]},
+  {"id": "PVTI_12", "content": {"number": 12}, "labels": ["type:external-blocker"]},
+  {"id": "PVTI_42", "content": {"number": 42}, "labels": ["type:feature", "priority:P2", "effort:S"]}
+]}
+JSON
+  bottom_manifest "$GH_MOCK_DIR/manifest.json"
+
+  run "$CREATE_ITEM" --input "$GH_MOCK_DIR/manifest.json"
   [[ "$status" -eq 0 ]]
   grep -qF 'itemId: "PVTI_42", afterId: "PVTI_10"' "$GH_MOCK_DIR/api_fields"
+}
+
+@test "rank bottom: with no other Workable Item, moves to the top, above the Ideas" {
+  cat > "$GH_MOCK_DIR/items_todo.json" << 'JSON'
+{"items": [
+  {"id": "PVTI_11", "content": {"number": 11}, "labels": ["type:idea"]},
+  {"id": "PVTI_42", "content": {"number": 42}, "labels": ["type:feature", "priority:P2", "effort:S"]}
+]}
+JSON
+  bottom_manifest "$GH_MOCK_DIR/manifest.json"
+
+  run "$CREATE_ITEM" --input "$GH_MOCK_DIR/manifest.json"
+  [[ "$status" -eq 0 ]]
+  grep -qF 'itemId: "PVTI_42"})' "$GH_MOCK_DIR/api_fields"
 }

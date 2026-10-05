@@ -239,7 +239,8 @@ if [[ "$rank_json" != "null" ]]; then
       [[ -n "${after_id:-}" && "$after_id" != "null" ]] && \
         after_input=", afterId: \"$after_id\""
     elif [[ "$rank_pos" == "bottom" ]]; then
-      last_id=$(echo "$todo_items" | jq -r '.items // [] | last | .id' 2>/dev/null)
+      last_id=$(echo "$todo_items" | jq -r --argjson n "$issue_num" \
+        '[.items // [] | .[] | select(.content.number != $n)] | last | .id' 2>/dev/null)
       [[ -n "${last_id:-}" && "$last_id" != "null" ]] && \
         after_input=", afterId: \"$last_id\""
     fi

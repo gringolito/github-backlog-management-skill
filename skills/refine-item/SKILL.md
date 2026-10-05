@@ -158,10 +158,10 @@ If existing items appear misranked relative to the refined item, surface the dis
 - Fetch the current Todo column rank: `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`
 - The response order is the current rank (top first). For each Todo item, capture its title and `type:*`, `priority:*`, `effort:*` labels.
 
-Ideas are not part of the ranking. Leave every `type:idea` and `type:external-blocker` item out of the list passed to `rank-recommender`. `bottom` means directly after the last Workable Item, so the item lands above the Ideas, never among or below them. For a refined Idea this step is mandatory: it currently sits at the bottom of the backlog and must move up to a real Rank.
+Ideas are not part of the ranking. Leave every `type:idea` and `type:external-blocker` item out of the list passed to `rank-recommender`, and leave out the item being refined too: once step 7 swaps its labels, a refined Idea shows up as a Workable Item at the very end of Todo. `bottom` means directly after the last Workable Item other than this one, so the item lands above the Ideas, never among or below them. If there is no other Workable Item, `bottom` means the top of the column. For a refined Idea this step is mandatory: it currently sits at the bottom of the backlog and must move up to a real Rank.
 
 Delegate rank analysis to the `rank-recommender` agent:
-- candidate item: the refined issue title, one-line `### What` summary, and the current (or updated) `type:*`, `priority:*`, `effort:*` labels from step 7
+- candidate item: the issue number, the refined issue title, one-line `### What` summary, and the current (or updated) `type:*`, `priority:*`, `effort:*` labels from step 7
 - current Todo column: ordered list (top-to-bottom) from `item-list`: each item's title and `type:*`, `priority:*`, `effort:*` labels
 
 The agent returns:
@@ -188,7 +188,7 @@ Apply rank changes only after explicit user confirmation via:
   }
   ```
 
-  Use the `id` fields from the `item-list` response. To move to the top, omit `afterId` (or set it to `null`).
+  Use the `id` fields from the `item-list` response. To move to the top, omit `afterId` (or set it to `null`). Never use the item's own `id` as `afterId`.
 
 Apply the relationship changes the user agreed to in step 3. Same API patterns as `add-item` step 9.
 

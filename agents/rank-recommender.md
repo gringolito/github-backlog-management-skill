@@ -17,6 +17,7 @@ You receive:
 
 - Candidates (required): each candidate has:
   - `id` *(optional)*: a stable identifier used to cross-reference multiple candidates in the output.
+  - `number` *(optional)*: the issue number, when the candidate already exists in the Project (e.g. during refinement)
   - `title`: the concise issue title
   - `what`: one-line summary from the `### What` section
   - `type`: the assigned `type:*` label
@@ -33,6 +34,8 @@ gh project item-list <project_number> --owner <owner> \
 Read `<project_number>` and `<owner>` from `.claude/backlog-project.json`. The response order is the current rank (top first). For each item capture its `content.number`, `content.body`, title, and `type:*`/`priority:*`/`effort:*` labels.
 
 Ideas (`type:idea`) sit below every Workable Item and are never part of the ranking. `bottom` means after the last Workable Item, above the Ideas.
+
+If a candidate carries a `number`, drop that issue from the fetched Todo list before ranking. A candidate is never compared against, or placed relative to, itself.
 
 ## Ranking rubric
 
