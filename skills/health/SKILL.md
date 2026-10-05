@@ -24,7 +24,7 @@ Run these two queries:
 1. Fetch all open issues:
    `gh issue list --state open --json number,title,labels,assignees,createdAt,updatedAt,url --limit 200`
 
-   Pre-filter: discard any issue whose labels include `type:external-blocker`. These are Stubs, not Workable Items, and are excluded from all counts and metrics.
+   Pre-filter: discard any issue whose labels include `type:external-blocker` or `type:idea`. These are Stubs and Ideas (Non-Workable Items), not Workable Items, and are excluded from all counts and metrics.
 
 2. Fetch project membership and status:
    `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue"`
@@ -33,11 +33,11 @@ Run these two queries:
 
 ### 2. Compute report sections
 
-All computations operate on the pre-filtered open-issue set (stubs excluded). Use today's date (UTC) for all age calculations.
+All computations operate on the pre-filtered open-issue set (Stubs and Ideas excluded). Use today's date (UTC) for all age calculations.
 
 #### 2a. Summary counts
 
-- Total open issues (stub-excluded)
+- Total open issues (Stubs and Ideas excluded)
 - Count in project vs. count not in project
 
 #### 2b. Distribution by label group
@@ -97,7 +97,7 @@ Generated: <YYYY-MM-DD>
 **Open issues:** N (M in Project, K not in Project)
 ```
 
-Stubs excluded from all counts.
+Stubs and Ideas excluded from all counts.
 
 #### Distribution
 
@@ -173,7 +173,7 @@ Emit `✅ All open items have complete label metadata.` when empty.
 ## Rules and constraints
 
 - Never mutate any issue, project field, milestone, or label.
-- Discard `type:external-blocker` Stubs before all computations; they are not Workable Items.
+- Discard `type:external-blocker` Stubs and `type:idea` Ideas before all computations; they are not Workable Items.
 - Closed issues are excluded from all sections.
 - Surface all `gh` errors verbatim; never swallow.
 - Percentages rounded to the nearest integer.

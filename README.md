@@ -175,9 +175,10 @@ Add one of the blocks below to `.claude/settings.json` in any repo where you use
 | `/initialize` | One-time bootstrap: provisions the GitHub Project v2, the full label catalog, and the Issue Forms template. Idempotent. Safe to re-run. |
 | `/plan-release` | Creates a Milestone with a due date. Tie-breaks and active-milestone resolution are automatic. |
 | `/add-item` | Interactively authors a single backlog item. Enforces INVEST, recommends rank and priority, wires up native GitHub dependencies. |
+| `/add-idea` | Captures a rough idea in seconds: no discovery, no INVEST, no priority or effort. The Idea lands at the bottom of the backlog until you refine it. |
 | `/migrate` | Bulk-imports an existing `BACKLOG.md`. Skips Done items. Dependency inference is opt-in; candidates are reviewed before anything is applied. |
-| `/refine` | Lists all `needs-clarification` candidates, lets you select which to refine, then loops through them one by one, asking continue/stop after each. |
-| `/refine-item` | Refines a single `needs-clarification` item: discovery dialogue, body rewrite, INVEST gate, label/rank/dep re-evaluation, and label removal after a final validation pass. |
+| `/refine` | Lists `needs-clarification` items, items with missing labels, and Ideas, lets you select which to refine, then loops through them one by one, asking continue/stop after each. |
+| `/refine-item` | Refines a single `needs-clarification` item or Idea: discovery dialogue, body rewrite, INVEST gate, label/rank/dep re-evaluation, and label removal after a final validation pass. An Idea comes out as a Workable Item with a real type, priority, effort, and rank. |
 | `/release-status` | Read-only milestone health dashboard: issue counts by Project Status, % complete, blocked items, and unestimated items. Accepts an optional milestone argument; defaults to the active milestone. |
 | `/health` | Read-only strategic portfolio health report: open-issue distribution by type, priority, and effort; age cohorts; overdue P0/P1 items; stale In-Progress items; metadata debt. Suitable for leadership updates and retrospectives. |
 | `/audit` | Read-only audit. Emits actionable `gh issue edit ...` snippets. Never mutates anything. |
@@ -229,11 +230,20 @@ Priority is severity classification. Execution order is the manual Project rank.
 
 `type:external-blocker` is a special infrastructure label for lightweight stub issues that represent external constraints (API limitations, vendor issues, regulatory holds, etc.) blocking one or more backlog items. Stubs carry **only** the `type:external-blocker` label: no priority, no effort, no rank. They are created by `/add-external-blocker`, never appear as executable work in `/pick-item`, and are excluded from all milestone counts and planning scope. Close a stub with `/resolve-external-blocker` when the external constraint is lifted. Create stubs with `/add-external-blocker` and link items with `/block-item`.
 
+#### Ideas
+
+Sometimes you have a thought worth keeping and no time to define it. `/add-idea "let /health flag stale Ideas"` files it as a `type:idea` issue with an `### Idea` section and an optional `### Notes` section. That's it. Ideas carry no priority and no effort, skip INVEST, and sit at the bottom of the Todo column below every Workable Item. `/pick-item`, `/plan-release`, and every count and metric ignore them.
+
+When you're ready to work on one, run `/refine-item #N` (or `/refine`, which lists Ideas in their own section). Refinement runs the full discovery, writes the canonical body, swaps `type:idea` for a real type, assigns priority and effort, and moves the item up to its proper rank.
+
+Upgrading from an earlier version? Re-run `/initialize` to create the `type:idea` label and the `idea.yml` Issue Form; preflight stops with a missing-label error until you do.
+
 ### Workflow
 
 ```
 /initialize ──► /plan-release ──► /add-item
                                   /migrate
+                                  /add-idea
                                         │
                                         ├──► /refine ──► /refine-item
                                         ├──► /release-status    (read-only)
@@ -287,13 +297,21 @@ Point Claude at your existing `BACKLOG.md`. Done items are skipped. Dependency h
 /refine
 ```
 
-Lists all `needs-clarification` items sorted by priority, lets you select which ones to work on, then calls `/refine-item` for each, asking whether to continue after every iteration.
+Lists `needs-clarification` items, items with missing labels, and Ideas, lets you select which ones to work on, then calls `/refine-item` for each, asking whether to continue after every iteration.
 
 ```
 /refine-item 42
 ```
 
 Refines a single item directly (useful when you know exactly which issue needs attention). Guides a discovery dialogue, rewrites the body, re-evaluates labels and rank, runs a validation gate, and removes `needs-clarification` only when everything checks out.
+
+### Capturing an idea for later
+
+```
+/add-idea "let /health flag Ideas older than 90 days"
+```
+
+Files the idea as-is at the bottom of the backlog. No questions asked. Refine it later with `/refine-item`.
 
 ### Checking release health
 

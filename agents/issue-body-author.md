@@ -77,6 +77,8 @@ Source material comes from a structured discovery dialogue; all details should b
 - Emit `<!-- TODO: ... -->` in the affected section
 - Add a corresponding open question to `### INVEST Notes`
 
+When `refine-item` refines an Idea, the source material also includes the original `### Idea` and `### Notes` text. Treat it as context for the discovery answers. Do not carry those headings into the output.
+
 ### migrate
 
 Source material is informal prose (a backlog file entry). It may be:

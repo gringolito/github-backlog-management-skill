@@ -41,7 +41,7 @@ options:
 
 Triggered when the user chooses "Add items" or "Both".
 
-Fetch unassigned candidates via `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo no:milestone -label:type:external-blocker" --format json --limit 200`
+Fetch unassigned candidates via `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo no:milestone -label:type:external-blocker -label:type:idea" --format json --limit 200`
 
 Display the candidate table in plain text before calling `AskUserQuestion`:
 
@@ -69,7 +69,7 @@ Apply additions: `gh issue edit <n> --milestone "<milestone-title>"` for each co
 
 Triggered when the user chooses "Remove items" or "Both".
 
-Fetch all open issues currently assigned to the milestone via `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo milestone:<milestone-title> -label:type:external-blocker" --format json --limit 200`
+Fetch all open issues currently assigned to the milestone via `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo milestone:<milestone-title> -label:type:external-blocker -label:type:idea" --format json --limit 200`
 
 Display the Milestone's Todo items in plain text before calling `AskUserQuestion`:
 

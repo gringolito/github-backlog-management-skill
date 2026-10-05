@@ -1,6 +1,6 @@
 ---
 name: refine
-description: Orchestrate a refinement session over all backlog items flagged needs-clarification or missing metadata.
+description: Orchestrate a refinement session over backlog items flagged needs-clarification, missing metadata, or captured as Ideas.
 ---
 
 # refine
@@ -13,7 +13,7 @@ The backlog is GitHub Issues inside a linked Project (v2). Milestones handle ver
 
 ## Objective
 
-Walk every selected item from two candidate pools through interactive refinement, one at a time, via `/refine-item`. Pool A: `needs-clarification` issues. Pool B: issues missing `priority:*`, `effort:*`, or `type:*` labels. Produce a structured report at the end: refined / partially refined / skipped, broken down by pool.
+Walk every selected item from three candidate pools through interactive refinement, one at a time, via `/refine-item`. Pool A: `needs-clarification` issues. Pool B: issues missing `priority:*`, `effort:*`, or `type:*` labels. Pool C: Ideas (`type:idea`) waiting to become Workable Items. Produce a structured report at the end: refined / partially refined / skipped, broken down by pool.
 
 ## Workflow
 
@@ -32,10 +32,14 @@ Pool A: needs clarification
 
 Pool B: incomplete metadata
 
-- Collect open issues missing a `priority:*` OR `type:*` OR `effort:*` label, that do NOT carry `needs-clarification`:
-  - `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue -label:priority:*,needs-clarification"`
+- Collect open issues missing a `priority:*` OR `type:*` OR `effort:*` label, that do NOT carry `needs-clarification` and are not Non-Workable Items (`type:idea`, `type:external-blocker`):
+  - `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue -label:priority:*,needs-clarification -label:type:idea -label:type:external-blocker"`
   - `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue -label:type:*,needs-clarification"`
-  - `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue -label:effort:*,needs-clarification"`
+  - `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue -label:effort:*,needs-clarification -label:type:idea -label:type:external-blocker"`
+
+Pool C: Ideas
+
+- `gh project item-list <project-number> --owner <owner> --format json --limit 200 --query "is:issue state:open label:type:idea"`
 
 For each candidate, capture:
 
@@ -43,11 +47,11 @@ For each candidate, capture:
 - Milestone (if assigned)
 - Project rank (the response order from `item-list` is the rank, top first)
 - Project Status (`Todo` / `In Progress` / `Done`)
-- Source pool (A or B)
+- Source pool (A, B, or C)
 
-If both pools are empty:
+If all three pools are empty:
 
-- Print `No items need clarification or have incomplete metadata. Done.`
+- Print `No items need clarification, have incomplete metadata, or are waiting as Ideas. Done.`
 - STOP
 
 ### 2. Sort & display queue
@@ -57,8 +61,9 @@ Build the refinement queue:
 - Primary sort: `priority:*` label ascending (`priority:P0` → `priority:P1` → `priority:P2` → `priority:P3`)
 - Items WITHOUT a `priority:*` label sort LAST (after `priority:P3`)
 - Tie-break: Project rank ascending (top of column first), then issue number ascending
+- Pool C (Ideas) always comes after Pools A and B, ordered by Project rank
 
-Display the queue as a numbered table with two labeled sections. Numbering is continuous across both sections:
+Display the queue as a numbered table with up to three labeled sections. Numbering is continuous across sections:
 
 ```
 ## Needs clarification
@@ -74,6 +79,12 @@ Display the queue as a numbered table with two labeled sections. Numbering is co
 ----|--------|----------------|--------------|------
  3  | #99: Missing effort    | priority:P2  | —    | https://...
  4  | #55: No labels at all  | unprioritized| v1.3 | https://...
+
+## Ideas
+
+ #  | Issue  | Created      | URL
+----|--------|--------------|------
+ 5  | #61: Rough idea        | 2026-08-14   | https://...
 ```
 
 Omit a section header entirely if its pool is empty.
@@ -108,10 +119,10 @@ After the loop ends (queue exhausted, user stopped, or all items processed), out
 
 #### Totals
 
-- Candidates found: N from Pool A (needs clarification), M from Pool B (incomplete metadata)
-- Refined (label removed / metadata completed)
-- Partially refined (body updated, label kept or metadata still incomplete)
-- Skipped (no changes)
+- Candidates found: N from Pool A (needs clarification), M from Pool B (incomplete metadata), K from Pool C (Ideas)
+- Refined (label removed / metadata completed / Idea turned into a Workable Item)
+- Partially refined (body updated, label kept or metadata still incomplete, or Idea made Workable but flagged `needs-clarification`)
+- Skipped (no changes, including Ideas kept as Ideas)
 
 #### Refined items
 

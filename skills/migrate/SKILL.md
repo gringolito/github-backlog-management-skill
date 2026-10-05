@@ -70,7 +70,7 @@ Pass `owner`/`repo`, the normalized title, and the finalized body to the `label-
 
 The agent returns a verdict for each of the three label groups (`type:*`, `priority:*`, `effort:*`) with one-line reasoning. Apply the returned verdicts to the candidate item. If `*:unclear` label was returned, note the ambiguity in `### INVEST Notes` and apply the `needs-clarification` label.
 
-Never assign `type:external-blocker`. External blockers are infrastructure stubs and are never migrated from backlog files.
+Never assign `type:external-blocker`. External blockers are infrastructure stubs and are never migrated from backlog files. Never assign `type:idea`. Ideas are created only by `/add-idea`.
 
 ### 6. Validation (HARD GATE)
 
@@ -150,7 +150,7 @@ The accepted items form the confirmed set. Assign each confirmed item a local pl
 
 #### Phase 3: Pre-flight batch rank
 
-1. Fetch the current Todo column with `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`. Capture each item's title and `type:*`, `priority:*`, `effort:*` labels. The response order is the current rank (top first).
+1. Fetch the current Todo column with `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo -label:type:external-blocker -label:type:idea" --format json --limit 200`. Capture each item's title and `type:*`, `priority:*`, `effort:*` labels. The response order is the current rank (top first). Stubs and Ideas are Non-Workable Items and are excluded from the candidate rank list.
 
 2. Call the `rank-recommender` agent once with the entire confirmed set as candidates:
 
@@ -170,7 +170,7 @@ The accepted items form the confirmed set. Assign each confirmed item a local pl
 
    Do NOT proceed with position changes before the user confirms.
 
-4. Record the final confirmed order per confirmed item. This determines the `rank` field Phase 4 writes into each manifest.
+4. Record the final confirmed order per confirmed item. This determines the `rank` field Phase 4 writes into each manifest. A `bottom` position means after the last Workable Item; Ideas stay below it at the bottom of the column.
 
 #### Phase 4: Creation loop
 

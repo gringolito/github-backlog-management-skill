@@ -33,7 +33,7 @@ If structure is unclear or `gh` fails:
 
 ### 2. Structural validation
 
-For EACH issue in the Project, first determine whether it is a `type:external-blocker` stub. Apply the appropriate check path; stubs and Workable Items have different structural rules.
+For EACH issue in the Project, first determine whether it is a `type:external-blocker` stub or a `type:idea` Idea. Apply the appropriate check path; stubs, Ideas and Workable Items have different structural rules. Ideas and stubs are Non-Workable Items: exclude them from INVEST and from every Workable-only check below.
 
 #### 2a. Stub check path (issues with `type:external-blocker`)
 
@@ -45,7 +45,16 @@ For EACH issue in the Project, first determine whether it is a `type:external-bl
   - The content is boilerplate or non-descriptive: single words, generic phrases such as "TBD", "N/A", "Unknown", "External dependency", "External constraint", or any content that does not explain the specific nature of the constraint
 - **Project Status field**: every stub MUST have a Status set (`Todo` / `In Progress` / `Done`). Flag stubs with no Status.
 
-#### 2b. Workable Item check path (all other issues)
+#### 2b. Idea check path (issues with `type:idea`)
+
+- **Type label**: verify exactly one `type:*` label is present and it is `type:idea`. Flag duplicates or unknown values.
+- **Skip**: `priority:*` check, `effort:*` check, body-shape checks (`### What`, `### Why`, etc.), INVEST
+- **Idea field**: parse the body for a `### Idea` section. Flag as **Quality** if it is missing, empty, or literally `_No response_`.
+- **Forbidden metadata**: flag as **Consistency** if the Idea carries any `priority:*`, `effort:*`, `needs-clarification`, a milestone, an assignee, or Project Status `In Progress`. Suggest removing it, or refining the Idea with `/refine-item #N` if it is ready for real work.
+- **Rank**: using the Step 1 project item-list order, flag as **Consistency** any Idea ranked above a Workable Item in the Todo column. Suggest moving it to the bottom, or refining it with `/refine-item #N` if it deserves a real rank.
+- **Project Status field**: every Idea MUST have a Status set. Flag Ideas with no Status.
+
+#### 2c. Workable Item check path (all other issues)
 
 ##### Labels (exactly-one rule)
 
@@ -263,6 +272,7 @@ Produce a validation report with:
 - Stale blockers (blocker in closed milestone while item is in the Active Release)
 - `type:external-blocker` stub with missing, empty, or boilerplate Reason field
 - `type:external-blocker` stub that is open but blocking no issues (orphaned)
+- `type:idea` Idea with a missing, empty, or `_No response_` `### Idea` section
 - `type:*` labels with missing or blank GitHub description
 
 ### C. Consistency issues
@@ -274,6 +284,8 @@ Produce a validation report with:
 - Priority skew
 - Cross-Project blockers (permitted but flagged for review)
 - Blocked items at top of Todo column (will be skipped by `execute-item`)
+- Ideas (`type:idea`) carrying `priority:*`, `effort:*`, a milestone, an assignee, `needs-clarification`, or Status `In Progress`
+- Ideas ranked above any Workable Item in the Todo column
 - Sub-issue parents not in the linked Project
 - Sub-issue milestone divergence (informational)
 

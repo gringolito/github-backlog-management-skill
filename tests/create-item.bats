@@ -83,7 +83,10 @@ elif [[ "$subcmd" == "project" ]]; then
         exit 0
       fi
     fi
-    cat "$GH_MOCK_DIR/items_todo.json" 2>/dev/null || echo '{"items": []}'
+    excluded=$(printf '%s\n' "$@" | grep -oE -- '-label:[^ "]+' | sed 's/^-label://' | jq -R . | jq -sc .)
+    jq --argjson ex "${excluded:-[]}" \
+      '.items = [.items[] | select(any((.labels // [])[]; IN($ex[])) | not)]' \
+      "$GH_MOCK_DIR/items_todo.json" 2>/dev/null || echo '{"items": []}'
     exit 0
   fi
 
@@ -93,7 +96,7 @@ elif [[ "$subcmd" == "api" ]]; then
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -X|--method) method="$2"; shift 2;;
-      -f|--field|-F) shift 2;;
+      -f|--field|-F) printf '%s\n' "$2" >> "$GH_MOCK_DIR/api_fields"; shift 2;;
       --jq) shift 2;;
       -*) shift;;
       *) [[ -z "$path" ]] && path="$1"; shift;;
@@ -552,4 +555,33 @@ JSON
   [[ "$status" -eq 0 ]]
   ! grep -q -x -- "--blocked-by" "$GH_MOCK_DIR/issue_create_args"
   ! grep -q -x -- "--blocking" "$GH_MOCK_DIR/issue_create_args"
+}
+
+# ---------------------------------------------------------------------------
+# Ideas sit below every Workable Item: position: bottom means after the last
+# Workable Item, never after an Idea or a Stub.
+# ---------------------------------------------------------------------------
+
+@test "rank bottom: lands after the last Workable Item, above Ideas and Stubs" {
+  cat > "$GH_MOCK_DIR/items_todo.json" << 'JSON'
+{"items": [
+  {"id": "PVTI_42", "content": {"number": 42}, "labels": ["type:feature", "priority:P2", "effort:S"]},
+  {"id": "PVTI_10", "content": {"number": 10}, "labels": ["type:bug", "priority:P3", "effort:M"]},
+  {"id": "PVTI_11", "content": {"number": 11}, "labels": ["type:idea"]},
+  {"id": "PVTI_12", "content": {"number": 12}, "labels": ["type:external-blocker"]}
+]}
+JSON
+  local manifest="$GH_MOCK_DIR/manifest.json"
+  cat > "$manifest" << JSON
+{
+  "title": "Bottom of the Workable Items",
+  "body_file": "$GH_MOCK_DIR/body.txt",
+  "labels": ["type:feature", "priority:P2", "effort:S"],
+  "rank": {"position": "bottom"}
+}
+JSON
+
+  run "$CREATE_ITEM" --input "$manifest"
+  [[ "$status" -eq 0 ]]
+  grep -qF 'itemId: "PVTI_42", afterId: "PVTI_10"' "$GH_MOCK_DIR/api_fields"
 }

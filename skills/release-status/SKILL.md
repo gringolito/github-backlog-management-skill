@@ -33,7 +33,7 @@ With the resolved milestone in hand, run these queries:
 
    All returned items are Project members by definition. The `status` field (`Todo` / `In Progress` / `Done`) is available directly on each item.
 
-   After fetching, partition the results: set aside any issue whose labels include `type:external-blocker`; these are Stubs and are excluded from all Milestone counts and metrics. They are retained only to enrich the blocked-items table with stub titles as blocker context (step 3).
+   After fetching, partition the results: set aside any issue whose labels include `type:external-blocker` or `type:idea`. Stubs and Ideas are excluded from all Milestone counts and metrics (Ideas should never be milestoned; they are excluded if present). Stubs are retained only to enrich the blocked-items table with stub titles as blocker context (step 3).
 
 2. Blocker check (open issues only):
    For each open issue, call: `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`
@@ -64,7 +64,7 @@ Omit the `Due:` line if the milestone has no `due_on`.
 | 🔄 In Progress | N | N% |
 | 📋 Todo | N | N% |
 
-- % complete = Done ÷ (all non-stub issues assigned to the milestone), rounded to the nearest integer. `type:external-blocker` stubs are excluded from this denominator.
+- % complete = Done ÷ (all Workable Item issues assigned to the milestone), rounded to the nearest integer. `type:external-blocker` stubs and `type:idea` Ideas are excluded from this denominator.
 
 #### Blocked items
 

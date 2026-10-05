@@ -75,22 +75,17 @@ elif [[ "$subcmd" == "project" ]]; then
   shift || true
   if [[ "$subcmd2" == "item-list" ]]; then
     args="$*"
+    excluded=$(echo "$args" | grep -oE -- '-label:[^ "]+' | sed 's/^-label://' | jq -R . | jq -sc .)
+    exclude() {
+      jq --argjson ex "${excluded:-[]}" \
+        '.items = [.items[] | select(any((.labels // [])[]; IN($ex[])) | not)]' "$1"
+    }
     if echo "$args" | grep -qF "In Progress"; then
       cat "$GH_MOCK_DIR/items_inprogress.json"
     elif echo "$args" | grep -qF "no:milestone"; then
-      if echo "$args" | grep -qF -- "-label:"; then
-        jq '.items = [.items[] | select((.labels // [] | index("type:external-blocker")) == null)]' \
-          "$GH_MOCK_DIR/items_tier2.json"
-      else
-        cat "$GH_MOCK_DIR/items_tier2.json"
-      fi
+      exclude "$GH_MOCK_DIR/items_tier2.json"
     else
-      if echo "$args" | grep -qF -- "-label:"; then
-        jq '.items = [.items[] | select((.labels // [] | index("type:external-blocker")) == null)]' \
-          "$GH_MOCK_DIR/items_tier1.json"
-      else
-        cat "$GH_MOCK_DIR/items_tier1.json"
-      fi
+      exclude "$GH_MOCK_DIR/items_tier1.json"
     fi
   else
     echo "Unhandled project subcmd: $subcmd2" >&2; exit 1
@@ -403,6 +398,25 @@ JSON
   cat > "$GH_MOCK_DIR/items_tier1.json" << 'JSON'
 {"items": [
   {"id": "PVTI_77", "type": null, "content": {"number": 77, "title": "External blocker stub", "body": "Issue body.", "url": "https://github.com/testowner/testrepo/issues/77"}, "labels": ["type:external-blocker"], "milestone": {"title": "v0.6.0"}, "status": "Todo", "linked pull requests": []}
+]}
+JSON
+
+  run "$SELECT_ITEM"
+  [[ "$status" -eq 0 ]]
+
+  candidate=$(echo "$output" | jq -r '.candidate')
+  [[ "$candidate" == "null" ]]
+}
+
+@test "AC3c: Ideas (type:idea) are never selected as candidates, in either tier" {
+  cat > "$GH_MOCK_DIR/items_tier1.json" << 'JSON'
+{"items": [
+  {"id": "PVTI_81", "type": null, "content": {"number": 81, "title": "Milestoned idea", "body": "### Idea", "url": "https://github.com/testowner/testrepo/issues/81"}, "labels": ["type:idea"], "milestone": {"title": "v0.6.0"}, "status": "Todo", "linked pull requests": []}
+]}
+JSON
+  cat > "$GH_MOCK_DIR/items_tier2.json" << 'JSON'
+{"items": [
+  {"id": "PVTI_82", "type": null, "content": {"number": 82, "title": "Loose idea", "body": "### Idea", "url": "https://github.com/testowner/testrepo/issues/82"}, "labels": ["type:idea"], "milestone": null, "status": "Todo", "linked pull requests": []}
 ]}
 JSON
 

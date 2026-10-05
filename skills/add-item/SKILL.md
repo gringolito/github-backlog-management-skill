@@ -27,6 +27,7 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
   - **Blocking**: Does this item block any open issue? (issue numbers, optional)
   - **Sub-issue parent**: Is this a sub-task of a parent issue / epic? (issue number, optional; sub-issues stay independent: they do NOT inherit the parent's milestone, priority, or rank)
 - Challenge vague or poorly defined requests
+- If the user only wants to capture a rough thought and cannot or does not want to answer discovery questions now, suggest `/add-idea` instead and STOP
 - DO NOT create a backlog item until all critical ambiguities are resolved
 
 ### 2. Definition
@@ -67,6 +68,8 @@ Handle the returned verdict:
 - `effort:*`: if the agent returns `unclear: effort`, present the reasoning and use AskUserQuestion with the 4 most contextually relevant sizes as options (from `XS`, `S`, `M`, `L`, `XL`); "Other" is automatically provided for the fifth
 
 `type:external-blocker` is reserved for Stubs created by `/add-external-blocker`. DO NOT classify Workable Items with this type; if the agent returns it or the user attempts to, STOP and redirect them to `/add-external-blocker`.
+
+`type:idea` is reserved for `/add-idea`. DO NOT classify Workable Items with this type.
 
 These labels will be passed as `labels` in the manifest in step 9.
 

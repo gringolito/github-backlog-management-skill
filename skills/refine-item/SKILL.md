@@ -1,17 +1,19 @@
 ---
 name: refine-item
-description: Refine a single ambiguous backlog item through guided INVEST validation and label correction.
+description: Refine a single ambiguous backlog item or Idea through guided INVEST validation and label correction.
 ---
 
 # refine-item
 
 You are an AI agent acting as a Senior Project Manager refining a single ambiguous backlog item.
 
-Refine one ambiguous backlog item: resolve every `UNKNOWN` / `NEEDS CLARIFICATION` marker through guided discovery, re-evaluate labels and rank relative to existing items, and remove `needs-clarification` when validation passes.
+Refine one ambiguous backlog item: resolve every `UNKNOWN` / `NEEDS CLARIFICATION` marker through guided discovery, re-evaluate labels and rank relative to existing items, and remove `needs-clarification` when validation passes. The same workflow turns an Idea (`type:idea`) into a Workable Item.
 
 The backlog lives in GitHub: items are GitHub Issues, prioritization inside a linked GitHub Project (v2), version planning through GitHub Milestones.
 
 Items carrying `needs-clarification` were created by `migrate` (or flagged later) because they are missing critical detail, typically with `UNKNOWN` / `NEEDS CLARIFICATION` markers in body sections and open questions parked in `### INVEST Notes`.
+
+Items carrying `type:idea` were captured by `/add-idea`. Their body has only `### Idea` and `### Notes`, and they have no `priority:*` or `effort:*`. Refining an Idea means defining it from scratch: the steps below call out where the Idea path differs.
 
 ## Objective
 
@@ -19,10 +21,10 @@ Bring the target issue to a fully refined state where:
 
 - All required body sections are filled (no `UNKNOWN` / `NEEDS CLARIFICATION` markers, no `_No response_`)
 - `### INVEST Notes` is empty or contains only acknowledged residual questions
-- The item passes INVEST
 - `priority:*`, `effort:*`, `type:*` labels reflect the refined understanding (re-evaluated relatively against existing items)
 - Project rank reflects the refined understanding (re-evaluated relatively)
 - The `needs-clarification` label is removed
+- For an Idea: `type:idea` is replaced by a Workable type, and the item ranks among Workable Items instead of below them
 
 ## Workflow
 
@@ -39,6 +41,7 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
   - A title or partial title (e.g. `/refine-item "add OAuth"`): search with `gh issue list --search "<text>" --state open --json number,title,url --limit 10`, then present matches and ask the user to confirm
   - No argument: ask "Which issue should I refine? You can provide an issue number or a title."
 - Fetch issue data and verify it is a member of the linked Project: `gh project item-list <project-number> --owner <owner> --format json --query "#<n>"`. If NOT in the Project, stop: `Issue #<n> is not in the linked Backlog project. Only Project members can be refined here.`
+- If the issue carries `type:idea`, this is an Idea refinement. Skip the `needs-clarification` check below.
 - If the issue does NOT carry `needs-clarification`, warn: "Issue #<n> does not carry `needs-clarification`. Proceed anyway? [Y/n]" and stop if the user declines.
 
 ### 2. Display item
@@ -57,9 +60,13 @@ After preflight succeeds, use `TaskCreate` to create one task per workflow step 
   - Blocking: list each with `#N`, title, state via `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocking"`
   - Sub-issue parent (if any): `#N`, title via `gh issue view <n> --json parent --jq '.parent'`
 
+For an Idea, show the `### Idea` and `### Notes` sections as-is instead of the canonical sections.
+
 ### 3. Discovery dialogue
 
 Reuse the discovery pattern from `add-item`.
+
+For an Idea, run the full `add-item` discovery (desired outcome, user/business impact, constraints, risks, edge cases, scope, acceptance criteria), starting from the `### Idea` and `### Notes` text. Nothing has been defined yet, so there are no markers to walk; every canonical section needs an answer. If the discovery shows the idea is not worth doing, offer to close it (`gh issue close <n> --reason "not planned"` with a one-line comment) and stop.
 
 - Ask clarifying questions to resolve EVERY `UNKNOWN` / `NEEDS CLARIFICATION` marker in `### What`, `### Why`, `### In Scope`, `### Out of Scope`, `### Acceptance Criteria`
 - Walk through the open questions in `### INVEST Notes` one by one
@@ -86,6 +93,8 @@ Delegate body authoring to the `issue-body-author` agent:
 
 The agent returns an updated body with all `UNKNOWN` / `NEEDS CLARIFICATION` / `_No response_` markers replaced. Sections still missing information are marked `<!-- TODO: ... -->`; those remain as open questions in `### INVEST Notes`.
 
+For an Idea, use mode `create` instead of `refine`, with the `### Idea` text, the `### Notes` text, and every answer from step 3 as source material. The result replaces the Idea body entirely.
+
 Do not introduce new headings or change ordering: `audit` parses these section headings.
 
 ### 5. INVEST gate
@@ -105,6 +114,11 @@ If splitting is needed (S letter fails):
 - Suggest a split via `/add-item` for the new item(s)
 - Apply the partial body update reflecting the reduced scope of the original item, or keep the original as-is if the user prefers to handle the split manually
 - Keep `needs-clarification` until the split is resolved
+
+If an Idea fails INVEST, the rules above don't apply as written. Ask the user, via AskUserQuestion, which way to go:
+
+- Keep it as an Idea: leave body and labels untouched, post the discovery answers and the per-letter verdict as a comment (`gh issue comment <n> --body-file <tmp>`) so the next attempt starts from them, then stop.
+- Make it a Workable Item now, flagged for clarification: apply the body (step 6) with the failures in `### INVEST Notes`, run steps 7 and 8 so it gets a real type, priority, effort, and rank, add `needs-clarification`, and skip steps 9 and 10.
 
 ### 6. Apply body update
 
@@ -131,6 +145,8 @@ If the agent returns `unclear` for a group, surface the reasoning and ask the us
 - `unclear: priority`: offer `P0` / `P1` / `P2` / `P3`
 - `unclear: effort`: offer the 4 most contextually relevant sizes from `XS`, `S`, `M`, `L`, `XL`; "Other" is included automatically
 
+For an Idea, there is nothing to compare against: propose the classifier's `type:*`, `priority:*`, and `effort:*` as new labels. The new type replaces `type:idea` (`gh issue edit <n> --remove-label type:idea --add-label <type> --add-label <priority> --add-label <effort>`). `type:idea` and `type:external-blocker` are never valid answers here.
+
 Apply changes only after explicit user confirmation:
 
 - `gh issue edit <n> --remove-label <old> --add-label <new>`
@@ -141,6 +157,8 @@ If existing items appear misranked relative to the refined item, surface the dis
 
 - Fetch the current Todo column rank: `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo" --format json --limit 200`
 - The response order is the current rank (top first). For each Todo item, capture its title and `type:*`, `priority:*`, `effort:*` labels.
+
+Ideas are not part of the ranking. Leave every `type:idea` and `type:external-blocker` item out of the list passed to `rank-recommender`. `bottom` means directly after the last Workable Item, so the item lands above the Ideas, never among or below them. For a refined Idea this step is mandatory: it currently sits at the bottom of the backlog and must move up to a real Rank.
 
 Delegate rank analysis to the `rank-recommender` agent:
 - candidate item: the refined issue title, one-line `### What` summary, and the current (or updated) `type:*`, `priority:*`, `effort:*` labels from step 7
@@ -192,7 +210,7 @@ Run all of the following checks:
 
 - Sections present: all body headings exist in the exact order defined in [../github-backlog-management/issue-body-sections.md](../github-backlog-management/issue-body-sections.md)
 - No stale markers: no `UNKNOWN`, `NEEDS CLARIFICATION`, or `_No response_` anywhere in the body
-- Label completeness: one `type:*`, one `priority:*`, one `effort:*`
+- Label completeness: one `type:*`, one `priority:*`, one `effort:*`, and no `type:idea`
 - Project status set: the item has a non-empty Status value in the Project
 - INVEST re-check: re-evaluate the final live body (not the in-memory draft) against all six INVEST principles
 - INVEST Notes clear: `### INVEST Notes` is empty or contains only acknowledged residual questions with no open action items
@@ -211,7 +229,7 @@ If all checks pass, proceed to step 10.
 
 Only after the pre-removal validation gate passes:
 
-- `gh issue edit <n> --remove-label needs-clarification`
+- `gh issue edit <n> --remove-label needs-clarification` (an Idea never carried it; skip this command for an Idea)
 - Print the per-item confirmation:
   - Issue URL
   - Summary of body changes
@@ -232,6 +250,6 @@ Only after the pre-removal validation gate passes:
 
 ## Output expectations
 
-- Fully refined: issue URL + body summary + label changes + rank change + dep changes + "✓ `needs-clarification` removed"
-- Partially refined: issue URL + what was clarified + remaining INVEST or validation failures + "`needs-clarification` kept"
+- Fully refined: issue URL + body summary + label changes + rank change + dep changes + "✓ `needs-clarification` removed" (for an Idea: "✓ Idea is now a Workable Item")
+- Partially refined: issue URL + what was clarified + remaining INVEST or validation failures + "`needs-clarification` kept" (for an Idea: whether it stayed an Idea or became a Workable Item flagged `needs-clarification`)
 - Every `gh` error: print verbatim

@@ -67,7 +67,7 @@ labels=$({
 missing_labels=()
 for label in \
   "type:feature" "type:bug" "type:security" "type:performance" "type:dx" \
-  "type:tech-debt" "type:reliability" "type:compliance" "type:spike" "type:external-blocker" \
+  "type:tech-debt" "type:reliability" "type:compliance" "type:spike" "type:external-blocker" "type:idea" \
   "priority:P0" "priority:P1" "priority:P2" "priority:P3" \
   "effort:XS" "effort:S" "effort:M" "effort:L" "effort:XL" \
   "needs-clarification"; do

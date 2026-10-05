@@ -33,7 +33,7 @@ JSON
   {"name": "type:feature"}, {"name": "type:bug"}, {"name": "type:security"},
   {"name": "type:performance"}, {"name": "type:dx"}, {"name": "type:tech-debt"},
   {"name": "type:reliability"}, {"name": "type:compliance"}, {"name": "type:spike"},
-  {"name": "type:external-blocker"},
+  {"name": "type:external-blocker"}, {"name": "type:idea"},
   {"name": "priority:P0"}, {"name": "priority:P1"}, {"name": "priority:P2"}, {"name": "priority:P3"},
   {"name": "effort:XS"}, {"name": "effort:S"}, {"name": "effort:M"}, {"name": "effort:L"}, {"name": "effort:XL"},
   {"name": "needs-clarification"}
@@ -210,7 +210,7 @@ JSON
   {"name": "type:feature"}, {"name": "type:bug"},
   {"name": "type:performance"}, {"name": "type:dx"}, {"name": "type:tech-debt"},
   {"name": "type:reliability"}, {"name": "type:compliance"}, {"name": "type:spike"},
-  {"name": "type:external-blocker"},
+  {"name": "type:external-blocker"}, {"name": "type:idea"},
   {"name": "priority:P0"}, {"name": "priority:P1"}, {"name": "priority:P2"}, {"name": "priority:P3"},
   {"name": "effort:XS"}, {"name": "effort:S"}, {"name": "effort:M"}, {"name": "effort:L"}, {"name": "effort:XL"},
   {"name": "needs-clarification"}

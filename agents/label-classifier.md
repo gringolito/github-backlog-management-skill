@@ -25,7 +25,7 @@ Inputs:
 
 ### Type labels
 
-Assign exactly one. `type:external-blocker` is reserved for Stubs; NEVER assign it to a Workable Item. If the item appears to be a Stub, return `unclear: type — item appears to be a Stub; use /add-external-blocker instead`.
+Assign exactly one. `type:external-blocker` is reserved for Stubs; NEVER assign it to a Workable Item. If the item appears to be a Stub, return `unclear: type — item appears to be a Stub; use /add-external-blocker instead`. `type:idea` is reserved for Ideas created by `/add-idea`; NEVER assign it.
 
 - `type:feature`: New capability or user-visible behaviour that does not currently exist
 - `type:bug`: Incorrect behaviour that deviates from a documented or clearly expected contract

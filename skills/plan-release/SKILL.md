@@ -78,6 +78,7 @@ Use `AskUserQuestion` to ask the user which release mode to use:
   - `gh issue view <n> --json number,title,state,labels,milestone`
   - If an issue is closed or not found, surface the error and ask the user to correct the list.
   - If any validated issue carries `type:external-blocker`, warn the user: "Issue #N is an external-blocker stub, not a Workable Item. Stubs should not appear in release scope." Exclude the item unless the user explicitly overrides with a justification.
+  - If any validated issue carries `type:idea`, warn the user: "Issue #N is an Idea, not a Workable Item. Refine it with /refine-item first." Exclude the item unless the user explicitly overrides with a justification.
 - Display the confirmed issue list (number, title, type label, priority label, effort label) and ask for review.
 - Scan the scope for items that carry `type:feature` or any explicit breaking-change signal in `### What` / `### INVEST Notes` (read body via `gh issue view <n> --json body`). For each such item, WARN the user:
   > ⚠️ Issue #N "`<title>`" introduces new functionality / a breaking change, which is atypical for a maintenance release.
@@ -86,7 +87,7 @@ Use `AskUserQuestion` to ask the user which release mode to use:
 
 #### Mode B: Regular
 
-- Fetch unassigned candidates via `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo no:milestone -label:type:external-blocker" --format json --limit 200`
+- Fetch unassigned candidates via `gh project item-list <project-number> --owner <owner> --query "is:issue status:Todo no:milestone -label:type:external-blocker -label:type:idea" --format json --limit 200`
 - Present the candidate table in Project rank order:
 
   ```text
@@ -98,7 +99,7 @@ Use `AskUserQuestion` to ask the user which release mode to use:
 
 #### Mode C: Automated
 
-- Fetch the same unassigned candidate set as Mode B (same `type:external-blocker` exclusion applies).
+- Fetch the same unassigned candidate set as Mode B (same `type:external-blocker` and `type:idea` exclusions apply).
 - For each candidate, check blockers:
   - `gh api "repos/<owner>/<repo>/issues/<n>/dependencies/blocked_by"`: collect open blockers. If the API returns `404`, treat all items as unblocked and note the unavailability.
   - Classify each blocked item:

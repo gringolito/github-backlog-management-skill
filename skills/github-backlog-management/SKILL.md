@@ -14,9 +14,10 @@ A set of skills for a fully GitHub-native backlog workflow: Issues, Projects v2,
 | `/initialize` | First-time setup: provisions Project, labels, Issue Forms template. Idempotent. Run this first. |
 | `/plan-release` | Create a Milestone with a due date: choose Maintenance, Regular, or Automated mode; semver version inferred from scope |
 | `/add-item` | Interactively create and rank a single backlog item (enforces INVEST) |
+| `/add-idea` | Capture a rough idea as a `type:idea` Non-Workable Item at the bottom of the backlog; no INVEST, no priority, no effort |
 | `/migrate` | Bulk-import an existing backlog file; skips Done items; dep inference opt-in |
-| `/refine` | Orchestrate a refinement session: list `needs-clarification` candidates, let user select, loop through with `/refine-item` |
-| `/refine-item` | Refine a single `needs-clarification` item: discovery dialogue, body rewrite, INVEST gate, label/rank/dep updates, label removal |
+| `/refine` | Orchestrate a refinement session: list `needs-clarification` items, items missing labels, and Ideas, let user select, loop through with `/refine-item` |
+| `/refine-item` | Refine a single `needs-clarification` item or Idea: discovery dialogue, body rewrite, INVEST gate, label/rank/dep updates, label removal. Turns an Idea into a Workable Item |
 | `/release-status` | Read-only milestone health dashboard: issue counts by Status, blocked items, unestimated items |
 | `/health` | Read-only strategic portfolio health report: distribution by type/priority/effort, age cohorts, overdue P0/P1 items, stale In-Progress, metadata debt |
 | `/audit` | Read-only audit: emits actionable `gh` commands; never mutates |
@@ -27,7 +28,7 @@ A set of skills for a fully GitHub-native backlog workflow: Issues, Projects v2,
 ## Workflow
 
 ```
-initialize ─► plan-release ─► add-item / migrate
+initialize ─► plan-release ─► add-item / migrate / add-idea
                                       │
                                       ├─► refine ─► refine-item
                                       ├─► release-status (read-only)
@@ -46,7 +47,7 @@ Every Workable Item passes INVEST (Independent, Negotiable, Valuable, Estimable,
 ## Key invariants (apply to all skills)
 
 Label catalog
-- `type:`: `feature` `bug` `security` `performance` `dx` `tech-debt` `reliability` `compliance` `spike` `epic` `external-blocker` (plus any custom `type:*` labels present in the repository)
+- `type:`: `feature` `bug` `security` `performance` `dx` `tech-debt` `reliability` `compliance` `spike` `epic` `external-blocker` `idea` (plus any custom `type:*` labels present in the repository)
 - `priority:`: `P0` `P1` `P2` `P3`
 - `effort:`: `XS` `S` `M` `L` `XL`
 - Operational: `needs-clarification`
@@ -58,6 +59,8 @@ Standard preflight: read [preflight-contract.md](./preflight-contract.md) for th
 Metadata file: `.claude/backlog-project.json`, written by `initialize`, read during preflight.
 
 Priority vs rank: `priority:*` is severity classification. Project rank (topmost Todo item) is execution order. They stay consistent but are independent. `pick-item` sorts by rank only.
+
+Ideas: `type:idea` items are Non-Workable. They carry no `priority:*` or `effort:*`, skip INVEST, sit below every Workable Item in the Todo column, and are excluded from Selection, rank analysis, release scope, and all counts. Only `/add-idea` creates them; only `/refine-item` turns them into Workable Items.
 
 ## Skill specs
 

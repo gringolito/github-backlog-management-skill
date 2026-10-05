@@ -186,10 +186,11 @@ n_adjustments=$(echo "$rank_adjustments_json" | jq 'length')
 
 # Used only to resolve pre-existing items (rank.after_issue, the position:
 # bottom last-item lookup, and rank_adjustments[] targets) — these already
-# have Status = Todo, so the filter is safe and unchanged from before.
+# have Status = Todo, so the filter is safe. Ideas are excluded so that
+# position: bottom lands after the last Workable Item, above the Ideas.
 fetch_todo_items() {
   todo_items=$(gh project item-list "$proj_num" --owner "$owner" \
-    --format json --limit 200 --query "is:issue status:Todo -label:type:external-blocker" 2>/dev/null) || \
+    --format json --limit 200 --query "is:issue status:Todo -label:type:external-blocker -label:type:idea" 2>/dev/null) || \
     todo_items='{"items": []}'
 }
 

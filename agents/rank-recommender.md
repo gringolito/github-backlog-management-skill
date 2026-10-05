@@ -27,10 +27,12 @@ Fetch the current Todo column yourself via:
 
 ```bash
 gh project item-list <project_number> --owner <owner> \
-  --format json --limit 200 --query "is:issue status:Todo -label:type:external-blocker"
+  --format json --limit 200 --query "is:issue status:Todo -label:type:external-blocker -label:type:idea"
 ```
 
 Read `<project_number>` and `<owner>` from `.claude/backlog-project.json`. The response order is the current rank (top first). For each item capture its `content.number`, `content.body`, title, and `type:*`/`priority:*`/`effort:*` labels.
+
+Ideas (`type:idea`) sit below every Workable Item and are never part of the ranking. `bottom` means after the last Workable Item, above the Ideas.
 
 ## Ranking rubric
 

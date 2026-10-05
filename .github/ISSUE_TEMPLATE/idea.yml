@@ -1,0 +1,19 @@
+name: Idea
+description: Capture a rough idea to refine later. No priority, effort, or acceptance criteria yet.
+labels: ["type:idea"]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: The thought you don't want to lose, in your own words.
+      placeholder: e.g. "Let /health flag Ideas that have been sitting for more than 90 days"
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Links, context, or open questions that will help when this gets refined (optional).
+    validations:
+      required: false
