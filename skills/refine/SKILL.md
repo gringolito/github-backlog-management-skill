@@ -17,12 +17,6 @@ Walk every selected item from two candidate pools through interactive refinement
 
 ## Workflow
 
-### 0. Preflight
-
-Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) and follow it exactly.
-
-After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
-
 ### 1. Fetch refinement candidates
 
 Pool A: needs clarification
