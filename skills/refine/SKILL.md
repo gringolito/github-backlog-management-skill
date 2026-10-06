@@ -14,18 +14,18 @@ The Project and the label vocabulary come from the repo's `docs/Backlog.md`, lin
 
 Candidates are open issues in the linked Project that carry `needs-clarification` or lack a type,
 priority or effort label. Issues outside the Project are ignored even if they carry the label,
-because the Project defines the backlog. If there are no candidates, say so and finish.
+because the Project defines the backlog. An item that qualifies for both reasons is listed once. Judge bodies by their content, not their headings, so items in the old six-section shape and in the current shape both count. If there are no candidates, say so and finish.
 
 Show the candidates grouped by why they qualify, most urgent priority first and unprioritized last,
-with ties broken by Project rank. Include each item's number, title, priority and Milestone, and
+with ties broken by Rank. Include each item's number, title, priority and Milestone, and
 let the user pick which to refine: a few, a range, all, or all but some. This is the only question
 before the work starts.
 
 Hand each picked item to `refine-item` in turn, in the order shown. Don't prompt between items. The
-user can stop at any time, and the items already refined stay refined. Rerunning the session
-rebuilds the candidates, so refined items drop out on their own.
+user can stop at any time, and rerunning the session rebuilds the candidates, so refined items drop
+out on their own.
 
-`refine` never changes an item itself. Each edit, label change and Queue move happens inside
+`refine` never changes an item itself. Each edit, label change and Rank move happens in
 `refine-item`, under its own confirmation.
 
 End with a summary that leads with what needs the user: items still failing INVEST or still flagged
