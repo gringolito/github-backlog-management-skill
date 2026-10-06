@@ -22,12 +22,6 @@ Transform ALL existing backlog items into GitHub Issues:
 
 ## Workflow
 
-### 0. Preflight
-
-Read the [preflight contract](../github-backlog-management/preflight-contract.md) for the preflight instruction. Follow it exactly.
-
-After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
-
 ### 1. Source analysis
 
 Parse the source backlog provided by the user (markdown, plain text, or any structured form). Identify individual items (even if poorly structured) and preserve original intent and wording. Skip any Done/Completed item. Those are historical and would only clutter the Project.

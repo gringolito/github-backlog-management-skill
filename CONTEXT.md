@@ -180,7 +180,7 @@ Implementation-through-PR for a non-spike Workable Item already selected. Run by
 The investigate → findings document → follow-on items protocol for a `type:spike` Workable
 Item, run end-to-end through PR by `/spike`. Assumes the item is already selected and
 assigned, typically suggested by `/pick-item`'s hand-off, or run directly. Does not repeat
-preflight or Selection.
+Selection.
 
 **Scope Completeness Review**:
 The verification step entered when a picked Backlog Item has sub-issues and all are closed.

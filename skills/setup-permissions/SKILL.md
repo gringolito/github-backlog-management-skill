@@ -15,7 +15,7 @@ Canonical allowlist blocks for each mode:
 
 `yolo`: no prompts during any multi-step skill:
 ```json
-["Bash(gh *)", "Bash(git *)", "Bash(backlog-preflight)", "Bash(resolve-milestone*)"]
+["Bash(gh *)", "Bash(git *)", "Bash(resolve-milestone*)"]
 ```
 
 `safe`: read-only `gh` calls run silently; write commands still prompt:
@@ -31,19 +31,18 @@ Canonical allowlist blocks for each mode:
   "Bash(gh project item-list *)",
   "Bash(gh project field-list *)",
   "Bash(gh release list *)",
-  "Bash(backlog-preflight)",
   "Bash(resolve-milestone*)"
 ]
 ```
 
 ## Workflow
 
-### 0. Preflight
+### 0. Environment check
 
 - `gh auth status`: if unauthenticated, STOP and output: `gh auth status failed. Run gh auth login and retry.`
 - Parse `<owner>/<repo>` from `gh repo view --json owner,name`
 
-After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
+After the checks succeed, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
 
 ### 1. Mode resolution
 
