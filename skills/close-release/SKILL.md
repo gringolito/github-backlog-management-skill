@@ -1,9 +1,8 @@
 ---
 name: close-release
 description: >-
-  Close a Milestone and publish its release: settle the open items, prepare the repo, publish the
-  tag and release notes. Use when a Release is done, or the user says "close the release", "cut
-  the release" or "ship the milestone".
+  Close a Milestone and publish its release. Use when a Release is done, or the user says "close
+  the release", "cut the release" or "ship the milestone".
 argument-hint: "Optional: the Milestone title or version. Defaults to the open Milestone due soonest."
 ---
 
@@ -12,13 +11,13 @@ the release needs, the release and its tag are published with reviewed notes, an
 closed.
 
 The user may name the Milestone by title or version. Otherwise use the open one with the earliest
-due date, and tell the user which you picked.
+due date, and ask which when several are open and none has a due date.
 
 Every open item in the Milestone gets the user's decision: carry it to the next open Milestone,
 close it as won't fix with a comment saying it wasn't included in this release, or drop its
-Milestone and leave it open in the backlog. Present all open items together and apply the choices
-once the user has answered. If the user carries items forward and no other Milestone is open, say
-so and ask for another choice.
+Milestone and leave it open in the backlog, still in the Project as Todo. Present all open items
+together and apply the choices once the user has answered. If the user carries items forward and no
+other Milestone is open, say so and ask for another choice.
 
 Prepare the repo as its own instructions describe. Read [pre-closure.md](./pre-closure.md) for
 where to look and how to handle what you find.
@@ -33,8 +32,6 @@ so confirm once before it, naming the tag, the commit it points at and the notes
 branch, after any release-prep PR has merged. Once published, close the Milestone. A closed
 Milestone can be reopened, so that needs no confirmation.
 
-The skill stops to ask the user in four places: the disposition of the open items, the wait for a
-release-prep PR or manual step to finish, the release notes review, and the publish confirmation.
 If the tag or release already exists, or a call fails, report it and ask how to proceed.
 
 Finish by reporting what was published, with the release URL, and how each open item was handled.
