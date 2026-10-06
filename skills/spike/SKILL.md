@@ -22,11 +22,10 @@ sources and prototypes were used, reports what was learned including dead ends, 
 recommendation, and lists the proposed follow-on items. Keep the findings clean, tight, concise,
 technical and direct.
 
-Open the pull request with only the findings document and the spike's milestone, if it has one.
-Keep monitoring it for reviews and feedback and apply them. Make sure the pull request body
-includes a footer `Closes #<spike>`.
+Open the pull request with only the findings document. Keep monitoring it for reviews and
+feedback and apply them. Make sure the pull request body includes a footer `Closes #<spike>`.
+Never merge the pull request without the user's explicit consent.
 
-Once the user approves the pull request, create the follow-on items through `add-item`. When the
-spike has a parent, they become that parent's sub-issues. Each one refers back to the spike. Write
-their issue numbers into the findings document and push. Never merge the pull request without the
-user's explicit consent.
+Once the user merges the pull request, create the follow-on items the document proposes through
+`add-item`. Each one refers back to the spike and its findings document, and becomes a sub-issue
+of the spike's parent when it has one. The document is not edited afterwards.
