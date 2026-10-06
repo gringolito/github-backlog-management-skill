@@ -37,13 +37,6 @@ Canonical allowlist blocks for each mode:
 
 ## Workflow
 
-### 0. Environment check
-
-- `gh auth status`: if unauthenticated, STOP and output: `gh auth status failed. Run gh auth login and retry.`
-- Parse `<owner>/<repo>` from `gh repo view --json owner,name`
-
-After the checks succeed, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
-
 ### 1. Mode resolution
 
 Determine the effective permission mode using this precedence:

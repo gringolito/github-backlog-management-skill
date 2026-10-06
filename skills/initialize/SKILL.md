@@ -23,7 +23,9 @@ Make the repository ready to host backlog items as GitHub Issues, prioritized in
 
 ### 0. Environment check
 
-Verify the local environment can talk to GitHub:
+**Re-run / idempotent case:** if `.claude/backlog-project.json` already exists, keep the Project it names and continue to step 5.
+
+**Fresh bootstrap:** if `.claude/backlog-project.json` does not yet exist, verify the local environment can talk to GitHub:
 
 - Parse `<owner>/<repo>` from the origin URL (support both `git@github.com:owner/repo.git` and `https://github.com/owner/repo.git` forms)
 - Confirm Issues are enabled: `gh repo view <owner>/<repo> --json hasIssuesEnabled --jq '.hasIssuesEnabled'`. If `false`, STOP and instruct the user to enable Issues in repository settings.
