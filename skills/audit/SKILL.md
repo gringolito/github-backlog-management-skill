@@ -25,10 +25,10 @@ items are P0, and acceptance criteria much deeper or shallower than the effort l
 XL item probably needs splitting.
 
 The body states what is wanted, why, what is in and out of scope, and acceptance criteria. Check
-that content, not headings, so items in the old six-section shape pass. Treat a what, why, scope or
-acceptance-criteria section that holds only a placeholder such as `_No response_` as missing.
-Acceptance criteria should be a checklist of specific, verifiable conditions. Flag vague ones such
-as "works correctly", and criteria that reach beyond the stated scope.
+that content, whatever the headings. Treat a what, why, scope or acceptance-criteria part that
+holds only a placeholder as missing. Acceptance criteria should be a checklist of specific,
+verifiable conditions. Flag vague ones such as "works correctly", and criteria that reach beyond
+the stated scope.
 
 Judge each item against INVEST and give a short reason for every failure. Epics are exempt from
 Small and Testable, which their sub-issues carry. An epic with no sub-issues hasn't been
