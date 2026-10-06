@@ -135,7 +135,7 @@ The accepted items form the confirmed set. Assign each confirmed item a local pl
 
 3. Confirm only after explicit review. Use AskUserQuestion with options: "Accept all" / "Cherry-pick" / "Reject all". For "Cherry-pick", follow up with a numbered list so the user can identify which candidates to apply. Nothing is mutated on GitHub here. "Accept" means recording the relationship for Phase 4's manifests.
 
-   NEVER auto-apply: inferred dependencies have a high false-positive rate, and a false `blocked_by` will gate `execute-item` on phantom work.
+   NEVER auto-apply: inferred dependencies have a high false-positive rate, and a false `blocked_by` will gate `pick-item` on phantom work.
 
 4. Normalize each confirmed relationship into a `blocked_by`/`parent` edge for manifest purposes:
 

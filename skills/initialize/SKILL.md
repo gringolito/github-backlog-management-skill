@@ -30,7 +30,7 @@ Make the repository ready to host backlog items as GitHub Issues, prioritized in
 - Parse `<owner>/<repo>` from the origin URL (support both `git@github.com:owner/repo.git` and `https://github.com/owner/repo.git` forms)
 - Confirm Issues are enabled: `gh repo view <owner>/<repo> --json hasIssuesEnabled --jq '.hasIssuesEnabled'`. If `false`, STOP and instruct the user to enable Issues in repository settings.
 - Confirm Projects are enabled: `gh repo view <owner>/<repo> --json hasProjectsEnabled --jq '.hasProjectsEnabled'`. If `false`, STOP and instruct the user to enable Projects in repository settings.
-- Confirm the GitHub Issue Dependencies API is reachable on this repo (used by `add-item`, `execute-item`, `audit`, `refine-item`, `migrate`):
+- Confirm the GitHub Issue Dependencies API is reachable on this repo (used by `add-item`, `pick-item`, `audit`, `refine-item`, `migrate`):
 
 If any required preflight step fails:
 

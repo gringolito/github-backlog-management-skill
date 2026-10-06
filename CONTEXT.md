@@ -104,7 +104,7 @@ Use "Milestone" when you mean the concrete GitHub thing. Use "Release" when you 
 **Active Release**:
 The Release targeted by default: the earliest open Milestone by `due_on`,
 tie-broken by lowest version parsed from the title (`v1.2.0` < `v1.3.0`), falling back to
-Milestone `number`. `/pick-item`, `/execute-item`, `/add-item`, `/migrate`, and
+Milestone `number`. `/pick-item`, `/add-item`, `/migrate`, and
 `/release-status` all resolve to this when no Release is named. When a Release name is given, it is matched by
 case-insensitive title substring, then by stripping a leading `v` from both sides.
 Resolved at runtime by `resolve-milestone` (no-arg: Active Release; positional arg:
@@ -173,8 +173,8 @@ sub-issues. Run by `/pick-item`, whose hand-off suggests `/spike` as the next st
 `type:spike` item.
 
 **Execution**:
-Implementation-through-PR for a non-spike Workable Item already selected. Run by
-`/execute-item`, deprecated in favor of `/pick-item`.
+Implementation-through-PR for a non-spike Workable Item already selected. No dedicated skill;
+`/pick-item` hands off to ordinary implementation.
 
 **Spike Execution**:
 The investigate → findings document → follow-on items protocol for a `type:spike` Workable
