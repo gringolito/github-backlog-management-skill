@@ -10,7 +10,7 @@ Skills moved from `commands/*.md` to `skills/<name>/SKILL.md` and were renamed i
 
 | Old slash command | New skill |
 |---|---|
-| `/initialize-backlog` | `/initialize` |
+| `/initialize-backlog` | `/setup` |
 | `/add-backlog-item` | `/add-item` |
 | `/migrate-backlog` | `/migrate` |
 | `/refine-backlog` | `/refine` |
@@ -172,7 +172,7 @@ Add one of the blocks below to `.claude/settings.json` in any repo where you use
 
 | Skill | What it does |
 |---|---|
-| `/initialize` | One-time bootstrap: provisions the GitHub Project v2, the full label catalog, and the Issue Forms template. Idempotent. Safe to re-run. |
+| `/setup` | One-time bootstrap: links a GitHub Project v2, creates the label vocabulary, and writes both into your `CLAUDE.md` or `AGENTS.md`. Safe to re-run. |
 | `/plan-release` | Creates a Milestone with a due date. Tie-breaks and active-milestone resolution are automatic. |
 | `/add-item` | Interactively authors a single backlog item. Enforces INVEST, recommends rank and priority, wires up native GitHub dependencies. |
 | `/migrate` | Bulk-imports an existing `BACKLOG.md`. Skips Done items. Dependency inference is opt-in; candidates are reviewed before anything is applied. |
@@ -232,7 +232,7 @@ Priority is severity classification. Execution order is the manual Project rank.
 ### Workflow
 
 ```
-/initialize ──► /plan-release ──► /add-item
+/setup ──► /plan-release ──► /add-item
                                   /migrate
                                         │
                                         ├──► /refine ──► /refine-item
@@ -243,7 +243,7 @@ Priority is severity classification. Execution order is the manual Project rank.
                                         └──► /spike
 ```
 
-Run `/initialize` once. Every other skill preflights for the linked Project and stops with a clear error if it is missing.
+Run `/setup` once. Every other skill preflights for the linked Project and stops with a clear error if it is missing.
 
 ---
 
@@ -252,10 +252,10 @@ Run `/initialize` once. Every other skill preflights for the linked Project and 
 ### Starting from scratch
 
 ```
-/initialize
+/setup
 ```
 
-This provisions the GitHub Project v2, creates all labels, opens a PR with the Issue Forms template, and writes `.claude/backlog-project.json`. Run it once per repo.
+This links the GitHub Project v2, creates missing labels, writes a Backlog section into your `CLAUDE.md` or `AGENTS.md`, and writes `.claude/backlog-project.json`. Run it once per repo.
 
 ### Planning a release
 
