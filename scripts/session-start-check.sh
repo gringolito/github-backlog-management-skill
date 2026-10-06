@@ -24,7 +24,7 @@ done
 if [ ${#missing_fields[@]} -gt 0 ]; then
   joined=$(IFS=,; echo "${missing_fields[*]}")
   echo "WARNING: Backlog: .claude/backlog-project.json is missing required field(s): ${joined}"
-  echo "  Fix: Re-run /initialize to regenerate the file."
+  echo "  Fix: Re-run /setup to regenerate the file."
   exit 0
 fi
 
@@ -59,10 +59,10 @@ live_id=$(gh project view "$project_number" --owner "$owner" --format json 2>/de
 
 if [ -z "$live_id" ]; then
   echo "WARNING: Backlog: project #${project_number} not found or inaccessible."
-  echo "  Fix: Re-run /initialize to re-link the project, or delete .claude/backlog-project.json if the project was abandoned."
+  echo "  Fix: Re-run /setup to re-link the project, or delete .claude/backlog-project.json if the project was abandoned."
 elif [ "$live_id" != "$project_id" ]; then
   echo "WARNING: Backlog: project ID mismatch (stored: ${project_id}, live: ${live_id})."
-  echo "  Fix: Re-run /initialize to re-link the project."
+  echo "  Fix: Re-run /setup to re-link the project."
 fi
 
 exit 0

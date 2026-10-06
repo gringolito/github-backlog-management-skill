@@ -515,7 +515,7 @@ JSON
 @test "#189: still exits fatally for other resolve-milestone failures (missing metadata)" {
   cat > "$MOCK_BIN/resolve-milestone" << 'SCRIPT'
 #!/usr/bin/env bash
-echo "No .claude/backlog-project.json found. Run /initialize first." >&2
+echo "No .claude/backlog-project.json found. Run /setup first." >&2
 exit 1
 SCRIPT
   chmod +x "$MOCK_BIN/resolve-milestone"

@@ -36,7 +36,7 @@ fi
 
 metadata_file=".claude/backlog-project.json"
 if [[ ! -f "$metadata_file" ]]; then
-  echo "No .claude/backlog-project.json found. Run /initialize first." >&2
+  echo "No .claude/backlog-project.json found. Run /setup first." >&2
   exit 1
 fi
 owner=$(jq -r '.owner' "$metadata_file")
