@@ -255,7 +255,7 @@ Run `/setup` once. Every other skill preflights for the linked Project and stops
 /setup
 ```
 
-This links the GitHub Project v2, creates missing labels, writes `docs/Backlog.md` and links it from a Backlog section in your `CLAUDE.md` or `AGENTS.md`, and writes `.claude/backlog-project.json`. Run it once per repo.
+This links the GitHub Project v2, creates missing labels, writes `docs/Backlog.md`, and links it from a Backlog section in your `CLAUDE.md` or `AGENTS.md`. Run it once per repo.
 
 ### Planning a release
 
