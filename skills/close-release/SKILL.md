@@ -15,9 +15,9 @@ due date, and ask which when several are open and none has a due date.
 
 Every open item in the Milestone gets the user's decision: carry it to the next open Milestone,
 close it as won't fix with a comment saying it wasn't included in this release, or drop its
-Milestone and leave it open in the backlog, still in the Project as Todo. Present all open items
-together and apply the choices once the user has answered. If the user carries items forward and no
-other Milestone is open, say so and ask for another choice.
+Milestone and leave it open in the backlog. Present all open items together and apply the choices
+once the user has answered. If the user carries items forward and no other Milestone is open, say
+so and ask for another choice.
 
 Prepare the repo as its own instructions describe. Read [pre-closure.md](./pre-closure.md) for
 where to look and how to handle what you find.
@@ -28,10 +28,9 @@ those items by content, whatever shape their bodies have. Show the draft and app
 edits until they approve it.
 
 Publishing the release and its tag is visible to everyone at once and can't be quietly taken back,
-so confirm once before it, naming the tag, the commit it points at and the notes. Tag the default
-branch, after any release-prep PR has merged. Once published, close the Milestone. A closed
-Milestone can be reopened, so that needs no confirmation.
+so confirm once before it, naming the tag, the commit it points at and the notes. The tag and the
+release title are the Milestone title. Tag the default branch, after any release-prep PR has
+merged. Once published, close the Milestone. A closed Milestone can be reopened, so that needs no
+confirmation.
 
 If the tag or release already exists, or a call fails, report it and ask how to proceed.
-
-Finish by reporting what was published, with the release URL, and how each open item was handled.
