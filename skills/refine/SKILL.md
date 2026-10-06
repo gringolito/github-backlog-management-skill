@@ -25,12 +25,3 @@ the work starts.
 Hand each picked item to `refine-item` in turn, in the order shown. Don't prompt between items. The
 user can stop at any time, and rerunning the session rebuilds the candidates, so refined items drop
 out on their own.
-
-`refine` never changes an item itself. Each edit, label change and Rank move happens in
-`refine-item`, under its own confirmation.
-
-End with a summary that leads with what needs the user: items still failing INVEST or still flagged
-`needs-clarification`, and the split, merge or duplicate candidates that came up and weren't
-applied. Then say what changed per item: labels, Rank, Milestone, body. List the items left
-untouched and why, and say if the session stopped before the end of the list. Mark anything you
-couldn't check and where you looked.
