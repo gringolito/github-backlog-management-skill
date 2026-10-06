@@ -11,10 +11,6 @@ Run a read-only audit of the project backlog by delegating to `backlog-auditor`.
 
 ## Workflow
 
-### 0. Preflight
-
-Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) and follow it exactly.
-
 ### 1. Delegate audit
 
 Spawn the `backlog-auditor` agent with `project_number`, `owner`, and `repo`.

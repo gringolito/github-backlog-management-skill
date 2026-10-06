@@ -13,12 +13,6 @@ Close a GitHub Milestone: resolve every open issue interactively, satisfy all pr
 
 ## Workflow
 
-### 0. Preflight
-
-Read [../github-backlog-management/preflight-contract.md](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
-
-After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
-
 ### 1. Milestone resolution
 
 The skill accepts an optional milestone argument (title substring or version string).
