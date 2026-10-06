@@ -147,7 +147,7 @@ _Avoid_: epic (for the parent), task (for the sub-issue) unless independently de
 
 **Audit**:
 The read-only, portfolio-wide quality sweep: checks INVEST compliance, required labels,
-dangling Dependencies, and cross-Project smells, then emits `gh` fix snippets the user can run. It never mutates. Performed by `/audit` (engine: the backlog-auditor).
+dangling Dependencies, and cross-Project smells, then emits `gh` fix snippets the user can run. It never mutates. Performed by `/audit`.
 _Avoid_: validate, validation as the name of the activity
 
 **Health**:
