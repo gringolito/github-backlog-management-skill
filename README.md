@@ -243,7 +243,7 @@ Priority is severity classification. Execution order is the manual Project rank.
                                         └──► /spike
 ```
 
-Run `/setup` once. Every other skill preflights for the linked Project and stops with a clear error if it is missing.
+Run `/setup` once. Every other skill reads the linked Project and reports a clear error if it is missing.
 
 ---
 
@@ -263,7 +263,7 @@ This links the GitHub Project v2, creates missing labels, writes `docs/Backlog.m
 /plan-release
 ```
 
-Claude presents three release modes: Maintenance (patch an existing milestone), Regular (you select scope interactively), or Automated (Claude proposes scope from unassigned items). It infers a semver version from the scope and creates a Milestone with a due date.
+The agent proposes a scope from the unassigned backlog items, a version inferred from that scope, and a due date. You adjust the proposal, and once you approve it the agent creates the Milestone and assigns the items. Passing an open Milestone re-plans its scope instead.
 
 ### Adding a backlog item
 
@@ -404,7 +404,7 @@ Open an Issue with the `type:feature` label and describe the problem it solves. 
 
 This repository uses [Conventional Commits](https://www.conventionalcommits.org/). Commit messages must follow the `<type>: <description>` format. Common types: `feat` for new behavior, `fix` for corrections, `docs` for README/comment changes, `refactor` for rewrites that don't change behavior, `chore` for maintenance. Example: `feat: add needs-refinement label to audit report`.
 
-When editing skill specs, keep numbered workflow steps as plain prose headings (no annotation suffixes). Skill files open with a `You are an AI agent acting as...` persona line. The label catalog, preflight stop string, and issue body section headings must stay consistent across all skill files.
+When editing skill specs, keep numbered workflow steps as plain prose headings (no annotation suffixes). Skill files open with a `You are an AI agent acting as...` persona line. The label catalog and issue body section headings must stay consistent across all skill files.
 
 ---
 
