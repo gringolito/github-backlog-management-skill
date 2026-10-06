@@ -9,12 +9,6 @@ You are an AI agent acting as a development lead. Select the topmost actionable 
 
 ## Workflow
 
-### 0. Preflight
-
-Read the [preflight contract](../github-backlog-management/preflight-contract.md) for the preflight instruction; follow it exactly.
-
-After preflight succeeds, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
-
 ### 1. Item selection
 
 Run `select-item` via the Bash tool. If it exits non-zero, STOP and surface its stderr verbatim.
