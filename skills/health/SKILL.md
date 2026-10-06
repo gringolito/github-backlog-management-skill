@@ -2,8 +2,8 @@
 name: health
 description: >-
   Report on the overall shape of the backlog: distribution, age, overdue priorities, stale
-  In-Progress work and metadata debt. Use when the user asks how healthy the backlog is or wants a
-  portfolio overview.
+  In-Progress work, missing labels and items that need clarification. Use when the user asks how
+  healthy the backlog is or wants a portfolio overview.
 ---
 
 Report on the shape of the whole backlog, covering every open issue. Measure ages in days from
