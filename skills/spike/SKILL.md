@@ -13,7 +13,6 @@ items created.
 Read the spike and its comments, and its parent if it has one. Clear up anything unclear before
 investigating, and run autonomously from there.
 
-Investigate on a branch, using whatever answers the question: docs, source, experiments.
 Prototypes are allowed but only to answer the question, and are thrown away. Findings that say
 "abandon" or "not feasible" are valid outcomes. Keep all communication clean, tight, concise,
 technical and direct.
