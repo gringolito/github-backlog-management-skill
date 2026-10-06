@@ -1,3 +1,5 @@
+> Status: superseded by [ADR 0005](0005-skills-do-not-name-harness-tools.md).
+
 # Use AskUserQuestion only for fixed-choice prompts where all valid responses are finite and known in advance
 
 Every interactive prompt that has a finite, pre-known set of valid responses and requires no follow-up prose uses `AskUserQuestion`. All other interactions remain free-form conversation.
