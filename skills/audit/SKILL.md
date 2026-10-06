@@ -11,8 +11,8 @@ user a fix for every problem found. The audit changes nothing: no issue, label, 
 Milestone.
 
 Read the Project and the label vocabulary from `docs/Backlog.md`, which the repo's `CLAUDE.md` or
-`AGENTS.md` links to. If the file is missing, point the user to `/setup` and stop. That is the only
-point where the audit stops to ask the user, since it has nothing to confirm.
+`AGENTS.md` links to. If the file is missing, tell the user to run `/setup` and stop. The audit
+asks nothing else, because it changes nothing.
 
 Audit every open issue in the Project.
 
@@ -25,15 +25,16 @@ items are P0, and acceptance criteria much deeper or shallower than the effort l
 XL item probably needs splitting.
 
 The body states what is wanted, why, what is in and out of scope, and acceptance criteria. Check
-that content, not headings, so items in the old six-section shape pass, and treat a section that
-holds only a placeholder such as `_No response_` as missing. Acceptance criteria should be a
-checklist of specific, verifiable conditions. Flag vague ones such as "works correctly", and
-criteria that reach beyond the stated scope.
+that content, not headings, so items in the old six-section shape pass. Treat a what, why, scope or
+acceptance-criteria section that holds only a placeholder such as `_No response_` as missing.
+Acceptance criteria should be a checklist of specific, verifiable conditions. Flag vague ones such
+as "works correctly", and criteria that reach beyond the stated scope.
 
 Judge each item against INVEST and give a short reason for every failure. Epics are exempt from
 Small and Testable, which their sub-issues carry. An epic with no sub-issues hasn't been
-decomposed, so suggest adding `needs-clarification`. Flag items that mix several problems or
-overlap another item; the fix is to split or merge them.
+decomposed, so suggest adding `needs-clarification`.
+
+Flag items that mix several problems or overlap another item; the fix is to split or merge them.
 
 External blocker stubs, the items typed `type:external-blocker`, follow their own rules. They
 carry no priority, effort or full body, but they need a stated reason that explains the specific
@@ -44,10 +45,9 @@ Read each item's `blocked_by` relationships. A blocker that can no longer be res
 A cycle is a defect even though GitHub rejects direct ones, because transfers and deletions can
 leave indirect ones.
 
-A closed blocker is satisfied, so report it only when it was closed as not planned, because the
-work it stood for never happened. A blocker outside the Project is allowed, but surface it so the
-user can confirm it's intended. Collect open blockers in other repos together, each with the item
-it holds up.
+A closed blocker is satisfied and needs no report. A blocker outside the Project is allowed, but
+surface it so the user can confirm it's intended. Collect open blockers in other repos together,
+each with the item it holds up.
 
 Call out blocked P0 items and blocked items near the top of the Queue, since they look ready and
 aren't. When the blocker is an external blocker stub, name it alongside the blocked item.
