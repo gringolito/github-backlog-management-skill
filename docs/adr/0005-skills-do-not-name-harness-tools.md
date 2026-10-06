@@ -4,7 +4,7 @@ Supersedes [ADR 0002](0002-askuserquestion-for-fixed-choice-prompts.md).
 
 Skills describe what to do and where the user must confirm, never which tool does it. That covers `AskUserQuestion` and `TaskCreate`, as well as `gh` and GraphQL calls. Each skill names its confirmation points, and the agent chooses how to ask: a structured prompt when the harness offers one, plain conversation otherwise.
 
-Each skill asks for one confirmation, right before it writes to GitHub, covering everything it's about to change. This removes the fixed-choice prompts between items that ADR 0002 routed through `AskUserQuestion`.
+Each skill asks for one confirmation, right before it writes to GitHub, covering everything it's about to change. The one exception is `close-release`, which also confirms before publishing the release and its tag, because other people can see and fetch them at once. This removes the fixed-choice prompts between items that ADR 0002 routed through `AskUserQuestion`.
 
 ## Considered options
 
