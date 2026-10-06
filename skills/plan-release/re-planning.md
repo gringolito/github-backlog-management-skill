@@ -10,13 +10,12 @@ Only items still to do can be removed.
 Candidates to add are the same as for a new release: open items with no Milestone, in Project rank
 order, leaving out external-blocker stubs, with the same blocker checks.
 
-Propose the changes, or take them from the user: which items to add, and which to remove. Every
-removed item needs a disposition. Without one, propose returning it to the backlog with its
-Milestone cleared. The alternatives are to carry it to another open Milestone, which needs a
-target, or to close it as won't fix with a comment saying so. If no other open Milestone exists,
-carrying forward isn't possible, so return the item to the backlog.
+The user says which items to add and which to remove, or asks for a proposal. Every removed item
+needs a disposition. Unless the user says otherwise, return it to the backlog with its Milestone
+cleared. The alternatives are to carry it to another open Milestone, which needs a target, or to
+close it as won't fix with a comment saying so. If no other open Milestone exists, carrying forward
+isn't possible.
 
-The user adjusts the changes until they approve them. Show the resulting size of the scope with the
-proposal. A single approval covers all additions, removals and dispositions. Apply them once
-approved, then report what was added, what was removed and where each removed item went, the
-resulting size, and anything that failed.
+Show the resulting size of the scope with the changes. One approval covers all additions, removals
+and dispositions. Once it's given, apply them and report what was added, what was removed and where
+each removed item went, the resulting size, and anything that failed.

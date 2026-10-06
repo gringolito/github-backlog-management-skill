@@ -20,15 +20,15 @@ Start from what exists: the published Releases, and the open and closed Mileston
 versioning scheme from their titles and tags. If the history mixes schemes and the right one going
 forward isn't clear, ask the user which to use. That is the only question before the proposal.
 
-Propose the whole plan at once: the scope, the version, the due date and the description. The user
-adjusts it, and you revise until they approve it.
+Propose the whole plan at once: the scope, the version with the items that drove it, the due date
+and the description. The user adjusts it, and you revise until they approve it.
 
 Candidates are the open backlog items with no Milestone, in Project rank order. Leave out
-`type:external-blocker` stubs, since they describe constraints and aren't workable, and keep them
-out even when the user names them unless the user insists. Propose a coherent scope rather than the
-top of the list: favor P0 and P1 items, keep a theme, and size it so the release is deliverable. If
-the user names the issues, use those. For a bug-fix or security release with no list, the unscoped
-bug and security items are the candidates.
+`type:external-blocker` stubs, since they describe constraints and aren't workable. Propose a
+coherent scope rather than the top of the list: favor P0 and P1 items, keep a theme, and size it so
+the release is deliverable. If the user names the issues, use those, after checking that each
+exists, is open and isn't a stub. For a bug-fix or security release with no list, the unscoped bug
+and security items are the candidates.
 
 Check each candidate's `blocked_by` dependencies. An item whose blockers are all candidates can go
 in only together with them, with the blockers ranked above it. An item with an open blocker outside
@@ -42,17 +42,15 @@ breaking change is one an item's body states or the user flags. Read bodies by c
 heading, since older items follow a different template. For calendar or custom schemes, continue
 the observed pattern, since scope doesn't drive the name there.
 
-The version must be higher than the latest released one, except for maintenance releases: a patch
-on an existing `major.minor` line, including the latest. A maintenance version is higher than that
-line's latest released patch. When the line isn't the latest, say in the proposal that it's a
-backport. Flag any feature or breaking change in a maintenance scope, since it doesn't belong in a
-patch.
+A release the user aims at an existing `major.minor` line, including the latest, is a maintenance
+release. Its version is the next patch on that line, whatever the scope's types, and a feature or
+breaking change in its scope is flagged, since it doesn't belong in a patch. Say in the proposal
+when the line isn't the latest, so the backport is visible. Any other version must be higher than
+the latest released one and not match a closed Milestone.
 
 For maintenance releases, offer to open a `[Forward-port]` issue for each scoped item, so the fix
 also reaches mainstream development. These are added to the Project with no Milestone, and the body
 links the original. Include the offer in the proposal.
-
-Explain the version choice in a line, naming the items that drove it.
 
 The due date is how `pick-item` chooses the Active Release, the open Milestone with the earliest
 due date. Propose one that fits the size of the scope and the cadence of earlier Milestones, and
