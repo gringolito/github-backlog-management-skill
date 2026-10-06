@@ -2,34 +2,31 @@
 name: setup
 description: >-
   Set up this repo for the backlog skills: link a GitHub Project, create the label vocabulary, and
-  write both into the repo's CLAUDE.md or AGENTS.md. Run once per repo, and again to change the
-  configuration.
+  record both in docs/Backlog.md, linked from the repo's CLAUDE.md or AGENTS.md. Run once per repo,
+  and again to change the configuration.
 disable-model-invocation: true
 ---
 
 Make this repo ready for the backlog skills. When you finish, a GitHub Project is linked to the
-repo, the label vocabulary exists on the repo, and the repo's `CLAUDE.md` or `AGENTS.md` has a
-Backlog section naming the Project and the labels. The other skills read both facts from that
-section instead of discovering them, so the user can change them, labels included, by editing it.
+repo, the label vocabulary exists on the repo, and `docs/Backlog.md` names the Project and the
+labels. The repo's `CLAUDE.md` or `AGENTS.md` links to that file, so the other skills load it only
+when they need it, and the user can change the Project or the labels by editing it.
 
-Start by exploring. Work out the owner and repo from the git remote, and check that Issues and
-Projects are enabled on the repo. If either is off, tell the user which setting to turn on and stop.
-Then see what's already there: Projects linked to the repo, the repo's labels, whether `CLAUDE.md`
-or `AGENTS.md` exists, and whether it already has a Backlog section. An existing section is the
-source of truth on a re-run: keep its Project and label choices rather than proposing new ones.
-
-Present what's in place and what's missing, then confirm once before writing anything. Cover
-everything in that one confirmation: the Project to reuse or create, the label vocabulary, and the
-file that gets the section. If the user's answer amends the plan, apply it as amended without asking
-again.
+Start by exploring. Check that Issues and Projects are enabled on the repo, and if either is off,
+tell the user which setting to turn on and stop. See what's already there: Projects linked to the
+repo, the repo's labels, whether `CLAUDE.md` or `AGENTS.md` exists, and whether `docs/Backlog.md`
+and a Backlog section already do. An existing `docs/Backlog.md` is the source of truth on a re-run:
+keep its Project and label choices rather than proposing new ones. Present what's in place and
+what's missing, then confirm once before writing anything, covering the Project to reuse or create,
+the label vocabulary and the file that gets the link. If the user's answer amends the plan, apply
+it as amended without asking again.
 
 Reuse a Project already linked to the repo, preferring one titled `<owner>/<repo> Backlog`. When
 none exists, create one with that title and the short description `Backlog for <owner>/<repo>`,
 private unless the user asks otherwise, and link it to the repo. Leave the Status field as GitHub
 created it.
 
-The default vocabulary is below. Every description fits GitHub's 100-character limit, and label
-creation fails on longer ones. Effort descriptions stay relative and never mention time.
+The default vocabulary is below.
 
 - `type:feature`: New capability or user-visible behaviour not yet present
 - `type:bug`: Incorrect behaviour deviating from a documented or expected contract
@@ -53,17 +50,15 @@ creation fails on longer ones. Effort descriptions stay relative and never menti
 - `effort:XL`: Extra large: major undertaking; probably needs a split plan
 - `needs-clarification`: Item needs more information before it can be worked
 
-The user can keep the defaults or map any of them to labels the repo already uses, for example
-`bug` for `type:bug`. When the repo has labels that look like equivalents, suggest mapping them
-instead of creating duplicates. Create only the labels the vocabulary needs and the repo lacks, with
-a consistent color per group. Leave existing labels, Projects and their settings as they are.
+The user can keep the defaults or map any of them to labels the repo already uses. Create only the
+labels the vocabulary needs and the repo lacks, with a consistent color per group. Leave existing
+labels, Projects and their settings as they are.
 
-Write the Backlog section into `CLAUDE.md` if it exists, otherwise `AGENTS.md`. When neither exists,
-ask which to create as part of the confirmation. Under the heading `## Backlog`, name the Project
-with its owner, number and URL, and list the labels in use for each group with their meanings,
-marking the ones mapped to existing repo labels. Keep it short, since the file is loaded into every
-session. On a re-run, rewrite that section where it stands and leave the rest of the file alone, so
-the file never ends up with two Backlog sections.
+Write the Project (owner, number and URL) and the labels in use for each group, with their meanings
+and marking the ones mapped to existing repo labels, into `docs/Backlog.md`. Then add a `## Backlog`
+section to `CLAUDE.md` if it exists, otherwise `AGENTS.md`, that links to that file. When neither
+exists, ask which to create as part of the confirmation. On a re-run, rewrite the linked file and
+update the section where it stands, so the file never has two Backlog sections.
 
 Some helper scripts (`create-item`, `resolve-milestone`, `select-item`) still read
 `.claude/backlog-project.json`, so write it with these fields: `owner`, `repo`, `project_number`,
@@ -75,5 +70,4 @@ Running setup on a repo that's already configured changes nothing that's in plac
 refreshing the metadata file.
 
 Finish with a short report. Lead with anything the user still has to do, such as enabling a repo
-setting. Then say what you created, linked or wrote, and what was already in place. Point to
-`/plan-release` as the next step.
+setting. Then say what you created, linked or wrote, and what was already in place.

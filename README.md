@@ -172,7 +172,7 @@ Add one of the blocks below to `.claude/settings.json` in any repo where you use
 
 | Skill | What it does |
 |---|---|
-| `/setup` | One-time bootstrap: links a GitHub Project v2, creates the label vocabulary, and writes both into your `CLAUDE.md` or `AGENTS.md`. Safe to re-run. |
+| `/setup` | One-time bootstrap: links a GitHub Project v2, creates the label vocabulary, and records both in `docs/Backlog.md`, linked from your `CLAUDE.md` or `AGENTS.md`. Safe to re-run. |
 | `/plan-release` | Creates a Milestone with a due date. Tie-breaks and active-milestone resolution are automatic. |
 | `/add-item` | Interactively authors a single backlog item. Enforces INVEST, recommends rank and priority, wires up native GitHub dependencies. |
 | `/migrate` | Bulk-imports an existing `BACKLOG.md`. Skips Done items. Dependency inference is opt-in; candidates are reviewed before anything is applied. |
@@ -255,7 +255,7 @@ Run `/setup` once. Every other skill preflights for the linked Project and stops
 /setup
 ```
 
-This links the GitHub Project v2, creates missing labels, writes a Backlog section into your `CLAUDE.md` or `AGENTS.md`, and writes `.claude/backlog-project.json`. Run it once per repo.
+This links the GitHub Project v2, creates missing labels, writes `docs/Backlog.md` and links it from a Backlog section in your `CLAUDE.md` or `AGENTS.md`, and writes `.claude/backlog-project.json`. Run it once per repo.
 
 ### Planning a release
 
