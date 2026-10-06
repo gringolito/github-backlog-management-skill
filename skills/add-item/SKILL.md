@@ -163,7 +163,7 @@ Using the JSON blob returned by `create-item`, print:
 - Do NOT bundle multiple problems into a single item
 - Exploratory work: classify as Spike (`type:spike`)
 - Effort must NEVER be measured in time (no hours/days)
-- Issue body section headings MUST match the Issue Forms template exactly (case + ordering) so `audit` can parse them
+- Issue body section headings MUST match the headings in [issue-body-sections.md](../github-backlog-management/issue-body-sections.md) exactly (case + ordering) so `audit` can parse them
 - Never apply more than one label per group (one type, one priority, one effort)
 - Dependencies and sub-issue parent are NOT mirrored in the issue body; GitHub's native API is the only source of truth for these relationships
 - Sub-issues stay independent: assigning a parent does NOT inherit the parent's milestone, priority, effort, type, or Project rank

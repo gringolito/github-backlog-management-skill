@@ -61,7 +61,7 @@ done
 # ─── Metadata ─────────────────────────────────────────────────────────────
 metadata_file=".claude/backlog-project.json"
 [[ ! -f "$metadata_file" ]] && {
-  echo "No .claude/backlog-project.json found. Run /initialize first." >&2
+  echo "No .claude/backlog-project.json found. Run /setup first." >&2
   exit 1
 }
 owner=$(jq -r '.owner'             "$metadata_file")

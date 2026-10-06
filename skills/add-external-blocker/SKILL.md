@@ -40,7 +40,7 @@ Create a stub issue with `type:external-blocker` label only (no `priority:*`, no
 
 - Title: `External blocker: <reason>` (keep short and specific)
 - Labels: `type:external-blocker`
-- Body: match the external-blocker Issue Forms template exactly:
+- Body: use exactly this shape:
 
   ```
   ### Reason

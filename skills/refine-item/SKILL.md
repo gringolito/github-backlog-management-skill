@@ -219,7 +219,7 @@ Only after the pre-removal validation gate passes:
 - Do not silently mutate labels or rank: every change requires explicit confirmation
 - Do not operate on issues outside the linked Project
 - Do not reset milestone assignments unless the user explicitly asks
-- Do not introduce new body section headings: keep them aligned with the canonical Issue Forms template so `audit` can parse them
+- Do not introduce new body section headings: keep them aligned with the headings in [issue-body-sections.md](../github-backlog-management/issue-body-sections.md) so `audit` can parse them
 - Effort must never be expressed in time (no hours/days)
 - Print all `gh` errors verbatim
 - This skill operates on exactly one issue. Use `/refine` for multi-item sessions.
