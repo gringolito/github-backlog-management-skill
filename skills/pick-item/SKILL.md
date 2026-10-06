@@ -1,28 +1,28 @@
 ---
 name: pick-item
 description: >-
-  Choose the next backlog item to work on, assign it to you and agree a plan. Use when the user
-  wants to start the next item or resume one already assigned to them.
+  Choose the next backlog item to work on, check that it is ready and assign it to you. Use when
+  the user wants to start the next item.
 ---
 
-Choose the next item to work on, assign it to the user, and agree an implementation plan with them. The skill is done when the item is assigned and the user has approved the plan. It stops to ask in five cases: which Milestone to work from when several are open and the user named none, whether to resume an item already assigned to the user or pick a new one, what to do with a parent whose sub-issues are all closed, an epic that needs decomposing, and the plan.
+Select the next item to work on, verify it can be worked, and assign it to the user. The skill is
+done when that item is assigned.
 
-The Project and the label vocabulary are in the repo's `docs/Backlog.md`, linked from its `CLAUDE.md` or `AGENTS.md`. If that configuration is missing, point the user to `/setup`.
+Items are ranked within projects or milestones. Look into the user's named milestone first, or
+else the open milestone, and ask which one when several are open. Then look at items without a
+milestone. The top of the queue wins.
 
-Items come from the Project. Look in the open Milestone first, then at items without a milestone. The top of the Queue wins.
+Skip an item that is blocked, or labelled `needs-clarification` or `type:external-blocker`. Use
+GitHub's blocked-by API to resolve blockers, where a closed blocker no longer counts. When every
+candidate is blocked, list each blocker with its state.
 
-Items already assigned to the user come first: list them with their PR status and ask whether to resume one. Resuming skips selection and goes straight to the plan, which starts from the existing branch and PR.
+When the top item has open sub-issues, pick the topmost one that qualifies instead. An epic with
+no sub-issues is not workable; ask the user to decompose it.
 
-An item is skipped when it is blocked, a Stub (`type:external-blocker`), or labelled `needs-clarification`. The skill doesn't judge whether an item is well formed; that label is the signal that it isn't, and the user can run `/refine-item` on it. Blocked means it has an open `blocked_by` dependency in GitHub's issue dependencies; a closed blocker no longer counts. A blocked item is never picked, even if the user asks, because its blocker would stop the work midway. If the dependency API is unavailable, carry on without block checks and warn the user. When every candidate is blocked, say so and list each blocker with its state, who holds it, and whether it looks stale, in progress, unassigned or external.
+Read the item's comments and, when it has a parent, also read the parent's context.
 
-A parent is never worked directly. When the top item has open sub-issues, go into them and pick the topmost one that qualifies. When all of its sub-issues are closed, run a scope completeness review: map each acceptance criterion of the parent to the closed sub-issue that covers it, and show the user the coverage. Ask whether to close the parent as complete, posting the coverage as a comment, or to create sub-issues with `/add-item` for the uncovered criteria. An epic with no sub-issues is not workable; ask the user to decompose it.
+Check whether the item has enough information to be worked on. If context or relevant information
+is missing, comment on the item saying what is missing, add the `needs-clarification` label, and
+move on to the next item.
 
-Read the item's body by content, not by headings. Read its comments and, when it has a parent, the parent's what and why. If the item's priority label looks out of line with its Queue position, mention it in the plan.
-
-Assign the item to the user. GitHub moves its Status on its own. A `type:spike` item is handed to `/spike` once the plan is approved, and its plan describes the investigation and the findings rather than a code change.
-
-Propose a concise implementation plan that covers every acceptance criterion, stays inside the scope, and fits the parent's context. Research online when the approach needs it. Wait for the user's approval before handing the item over, and don't make assumptions the user could settle with a question.
-
-When the item is too large for one iteration, propose a split instead: each sub-issue with a title, what, why, acceptance criteria and labels, and how together they cover the parent's criteria. On approval, create the sub-issues with `/add-item` under the parent, unassign the parent, and pick the first sub-issue. Where siblings depend on each other, record that as `blocked_by` directly and include it in the proposal, so one approval covers all of it.
-
-Issues are closed by the PR's `Closes #N`, never by hand. The exceptions are a parent closed after the scope completeness review, and a spike closed by its own PR.
+Self-assign the issue.
