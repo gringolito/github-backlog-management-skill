@@ -21,29 +21,15 @@ Make the repository ready to host backlog items as GitHub Issues, prioritized in
 
 ## Workflow
 
-### 0. Environment check
+### 0. Re-run shortcut
 
-**Re-run / idempotent case:** if `.claude/backlog-project.json` already exists, keep the Project it names and continue to step 5.
-
-**Fresh bootstrap:** if `.claude/backlog-project.json` does not yet exist, verify the local environment can talk to GitHub:
-
-- Parse `<owner>/<repo>` from the origin URL (support both `git@github.com:owner/repo.git` and `https://github.com/owner/repo.git` forms)
-- Confirm Issues are enabled: `gh repo view <owner>/<repo> --json hasIssuesEnabled --jq '.hasIssuesEnabled'`. If `false`, STOP and instruct the user to enable Issues in repository settings.
-- Confirm Projects are enabled: `gh repo view <owner>/<repo> --json hasProjectsEnabled --jq '.hasProjectsEnabled'`. If `false`, STOP and instruct the user to enable Projects in repository settings.
-- Confirm the GitHub Issue Dependencies API is reachable on this repo (used by `add-item`, `execute-item`, `audit`, `refine-item`, `migrate`):
-
-If any required check fails:
-
-- STOP
-- Report the missing prerequisite explicitly
-- Do NOT continue to provisioning
-
-After the checks succeed, use `TaskCreate` to create one task per workflow step below. Mark each task `in_progress` when you begin it and `completed` when it finishes.
+If `.claude/backlog-project.json` already exists, keep the Project it names and continue to step 5.
 
 ### 1. Project detection (idempotent)
 
 Before creating anything:
 
+- Parse `<owner>/<repo>` from the origin URL (support both `git@github.com:owner/repo.git` and `https://github.com/owner/repo.git` forms)
 - Query existing projects:
   - `gh project list --owner <owner> --format json`
 - Filter for a Project (v2) titled `<owner>/<repo> Backlog` that is linked to this repo
@@ -188,7 +174,6 @@ Print a structured summary so the user can verify provisioning:
 
 - Re-running this skill on a fully-provisioned repo MUST be a no-op except for printing the summary
 - NEVER delete pre-existing labels, projects, or templates the user may have customized
-- NEVER skip the `gh auth status` and `git remote get-url origin` environment checks
 - Stop and ask before opening a PR that would replace a pre-existing `.github/ISSUE_TEMPLATE/backlog-item.yml`
 - NEVER commit `.github/ISSUE_TEMPLATE/backlog-item.yml` directly to the default branch; always go through a PR
 - All `gh` errors must be surfaced verbatim to the user; do not swallow them
