@@ -1,36 +1,19 @@
 ---
 name: release-status
 description: >-
-  Report how a Release is tracking: progress, blocked items and items missing an effort estimate.
+  Report how a Release is tracking: progress, blocked items and items that need clarification.
   Use when the user asks about milestone progress, release readiness or blockers.
-argument-hint: "Optional: the Release to report on, by title or version. Defaults to the repo's open Milestone."
+argument-hint: "Optional: the Release to report on, by title or version."
 ---
 
 Report how one Release is tracking, in a form the user can paste into a standup note or a comment.
-The report answers three questions: how much of the Release is done and which open items are being
-worked on, which open items are blocked and by what, and which open items have no effort estimate.
+The report answers four questions: how far along the Release is, how many items are in progress,
+which open items are blocked and by what, and which items need clarification.
 
-The Release is the one the user names, matched by title substring or version with or without a
-leading `v`. Without a name it is the repo's open Milestone. If several are open, ask which one.
-If no open Milestone exists or the name matches none, say so in the report and stop. The Project
-and the label vocabulary are in `docs/Backlog.md`. If it is missing, tell the user to run `/setup`.
+The Release is the open Milestone. If several are open, ask which one. If the user names a Release,
+match it by title substring or by version, with or without a leading `v`.
 
-Count every issue assigned to the Milestone, open and closed. Items labeled
-`type:external-blocker` are Stubs, not work: leave them out of every count and percentage, and use
-them only to name a blocker. Progress is closed items over all counted items. An open item is
-being worked on when its Project Status is In Progress. An open item that isn't on the Project has
-no Status, so list it as not checked.
+An item is in progress when its Project Status says so. Use the `blocked_by` GitHub API for
+blockers. An item needs clarification when it carries the `needs-clarification` label.
 
-An open item is blocked when at least one of its `blocked_by` dependencies is still open. When the
-blocker is a Stub, name the external constraint by the Stub's title. If the dependency API is
-unavailable on the repo, say so in the report instead of listing blocked items, so the missing
-section isn't read as nothing being blocked.
-
-An open item is unestimated when it has no effort label.
-
-Lead the report with anything that needs the user's attention, such as items that couldn't be
-checked, and say where each check looked. Then give the Release title, due date if set, and total,
-with the issues behind each finding.
-
-The skill only reads: it changes no issue, Project field, Milestone or label, and doesn't rank
-items or recommend an order of work.
+The skill only reads: it changes no issue, Project field, Milestone or label.
