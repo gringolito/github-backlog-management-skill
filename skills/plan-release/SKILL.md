@@ -38,9 +38,8 @@ unblocked and say so.
 
 Infer the version from the scope. For semver projects, a breaking change anywhere in the scope
 means a major bump, a `type:feature` item means a minor bump, and anything else is a patch. A
-breaking change is one an item's body states or the user flags. Read bodies by content, not by
-heading, since older items follow a different template. For calendar or custom schemes, continue
-the observed pattern, since scope doesn't drive the name there.
+breaking change is one an item's body states, wherever it says so, or the user flags. For calendar
+or custom schemes, continue the observed pattern, since scope doesn't drive the name there.
 
 A release the user aims at an existing `major.minor` line, including the latest, is a maintenance
 release. Its version is the next patch on that line, whatever the scope's types, and a feature or
