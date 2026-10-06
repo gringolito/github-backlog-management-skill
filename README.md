@@ -263,7 +263,7 @@ This links the GitHub Project v2, creates missing labels, writes `docs/Backlog.m
 /plan-release
 ```
 
-Claude proposes a scope from the unassigned backlog items, a version inferred from that scope, and a due date. You adjust the proposal, and once you approve it Claude creates the Milestone and assigns the items. Passing an open Milestone re-plans its scope instead.
+The agent proposes a scope from the unassigned backlog items, a version inferred from that scope, and a due date. You adjust the proposal, and once you approve it the agent creates the Milestone and assigns the items. Passing an open Milestone re-plans its scope instead.
 
 ### Adding a backlog item
 
