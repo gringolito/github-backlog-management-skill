@@ -263,7 +263,7 @@ This links the GitHub Project v2, creates missing labels, writes `docs/Backlog.m
 /plan-release
 ```
 
-Claude presents three release modes: Maintenance (patch an existing milestone), Regular (you select scope interactively), or Automated (Claude proposes scope from unassigned items). It infers a semver version from the scope and creates a Milestone with a due date.
+Claude proposes a scope from the unassigned backlog items, a semver version inferred from that scope, and a due date. You adjust the proposal, and once you approve it Claude creates the Milestone and assigns the items. Passing an open Milestone re-plans its scope instead.
 
 ### Adding a backlog item
 
