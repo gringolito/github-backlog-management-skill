@@ -24,8 +24,7 @@ the work starts.
 
 Hand each picked item to `refine-item` in turn, in the order shown. Don't prompt between items. The
 user can stop at any time, and rerunning the session rebuilds the candidates, so refined items drop
-out on their own. Bodies are judged by content, not headings, so items in the old six-section shape
-and in the current shape both work.
+out on their own.
 
 `refine` never changes an item itself. Each edit, label change and Rank move happens in
 `refine-item`, under its own confirmation.
