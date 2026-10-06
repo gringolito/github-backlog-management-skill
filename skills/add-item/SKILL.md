@@ -83,7 +83,7 @@ If the user did not name any blockers, blocking items, or a sub-issue parent, om
 
 ### 7. Execution rank
 
-Execution order comes from Rank in the Queue; `execute-item` always picks the topmost item.
+Execution order comes from Rank in the Queue; `pick-item` always picks the topmost item.
 
 Determine rank by RELATIVE analysis against existing Todo items, NOT by defaulting to bottom-of-column.
 
@@ -120,7 +120,7 @@ Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surfac
 Ask the user whether to assign this item to the Active Release:
 
 - If yes: include `"milestone": "<milestone-title>"` in the manifest passed to `create-item`
-- If no: omit the `milestone` field (will be picked up by `execute-item` only after items in the Active Release are exhausted)
+- If no: omit the `milestone` field (will be picked up by `pick-item` only after items in the Active Release are exhausted)
 
 ### 9. Issue creation & project setup
 

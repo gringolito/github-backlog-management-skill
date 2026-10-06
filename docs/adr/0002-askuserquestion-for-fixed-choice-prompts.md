@@ -6,7 +6,7 @@ Every interactive prompt that has a finite, pre-known set of valid responses and
 
 Prompts migrated under this rule: item-by-item migration gate (Apply / Skip / Apply All Remaining / Stop Migration), milestone assignment yes/no, dependency inference bulk confirm (Accept all / Cherry-pick / Reject all), refine queue selection (multiSelect for ≤ 4 items), between-item continue/stop, in-progress resume-vs-new-pick, Status field customization choice, Issue template replacement choice, and label disambiguation for unclear `type:*`, `priority:*`, and `effort:*` classifications.
 
-Prompts explicitly left as free-form: plan approval in `execute-item` (users routinely answer "request changes" or "yes but move X first"), spike findings sign-off (the user's free-text response IS the edits to the document), rank-order confirmation in `add-item` and `refine-item` (users frequently add rationale or redirect), and the apply-all-changes gate in `refine-item` (partial acceptance with prose adjustments is common).
+Prompts explicitly left as free-form: plan approval in `pick-item` (users routinely answer "request changes" or "yes but move X first"), spike findings sign-off (the user's free-text response IS the edits to the document), rank-order confirmation in `add-item` and `refine-item` (users frequently add rationale or redirect), and the apply-all-changes gate in `refine-item` (partial acceptance with prose adjustments is common).
 
 ## Considered options
 
