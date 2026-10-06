@@ -128,7 +128,7 @@ teardown() {
   rm .claude/backlog-project.json
   run "$BACKLOG_PREFLIGHT"
   [[ "$status" -ne 0 ]]
-  [[ "$output" == *"Run /initialize first"* ]]
+  [[ "$output" == *"Run /setup first"* ]]
 }
 
 # ---------------------------------------------------------------------------
