@@ -97,23 +97,23 @@ Legend:
 | `gh label list` | initialize, add-item, audit | `list_label` (labels) | **COVERED** |
 | `gh label create` | initialize | `label_write` (labels) | **COVERED** |
 | `gh repo view` | preflight | `get_repository` / context | **COVERED** |
-| `gh pr create` | execute-item, initialize | `create_pull_request` (pull_requests) | **COVERED** |
+| `gh pr create` | initialize | `create_pull_request` (pull_requests) | **COVERED** |
 | `gh project list` | preflight/initialize | `projects_list` (projects) | **COVERED** |
 | `gh project view` | initialize, release-status | `projects_get` (projects) | **COVERED** |
-| `gh project item-list` | execute-item, add-item, status, health, audit | `projects_get` / list project items | **COVERED** (read) |
+| `gh project item-list` | pick-item, add-item, status, health, audit | `projects_get` / list project items | **COVERED** (read) |
 | `gh project item-add` | add-item, migrate | `projects_write` → `add_project_item` | **COVERED** |
-| `gh project field-list` | execute-item, add-item | `list_project_fields` / `projects_get` | **COVERED** |
-| `gh project item-edit` (set **Status**) | execute-item, add-item, migrate | `projects_write` → `update_project_item` | **PARTIAL**: item-field write exists, but explicit ProjectV2 **status** read/write is still an open request ([#1963](https://github.com/github/github-mcp-server/issues/1963)); needs hands-on confirmation that the single-select Status option can be set |
+| `gh project field-list` | pick-item, add-item | `list_project_fields` / `projects_get` | **COVERED** |
+| `gh project item-edit` (set **Status**) | pick-item, add-item, migrate | `projects_write` → `update_project_item` | **PARTIAL**: item-field write exists, but explicit ProjectV2 **status** read/write is still an open request ([#1963](https://github.com/github/github-mcp-server/issues/1963)); needs hands-on confirmation that the single-select Status option can be set |
 | `gh project create` | initialize | n/a | **MISSING**: no create-project tool |
 | `gh project link` (Project → repo) | initialize | n/a | **MISSING** |
 | `gh api graphql updateProjectV2` (shortDescription) | initialize | n/a | **MISSING**: `projects_write` operates on **items**, not project metadata |
 | `gh api graphql` **rank / item position** reorder | add-item (rank insertion) | n/a | **MISSING**: no position/reorder tool; the entire rank-ordering model (CLAUDE.md invariant 6) has no write path |
 | `gh api repos/.../milestones` **POST** (create) | plan-release | n/a | **MISSING**: open request ([#258](https://github.com/github/github-mcp-server/issues/258)) |
 | `gh api repos/.../milestones/<n>` **PATCH** state=closed | close-release | n/a | **MISSING** |
-| `gh api repos/.../milestones?state=…` (list/read `due_on`) | execute-item, add-item, status | n/a | **MISSING**: milestone metadata (esp. `due_on` for active-milestone resolution) has no read tool; `list_issues` filters by milestone but does not return milestone `due_on` |
+| `gh api repos/.../milestones?state=…` (list/read `due_on`) | pick-item, add-item, status | n/a | **MISSING**: milestone metadata (esp. `due_on` for active-milestone resolution) has no read tool; `list_issues` filters by milestone but does not return milestone `due_on` |
 | `gh api .../sub_issues` POST / DELETE | add-item, migrate, refine-item | `add_sub_issue` / `remove_sub_issue` / `reprioritize_sub_issue` (issues) | **COVERED** |
-| `gh api .../issues/<n>/parent` (read parent) | execute-item, add-item | n/a | **PARTIAL / MISSING**: `get_issue` does not return parent; tracked in [#950](https://github.com/github/github-mcp-server/issues/950) |
-| `gh api .../dependencies/blocked_by` (read) | **execute-item block-skipping**, block-item, audit, resolve-external-blocker | n/a | **MISSING**: [#950](https://github.com/github/github-mcp-server/issues/950) open |
+| `gh api .../issues/<n>/parent` (read parent) | pick-item, add-item | n/a | **PARTIAL / MISSING**: `get_issue` does not return parent; tracked in [#950](https://github.com/github/github-mcp-server/issues/950) |
+| `gh api .../dependencies/blocked_by` (read) | **pick-item block-skipping**, block-item, audit, resolve-external-blocker | n/a | **MISSING**: [#950](https://github.com/github/github-mcp-server/issues/950) open |
 | `gh api .../dependencies/blocking` POST / DELETE | block-item, add-external-blocker, resolve-external-blocker | n/a | **MISSING** |
 | `gh api repos/.../releases/generate-notes` POST | close-release | n/a | **MISSING** (no release-notes generation tool verified) |
 | `gh api user` | preflight | `get_me` (context/users) | **COVERED** |
@@ -206,8 +206,8 @@ today's single `gh auth login`.
 - Write paths that are covered (issue create/update, sub-issues, project item-add, PR create):
   another large chunk, swappable.
 - Paths that are MISSING and would still require `gh`:
-  - Issue dependencies (read **and** write): `execute-item`, `block-item`, both external-blocker skills, `audit`.
-  - Milestones create/close/read-`due_on`: `plan-release`, `close-release`, active-milestone resolution in `execute-item`/`add-item`/`release-status`.
+  - Issue dependencies (read **and** write): `pick-item`, `block-item`, both external-blocker skills, `audit`.
+  - Milestones create/close/read-`due_on`: `plan-release`, `close-release`, active-milestone resolution in `pick-item`/`add-item`/`release-status`.
   - Project create + link + description: `initialize`.
   - Project rank/position reorder: `add-item`.
   - Release notes generation: `close-release`.

@@ -150,7 +150,7 @@ Wait for explicit user confirmation of the version name before proceeding.
 Collect from the user (with sensible defaults):
 
 - **Title**: confirmed in step 6
-- **Due date** (`due_on`): used by `execute-item` to determine the Active Release (earliest `due_on` wins). Format: `YYYY-MM-DDTHH:MM:SSZ`.
+- **Due date** (`due_on`): used by `pick-item` to determine the Active Release (earliest `due_on` wins). Format: `YYYY-MM-DDTHH:MM:SSZ`.
 - **Description**: if the user does not provide one, generate a suggested description from the confirmed scope:
   - Summarize the release theme (e.g. "Bug-fix and security hardening release", "Feature release: …", "Maintenance patch for v1.5.x")
   - List the top goals derived from the scoped items' `### Why` sections
