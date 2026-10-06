@@ -25,8 +25,9 @@ Draft the release notes from the merged PRs, then add what the PR list misses: b
 new features, configuration or schema changes and migration steps from the closed items. Read
 those items by content. Show the draft and apply the user's edits until they approve it.
 
-Publishing the release and its tag is visible to everyone at once and can't be quietly taken back,
-so confirm once before it. The tag and the release title are the Milestone title. Tag the default
-branch, after any release-prep PR has merged. Once published, close the Milestone.
+Publishing the release and its tag is visible to everyone at once and can't be quietly taken
+back, so confirm once before it. The tag and the release title are the Milestone title; follow
+the repository's existing pattern if one exists. Tag the default branch, after any release-prep
+PR has merged. Once published, close the Milestone.
 
 If the tag or release already exists, report it and ask how to proceed.
