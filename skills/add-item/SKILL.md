@@ -40,7 +40,8 @@ the proposal diverges. If existing items look misranked next to the new one, sug
 each, and apply it only if the user agrees.
 
 When an open Milestone exists, ask whether the item belongs in it, and which one when several
-are open. Adding to a Milestone changes its scope, so that is the user's call.
+are open. Adding to a Milestone changes its scope, so don't add the item to one without the
+user's consent.
 
 Create the issue once the questions are settled, recording blockers with the `blocked_by` API and
 the parent with the sub-issue API. Report what was created so the user can correct it.
