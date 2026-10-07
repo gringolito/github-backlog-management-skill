@@ -36,7 +36,7 @@ here too.
 **Stub**:
 The one current kind of Non-Workable Item: the encapsulation of an **External Blocker**, an
 out-of-team-control constraint recorded so it can block Workable Items. Carries
-`type:external-blocker` and is created only by `/add-external-blocker` (cleared by `/resolve-external-blocker`).
+`type:external-blocker` and is managed by `/external-blocker`.
 _Avoid_: using "Stub" as a synonym for the whole Non-Workable Item category. It is one kind of it.
 
 ### Classification
@@ -135,7 +135,7 @@ proceed. May be a Workable Item or a Stub.
 
 **External Blocker**:
 A Blocker that is a Stub, an out-of-team-control constraint. The role a `type:external-blocker`
-Stub plays. Created by `/add-external-blocker`. Cleared by `/resolve-external-blocker`.
+Stub plays. Created, linked and cleared by `/external-blocker`.
 
 **Sub-issue** / **Parent**:
 Hierarchical decomposition recorded via GitHub `sub_issues`. A sub-issue does NOT inherit its

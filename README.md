@@ -18,12 +18,11 @@ Skills moved from `commands/*.md` to `skills/<name>/SKILL.md` and were renamed i
 | `/validate-backlog` | `/audit` |
 | `/execute-backlog-item` | `/execute-item` |
 | `/backlog-health` | `/health` |
-| `/block-backlog-item` | `/block-item` |
+| `/block-backlog-item` | `/external-blocker` |
 | `/plan-release` | `/plan-release` _(unchanged)_ |
 | `/release-status` | `/release-status` _(unchanged)_ |
 | `/close-release` | `/close-release` _(unchanged)_ |
-| `/add-external-blocker` | `/add-external-blocker` _(unchanged)_ |
-| `/resolve-external-blocker` | `/resolve-external-blocker` _(unchanged)_ |
+| `/add-external-blocker`, `/resolve-external-blocker` | `/external-blocker` |
 | `/setup-permissions` | `/setup-permissions` _(unchanged)_ |
 
 ---
@@ -227,7 +226,7 @@ Priority is severity classification. Execution order is the manual Project rank.
 
 #### External blocker stubs
 
-`type:external-blocker` is a special infrastructure label for lightweight stub issues that represent external constraints (API limitations, vendor issues, regulatory holds, etc.) blocking one or more backlog items. Stubs carry **only** the `type:external-blocker` label: no priority, no effort, no rank. They are created by `/add-external-blocker`, never appear as executable work in `/pick-item`, and are excluded from all milestone counts and planning scope. Close a stub with `/resolve-external-blocker` when the external constraint is lifted. Create stubs with `/add-external-blocker` and link items with `/block-item`.
+`type:external-blocker` is a special infrastructure label for lightweight stub issues that represent external constraints (API limitations, vendor issues, regulatory holds, etc.) blocking one or more backlog items. Stubs carry **only** the `type:external-blocker` label: no priority, no effort, no rank. They never appear as executable work in `/pick-item` and are excluded from all milestone counts and planning scope. Use `/external-blocker` to create a stub, link it to the items it blocks, and close it when the external constraint is lifted.
 
 ### Workflow
 
