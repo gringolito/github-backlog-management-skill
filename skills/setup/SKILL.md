@@ -16,10 +16,6 @@ on and stop. Otherwise find the Projects linked to the repo, its labels, which o
 `AGENTS.md` exist, and whether `docs/Backlog.md` and a Backlog section already do. An existing
 `docs/Backlog.md` is the source of truth on a re-run, so keep its choices.
 
-Present what's in place and what's missing, then confirm once before writing anything. The
-confirmation covers the Project to reuse or create, the label vocabulary, and the file that gets
-the link. If the user amends the plan, apply it as amended without asking again.
-
 Reuse a Project already linked to the repo, preferring one titled `<owner>/<repo> Backlog`. If none
 exists, create one with that title and the short description `Backlog for <owner>/<repo>`, private
 unless the user asks otherwise, and link it. Leave the Status field as GitHub created it.
@@ -31,5 +27,7 @@ labels, Projects and their settings alone.
 
 Write the repo's `docs/Backlog.md` from the template, filled in with the Project and the labels in
 use. Then add a `## Backlog` section to `CLAUDE.md` if it exists, otherwise `AGENTS.md`, that links
-to it. If neither exists, ask which to create as part of the confirmation. Re-running updates the
-file and that section in place, and changes nothing that is already right.
+to it. If neither exists, ask the user which to create. Re-running updates the file and that
+section in place, and changes nothing that is already right.
+
+When you finish, report what you created, reused and changed.
