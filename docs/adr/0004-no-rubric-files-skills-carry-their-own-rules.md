@@ -4,7 +4,7 @@ Supersedes [ADR 0001](0001-rubrics-live-in-agents.md).
 
 There is no shared rubric, reference file, or custom agent to house one. Each skill states the few rules it needs in a sentence or two: INVEST in the skills that write items and in `audit`, the body shape in `add-item`, `refine-item` and `audit`, and the `blocked_by` API wherever dependencies are recorded. The model already knows INVEST, can weigh where an item belongs in the Queue, and notices dependencies in prose, so what survives is only the part it can't infer, such as the epic exemption from INVEST.
 
-The two facts that vary per repository, its Project and its label vocabulary, live in `docs/Backlog.md` in the consuming repo, linked from a short `## Backlog` section in its `CLAUDE.md` or `AGENTS.md`. `setup` writes both. The user can edit the file, labels included. Skills read it and point the user to `setup` when it's missing.
+The two facts that vary per repository, its Project and its label vocabulary, live in `docs/Backlog.md` in the consuming repo, linked from a short `## Backlog` section in its `CLAUDE.md` or `AGENTS.md`. `setup` writes both. The user can edit the file, labels included. Skills get it through the agent instructions and don't restate where it lives.
 
 The `github-backlog-management` routing skill goes with this. It only repeated each skill's `description`, which the harness already routes on, and carried no domain knowledge.
 
