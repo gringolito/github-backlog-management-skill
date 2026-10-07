@@ -28,14 +28,14 @@ and an effort. It sat at the bottom of the Queue, so it needs a real position am
 items. If the conversation shows the idea isn't worth doing, offer to close it as not planned.
 
 Judge the rewritten body against INVEST, with a short reason for each failure. Epics are exempt
-from Small and Testable, which their sub-issues carry. When the item fails, keep
+from Small and Testable, which their sub-issues carry. When a defined item fails, keep
 `needs-clarification` and leave labels, Rank and relationships alone until it passes. When it fails
 Small, suggest splitting it, narrow the original's scope to match, and leave creating the new
 items to `add-item`.
 
-An idea that fails is the user's call: keep it an idea, with what was learned written into its
-body, or make it a defined item now with a type, priority, effort and Rank, flagged
-`needs-clarification`.
+An idea that fails is the user's call: keep it an idea, still carrying only `type:idea`, with what
+was learned written into its body, or make it a defined item now with a type, priority, effort and
+Rank, flagged `needs-clarification`.
 
 When the item passes, review what surrounds the body. The refined understanding can change the
 type, priority and effort, so check each against the vocabulary and against the item's scope and
@@ -52,5 +52,5 @@ the sub-issue API.
 The Milestone stays as it is unless the user asks to change it.
 
 Remove `needs-clarification` once the changes are written and the item as it now stands on GitHub
-still passes. If it doesn't, keep the label. Report what the item still needs from the user first,
-then what changed.
+still passes. If a defined item doesn't, keep the label. Report what the item still needs from the
+user first, then what changed.
