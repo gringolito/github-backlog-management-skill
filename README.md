@@ -1,31 +1,6 @@
 # GitHub Backlog Management
 
-> A Claude Code skill that turns GitHub Issues + Projects v2 into a disciplined, AI-assisted backlog. No extra tools, no databases, no webhooks.
-
----
-
-## Migration to skills layout (v0.4.x → v0.5.0)
-
-Skills moved from `commands/*.md` to `skills/<name>/SKILL.md` and were renamed in two ways:
-
-| Old slash command | New skill |
-|---|---|
-| `/initialize-backlog` | `/setup` |
-| `/add-backlog-item` | `/add-item` |
-| `/migrate-backlog` | `/migrate` |
-| `/refine-backlog` | `/refine` |
-| `/refine-backlog-item` | `/refine-item` |
-| `/validate-backlog` | `/audit` |
-| `/execute-backlog-item` | `/execute-item` |
-| `/backlog-health` | `/health` |
-| `/block-backlog-item` | `/external-blocker` |
-| `/plan-release` | `/plan-release` _(unchanged)_ |
-| `/release-status` | `/release-status` _(unchanged)_ |
-| `/close-release` | `/close-release` _(unchanged)_ |
-| `/add-external-blocker`, `/resolve-external-blocker` | `/external-blocker` |
-| `/setup-permissions` | `/setup-permissions` _(unchanged)_ |
-
----
+> A Claude Code plugin that turns GitHub Issues and Projects v2 into a disciplined, AI-assisted backlog. No extra tools, no databases, no webhooks.
 
 ## Motivation
 
@@ -33,394 +8,90 @@ Backlogs rot. Items accumulate without acceptance criteria, blockers go unrecord
 
 This skill keeps a GitHub backlog honest. Every item is INVEST-validated before it lands in the queue. Blockers are tracked with GitHub's native dependency API, not buried in comments. `/pick-item` picks the topmost unblocked work automatically, so "what do I do next?" has a deterministic answer.
 
-Everything stays in GitHub: Issues, Projects v2, Milestones, Labels. No extra tools, no database, no webhooks.
+Claude enforces structure; it doesn't set your priorities. It flags vague items, surfaces dependency candidates for you to confirm, and picks the next item, but you decide what to do with it.
 
-### What Claude does (and doesn't do)
+## Breaking changes
 
-Claude enforces structure; it doesn't set your priorities. Specifically:
+- `.claude/backlog-project.json` is gone. `/setup` writes the Project and label vocabulary to `docs/Backlog.md` and links it from `CLAUDE.md` or `AGENTS.md`.
+- Permission modes and the plugin's user configuration are gone. Allow `gh` and `git` in your own Claude Code settings if you want fewer prompts.
+- The SessionStart hook and preflight check are gone.
+- Issue Forms templates are gone.
+- There is no Active Release. A repo usually has one open Milestone; when several are open, skills ask which one.
+- Removed or merged skills:
 
-- INVEST gate: flags items with vague scope or missing acceptance criteria before they enter the queue
-- Dependency inference: reads prose ("depends on X"), surfaces candidates for you to confirm
-- Next-item selection: picks the topmost unblocked work; you decide whether to execute it
-- Audit: `/audit` is read-only and surfaces problems as ready-to-run `gh` commands
-
-### Already have a `TODO.md`, `BACKLOG.md`, or some other list?
-
-Run `/migrate`, point Claude at the file, and it imports everything into GitHub Issues, skipping done items, inferring dependencies from your own prose, and letting you review before anything is applied.
-
----
+| Removed | Use instead |
+|---|---|
+| `initialize` | `/setup` |
+| `github-backlog-management` | none; Claude picks skills from their descriptions |
+| `execute-item` | `/pick-item`, then implement as usual |
+| `setup-permissions` | none |
+| `add-external-blocker`, `resolve-external-blocker`, `block-item` | `/external-blocker` |
 
 ## Requirements
 
-- [Claude Code](https://claude.ai/code) (CLI or IDE extension)
-- [GitHub CLI](https://cli.github.com/) (`gh`) authenticated (`gh auth login`)
-- A GitHub repository with Issues enabled
-- Git `origin` remote pointing to that repository
-
----
+- [Claude Code](https://claude.ai/code)
+- [GitHub CLI](https://cli.github.com/) (`gh`), authenticated
+- A GitHub repository with Issues enabled and an `origin` remote pointing to it
 
 ## Installation
-
-### Native plugin install (recommended)
-
-Add the marketplace and install the plugin with two Claude Code commands:
 
 ```text
 /plugin marketplace add gringolito/github-backlog-management-skill
 /plugin install github-backlog-management@gringolito
 ```
 
-Restart Claude Code if it was already running. All skills below are then available in any repository you open with Claude Code.
+Restart Claude Code if it was already running. If installation fails with an SSH error, see [Troubleshooting](#troubleshooting).
 
-> **Note:** If plugin installation fails with an SSH authentication error, see [Plugin install fails with SSH authentication error](#plugin-install-fails-with-ssh-authentication-error).
+Your `gh` token needs the `repo`, `project` and `read:user` scopes, plus `read:org` for organization repos. Add missing ones with `gh auth refresh --scopes repo,project,read:user,read:org`. With a personal access token, create a new one with these scopes.
 
----
+## Skills
 
-## Authentication & permissions
-
-### 1. Authenticate the GitHub CLI
-
-If `gh auth status` reports that you are not logged in, run:
-
-```bash
-gh auth login
-```
-
-Choose `GitHub.com`, then `Login with a web browser`, the recommended option since it handles all scope grants in one step. If you prefer a token, select `Paste an authentication token` instead.
-
-### 2. Verify required token scopes
-
-This skill calls GitHub's Issues, Projects v2, and Dependencies APIs. Your token must include all four scopes:
-
-| Scope | Required for |
-|---|---|
-| `repo` | Create and read Issues, Labels, Milestones, and PRs |
-| `project` | Read and write GitHub Projects v2 |
-| `read:user` | Resolve the authenticated user for metadata |
-| `read:org` | Required when the repo lives under a GitHub organization |
-
-Check your current scopes:
-
-```bash
-gh auth status
-```
-
-If `project` or `read:user` are missing, add them without re-authenticating:
-
-```bash
-gh auth refresh --scopes project,read:user
-```
-
-> **Note:** `gh auth refresh` works for OAuth (web browser) logins. If you authenticated with a Personal Access Token, generate a new classic PAT on GitHub with the scopes listed above.
-
-### 3. Configure Claude Code permissions
-
-This skill runs multi-step workflows that call `gh` and `git` many times in sequence. Without a pre-approved allowlist, Claude Code prompts for permission on every call and interrupts the workflow mid-run.
-
-When you enable the plugin, Claude Code asks for your preferred mode (`yolo`, `safe`, or `off`). To apply that choice, run:
-
-```text
-/setup-permissions
-```
-
-The skill asks which settings file to write (per-project gitignored, per-project shared, or user-global) and merges the allowlist block idempotently. Re-running it is safe.
-
-<details>
-<summary>Manual fallback: copy the JSON block directly</summary>
-
-Add one of the blocks below to `.claude/settings.json` in any repo where you use this skill, or to `~/.claude/settings.json` for a global default.
-
-**YOLO mode.** No prompts during any multi-step command:
-
-```json
-{
-  "permissions": {
-    "allow": ["Bash(gh *)", "Bash(git *)"]
-  }
-}
-```
-
-**Safe / read-only mode.** `/audit` and read queries run silently; write commands still ask for confirmation:
-
-```json
-{
-  "permissions": {
-    "allow": [
-      "Bash(gh auth status *)",
-      "Bash(gh repo view *)",
-      "Bash(gh issue list *)",
-      "Bash(gh issue view *)",
-      "Bash(gh label list *)",
-      "Bash(gh project list *)",
-      "Bash(gh project view *)",
-      "Bash(gh project item-list *)",
-      "Bash(gh project field-list *)",
-      "Bash(gh release list *)"
-    ]
-  }
-}
-```
-
-> **Note:** `gh api` calls used for reading milestones and issue dependencies are not listed above. The same command prefix covers both reads and writes, so they cannot be cleanly separated by pattern. In safe mode these calls will still prompt; approve them when the command starts with `gh api "repos/..."` and contains no `-X POST` or `-X DELETE` flag.
-
-</details>
-
----
-
-## Features
+Run `/setup` once per repo. The other skills read `docs/Backlog.md` for the Project and labels.
 
 | Skill | What it does |
 |---|---|
-| `/setup` | One-time bootstrap: links a GitHub Project v2, creates the label vocabulary, and records both in `docs/Backlog.md`, linked from your `CLAUDE.md` or `AGENTS.md`. Safe to re-run. |
-| `/plan-release` | Creates a Milestone with a due date. Tie-breaks and active-milestone resolution are automatic. |
-| `/add-item` | Interactively authors a single backlog item. Enforces INVEST, recommends rank and priority, wires up native GitHub dependencies. |
-| `/migrate` | Bulk-imports an existing `BACKLOG.md`. Skips Done items. Dependency inference is opt-in; candidates are reviewed before anything is applied. |
-| `/refine` | Lists all `needs-clarification` candidates, lets you select which to refine, then loops through them one by one, asking continue/stop after each. |
-| `/refine-item` | Refines a single `needs-clarification` item: discovery dialogue, body rewrite, INVEST gate, label/rank/dep re-evaluation, and label removal after a final validation pass. |
-| `/release-status` | Read-only milestone health dashboard: issue counts by Project Status, % complete, blocked items, and unestimated items. Accepts an optional milestone argument; defaults to the active milestone. |
-| `/health` | Read-only strategic portfolio health report: open-issue distribution by type, priority, and effort; age cohorts; overdue P0/P1 items; stale In-Progress items; metadata debt. Suitable for leadership updates and retrospectives. |
-| `/audit` | Read-only audit. Emits actionable `gh issue edit ...` snippets. Never mutates anything. |
-| `/pick-item` | Picks the topmost unblocked Todo item, respects active milestone scope, skips blocked items, validates INVEST, assigns it to you, and proposes a plan. Suggests `/spike` as the next step for `type:spike` items. |
-| `/spike` | Runs a spike's investigation through a findings document, follow-on backlog items, and a PR, once an item is already selected and assigned. Typically suggested by `/pick-item`, or run directly. |
-| `/execute-item` | **Deprecated.** Use `/pick-item`. Delegates selection to it, then carries a non-spike item through implementation to a PR. |
-| `/setup-permissions` | Writes the `gh`/`git` allowlist block into your chosen Claude Code settings file. Idempotent; safe to re-run. |
+| `/setup` | Links a GitHub Project, creates the label vocabulary, and documents both in `docs/Backlog.md`. Safe to re-run. |
+| `/add-item` | Turns a request into one well-formed, ranked backlog item. |
+| `/migrate` | Imports an existing `TODO.md`, `BACKLOG.md` or other list into GitHub Issues. |
+| `/refine` | Runs a refinement session over items that need clarification or labels. |
+| `/refine-item` | Brings one item up to standard and clears `needs-clarification`. |
+| `/pick-item` | Chooses the next unblocked item by rank, checks it is ready and assigns it to you. |
+| `/spike` | Investigates a spike and delivers a findings pull request with follow-on items. |
+| `/external-blocker` | Records, links and resolves constraints outside the team's control that block items. |
+| `/plan-release` | Creates a Milestone with a version, due date and scope, or re-plans one. |
+| `/release-status` | Reports how a Release is tracking: progress, blocked items, items needing clarification. |
+| `/close-release` | Closes a Milestone and publishes its release. |
+| `/health` | Reports the overall shape of the backlog: distribution, age, overdue priorities, stale work. |
+| `/audit` | Finds conflicting labels, malformed items, broken dependencies and milestone inconsistencies, with a fix for each. |
 
-### INVEST: the quality bar every backlog item must meet
+## Conventions
 
-INVEST is a checklist for deciding whether a backlog item is ready to be worked on. An item passes when it is:
-
-| Letter | Criterion | Why it matters |
-| --- | --- | --- |
-| **I** | Independent | Can be built and shipped without waiting on another item in the same batch. Avoids invisible coupling that breaks your execution order. |
-| **N** | Negotiable | The *what* is agreed; the *how* is still open. If an item already dictates the implementation, you've skipped the design conversation. |
-| **V** | Valuable | Delivers something real to a user or the system. If you can't articulate the value, the item probably isn't ready. |
-| **E** | Estimable | The team can roughly size it. Items that can't be estimated are usually under-specified or secretly multiple items. |
-| **S** | Small | Fits inside a single cycle of work. Large items hide risk and delay feedback. |
-| **T** | Testable | Has acceptance criteria concrete enough to write a test or a manual check against. "Works correctly" doesn't count. |
-
-This skill enforces INVEST at creation time (`/add-item`) and during refinement (`/refine-item`). Items that don't pass get the `needs-clarification` label instead of landing in the queue, because a vague item at the top of your backlog is just a polite way of not knowing what you're doing next.
-
-### Backlog structure
-
-Every issue created by this skill follows a consistent body shape:
-
-```
-### What
-### Why
-### In Scope
-### Out of Scope
-### Acceptance Criteria
-### INVEST Notes
-```
-
-Every backlog item carries three label groups:
-
-- **Type**: `type:feature` `type:bug` `type:security` `type:performance` `type:dx` `type:tech-debt` `type:reliability` `type:compliance` `type:spike`
-
-  Custom `type:*` labels are automatically discovered by `label-classifier` at runtime. No changes to the skill are required. For best accuracy, add a meaningful GitHub label description to each custom label; the description is used as "when to apply" guidance. Labels with no description fall back to a generic name-based rule. The `/audit` command flags any `type:*` label with a blank description.
-
-- **Priority**: `priority:P0` through `priority:P3`
-- **Effort**: `effort:XS` `effort:S` `effort:M` `effort:L` `effort:XL`
-
-Priority is severity classification. Execution order is the manual Project rank. The two are independent concepts that should stay consistent but are never conflated.
-
-#### External blocker stubs
-
-`type:external-blocker` is a special infrastructure label for lightweight stub issues that represent external constraints (API limitations, vendor issues, regulatory holds, etc.) blocking one or more backlog items. Stubs carry **only** the `type:external-blocker` label: no priority, no effort, no rank. They never appear as executable work in `/pick-item` and are excluded from all milestone counts and planning scope. Use `/external-blocker` to create a stub, link it to the items it blocks, and close it when the external constraint is lifted.
-
-### Workflow
-
-```
-/setup ──► /plan-release ──► /add-item
-                                  /migrate
-                                        │
-                                        ├──► /refine ──► /refine-item
-                                        ├──► /release-status    (read-only)
-                                        ├──► /health            (read-only)
-                                        ├──► /audit             (read-only)
-                                        ├──► /pick-item
-                                        └──► /spike
-```
-
-Run `/setup` once. Every other skill reads the linked Project and reports a clear error if it is missing.
-
----
-
-## Usage
-
-### Starting from scratch
-
-```
-/setup
-```
-
-This links the GitHub Project v2, creates missing labels, writes `docs/Backlog.md`, and links it from a Backlog section in your `CLAUDE.md` or `AGENTS.md`. Run it once per repo.
-
-### Planning a release
-
-```
-/plan-release
-```
-
-The agent proposes a scope from the unassigned backlog items, a version inferred from that scope, and a due date. You adjust the proposal, and once you approve it the agent creates the Milestone and assigns the items. Passing an open Milestone re-plans its scope instead.
-
-### Adding a backlog item
-
-```
-/add-item
-```
-
-Claude asks clarifying questions, authors the issue body, recommends a rank in the Project, and links any declared blockers using GitHub's native dependency API.
-
-### Importing an existing backlog
-
-```
-/migrate
-```
-
-Point Claude at your existing `BACKLOG.md`. Done items are skipped. Dependency hints in prose (`"depends on"`, `"blocked by"`) are surfaced for your review before anything is applied.
-
-### Refining unclear items
-
-```
-/refine
-```
-
-Lists all `needs-clarification` items sorted by priority, lets you select which ones to work on, then calls `/refine-item` for each, asking whether to continue after every iteration.
-
-```
-/refine-item 42
-```
-
-Refines a single item directly (useful when you know exactly which issue needs attention). Guides a discovery dialogue, rewrites the body, re-evaluates labels and rank, runs a validation gate, and removes `needs-clarification` only when everything checks out.
-
-### Checking release health
-
-```
-/release-status
-```
-
-Produces a Markdown dashboard for the active milestone: issue counts by Project Status (Done / In Progress / Todo), % complete, blocked items (requires GitHub's native dependency API), and open items missing an `effort:*` label. Pass a milestone title, number, or version string to target a specific release:
-
-```
-/release-status v1.3.0
-```
-
-The output is valid GitHub-Flavored Markdown. Paste it directly into a standup document, Slack message, or GitHub comment.
-
-### Checking portfolio health
-
-```
-/health
-```
-
-Produces a Markdown strategic health report across all open Project issues: distribution tables by type, priority, and effort; age cohorts (<7d, 7–30d, 30–90d, >90d); overdue P0 (>14 days) and P1 (>30 days) items; stale In-Progress items (no update in 7+ days); and a metadata debt list of issues missing any label group. Useful for weekly leadership updates or retrospectives.
-
-### Auditing backlog health
-
-```
-/audit
-```
-
-A read-only pass that surfaces missing labels, malformed issue bodies, dangling blockers, and cross-Project dependency smells. Outputs copy-pasteable `gh` commands. Never applies fixes itself.
-
-### Picking next work
-
-```
-/pick-item
-```
-
-Picks the topmost unblocked Todo item (active milestone first, unmilestoned fallback), reports which items were skipped and why, validates it against INVEST, assigns it to you, and proposes an implementation plan. Its hand-off suggests contextually relevant next skills. For a `type:spike` item, that's `/spike` (see [Spikes](#spikes) below). `/execute-item` is deprecated: it delegates this step to `/pick-item`, then carries a non-spike item through implementation to a PR.
-
-#### Spikes
-
-```
-/spike
-```
-
-Suggested by `/pick-item`'s hand-off for `type:spike` items, or run directly (`/spike 42`) once the item is already selected and assigned. A spike's deliverable is knowledge, not a shippable feature: it investigates the question in the issue's `### What` / `### Why`, produces a findings document at `docs/spikes/####-<slug>.md`, gets your sign-off, then proposes and creates approved follow-on backlog items before opening a PR.
-
----
+Every Workable Item carries one `type:*`, one `priority:*` and one `effort:*` label. Priority is severity; execution order is the manual rank in the Project. Items that fail [INVEST](https://en.wikipedia.org/wiki/INVEST_(mnemonic)) get `needs-clarification` until refined. Blockers use GitHub's native dependencies (`blocked_by`). Edit `docs/Backlog.md` to change the label vocabulary.
 
 ## Troubleshooting
 
 ### Plugin install fails with SSH authentication error
 
-**Symptom:** Plugin installation fails with one of these errors:
+Symptom: `git@github.com: Permission denied (publickey).` or `Host key verification failed.` during install.
 
-```text
-git@github.com: Permission denied (publickey).
-fatal: Could not read from remote repository.
-```
-
-```text
-No ED25519 host key is known for github.com and you have requested strict checking.
-Host key verification failed.
-fatal: Could not read from remote repository.
-```
-
-**Root cause:** Claude Code clones marketplace plugins using SSH URLs (`git@github.com:...`), even though marketplace repositories are public and read-only. This requires SSH to be configured for GitHub, including authentication keys and a trusted host entry, regardless of whether you use HTTPS with `gh auth login`. This is a known upstream issue tracked at [anthropics/claude-code#26588](https://github.com/anthropics/claude-code/issues/26588).
-
-**Workaround A.** Rewrite SSH URLs to HTTPS (recommended if you don't rely on SSH for GitHub):
+Claude Code clones marketplace plugins over SSH, even for public repos ([anthropics/claude-code#26588](https://github.com/anthropics/claude-code/issues/26588)). Either rewrite SSH URLs to HTTPS:
 
 ```bash
 git config --global url."https://github.com/".insteadOf git@github.com:
 ```
 
-This tells Git to silently use HTTPS whenever it encounters a GitHub SSH URL, bypassing the SSH requirement entirely.
-
-**Workaround B.** Configure SSH for GitHub (if you already use or need SSH):
-
-1. Add GitHub's host key to your known hosts:
-
-```bash
-ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts
-```
-
-2. Make sure your SSH key is added to your GitHub account and to your local SSH agent (`ssh-add`).
-
----
+or configure SSH for GitHub: trust its host key with `ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts`, and add your key to your GitHub account and `ssh-agent`.
 
 ## Contributing
 
-Issues, improvement suggestions, and pull requests are welcome.
-
-### Found a bug or unexpected behavior?
-
-Open a GitHub Issue describing what skill you ran, what you expected, and what actually happened. Include the relevant `gh` output if you have it.
-
-### Have an idea for a new feature or skill?
-
-Open an Issue with the `type:feature` label and describe the problem it solves. The best feature requests explain the workflow gap, not just the proposed solution.
-
-### Want to contribute a fix or improvement?
-
-1. Fork the repository
-2. Create a branch
-3. Make your changes; each skill spec lives in `skills/<name>/SKILL.md`
-4. Verify cross-skill invariants still hold (see the consistency greps in [CLAUDE.md](CLAUDE.md))
-5. Open a PR with a clear description of what changed and why
-
-This repository uses [Conventional Commits](https://www.conventionalcommits.org/). Commit messages must follow the `<type>: <description>` format. Common types: `feat` for new behavior, `fix` for corrections, `docs` for README/comment changes, `refactor` for rewrites that don't change behavior, `chore` for maintenance. Example: `feat: add needs-refinement label to audit report`.
-
-When editing skill specs, keep numbered workflow steps as plain prose headings (no annotation suffixes). Skill files open with a `You are an AI agent acting as...` persona line. The label catalog and issue body section headings must stay consistent across all skill files.
-
----
+Open an Issue for a bug (which skill, what you expected, what happened) or a feature idea (the workflow gap it closes). For a pull request, fork, branch, and change the skill in `skills/<name>/`. Commits follow [Conventional Commits](https://www.conventionalcommits.org/).
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
 
----
+### On Beer-ware and the spirit that lives on
 
-## On Beer-ware and the spirit that lives on
+Poul-Henning Kamp wrote the Beerware License in the 1990s: *if you think this software is worth it, and we ever meet in person, you can buy me a beer.* It is one of the most honest licenses ever written. Sadly, it isn't OSI-approved, and corporate legal teams can't wave it through, so this project is MIT. Lawyers can sleep soundly.
 
-There is a beautiful license called the Beerware License. It was written by Poul-Henning Kamp sometime in the 1990s and it says, more or less: *if you think this software is worth it, and we ever meet in person, you can buy me a beer.*
-
-It is one of the most honest licenses ever written. It captures exactly the spirit of open source: share freely, ask for nothing, and if someone's work genuinely helped you, buy them a drink and tell them about it.
-
-Sadly, the Beerware License is not OSI-approved. It lacks the formal language needed for corporate legal teams to wave it through, which means, in a cruel twist, the most human license ever written is the one least likely to be used by humans working inside institutions.
-
-So this project is MIT. Lawyers can sleep soundly.
-
-But the spirit is still here. If this skill saved you an afternoon of backlog wrangling, helped you ship something that mattered, or simply made your GitHub a little less of a mess, and if we ever happen to meet in person, you can buy me a beer.
+But the spirit is still here. If this skill saved you an afternoon of backlog wrangling, or simply made your GitHub a little less of a mess, and we ever happen to meet, you can buy me a beer.

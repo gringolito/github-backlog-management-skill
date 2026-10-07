@@ -1,6 +1,6 @@
 # Backlog management
 
-This plugin manages a software backlog through GitHub-native primitives: Issues, Projects v2, Milestones, Labels. The language below is the shared vocabulary every skill, agent, and doc in this repo must speak.
+This plugin manages a software backlog through GitHub-native primitives: Issues, Projects v2, Milestones, Labels. The language below is the shared vocabulary every skill and doc in this repo must speak.
 
 ## Language
 
@@ -64,7 +64,7 @@ Negotiable, Valuable, Estimable, Small, Testable. Enforced at creation and Refin
 
 **needs-clarification**:
 The operational label marking a Backlog Item that fails the quality bar and awaits Refinement.
-The queue `/refine-backlog` works from. Removed only after a passing INVEST gate.
+The queue `/refine` works from. Removed only after a passing INVEST gate.
 
 ### Ordering & lifecycle
 
@@ -80,12 +80,12 @@ as repo labels, not Status.
 
 **Rank**:
 The manual execution order of items in the Project's Todo column. Topmost wins. Answers
-"what do we do next?". The sole input to execution order. `/execute-backlog-item` reads
+"what do we do next?". The sole input to execution order. `/pick-item` reads
 Rank only and ignores Priority for ordering.
 _Avoid_: position (the GitHub Projects API term), priority (a different concept)
 
 **Queue**:
-The Rank-ordered list of `Todo` items awaiting execution. `/execute-backlog-item` pulls from
+The Rank-ordered list of `Todo` items awaiting execution. `/pick-item` pulls from
 the top of the Queue.
 _Avoid_: Todo column (acceptable informally, but "Queue" names the ordered intent)
 
@@ -110,7 +110,7 @@ _Avoid_: using bare "Release" for the artifact when the planning unit is also in
 **Dependency**:
 A directed relationship between two Issues, recorded via GitHub Issue Dependencies
 (`blocked_by` / `blocking`). The source of truth for whether an item is gated. Never mirrored
-into the issue body. A blocked item is skipped by `/execute-backlog-item`.
+into the issue body. A blocked item is skipped by `/pick-item`.
 _Avoid_: link, relation
 
 **Blocker**:
@@ -151,25 +151,14 @@ Run by `/refine` (session over many items) and `/refine-item` (a single item).
 _Avoid_: grooming
 
 **Selection**:
-Picking, planning, and assigning the topmost unblocked Workable Item from the Queue. Obeys
-Rank, skips blocked items and items that need clarification, and descends into sub-issues.
-Run by `/pick-item`, which hands a `type:spike` item to `/spike`.
-
-**Execution**:
-Implementation-through-PR for a non-spike Workable Item already selected. No dedicated skill;
-`/pick-item` hands off to ordinary implementation.
+Picking and assigning the topmost unblocked Workable Item from the Queue. Obeys Rank, skips
+blocked items and items that need clarification, and descends into sub-issues. Run by
+`/pick-item`.
 
 **Spike Execution**:
 The investigate → findings document → follow-on items protocol for a `type:spike` Workable
 Item, run end-to-end through PR by `/spike`. Assumes the item is already selected and
-assigned, typically suggested by `/pick-item`'s hand-off, or run directly. Does not repeat
-Selection.
-
-**Scope Completeness Review**:
-The verification step entered when a picked Backlog Item has sub-issues and all are closed.
-Cross-references the parent's Acceptance Criteria against closed sub-issues, presents a
-coverage analysis, then either closes the parent (scope complete) or creates new sub-issues
-for uncovered gaps. Part of `/pick-item`. Triggered automatically, never run standalone.
+assigned. Does not repeat Selection.
 
 **Migration**:
 The one-time bulk import of an existing `BACKLOG.md` into Issues: normalizes labels, skips
