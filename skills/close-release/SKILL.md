@@ -7,8 +7,7 @@ argument-hint: "Optional: the Milestone title or version. Defaults to the open M
 ---
 
 Close a Release. When you finish, no open item is left in the Milestone, the repo carries whatever
-the release needs, the release and its tag are published with reviewed notes, and the Milestone is
-closed.
+the release needs, the release and its tag are published, and the Milestone is closed.
 
 The user may name the Milestone by title or version. Otherwise use the open Milestone, and ask
 which when several are open.
@@ -23,11 +22,11 @@ where to look and how to handle what you find.
 
 Draft the release notes from the merged PRs, then add what the PR list misses: breaking changes,
 new features, configuration or schema changes and migration steps from the closed items. Read
-those items by content. Show the draft and apply the user's edits until they approve it.
+those items by content.
 
-Publishing the release and its tag is visible to everyone at once and can't be quietly taken
-back, so confirm once before it. The tag and the release title are the Milestone title; follow
-the repository's existing pattern if one exists. Tag the default branch, after any release-prep
-PR has merged. Once published, close the Milestone.
+The tag and the release title are the Milestone title; follow the repository's existing pattern
+if one exists. Tag the default branch, after any release-prep PR has merged. Publish the release
+with those notes, then close the Milestone. Link the published release in your report so the
+user can edit the notes.
 
-If the tag or release already exists, report it and ask how to proceed.
+If the tag or release already exists, ask how to proceed.
