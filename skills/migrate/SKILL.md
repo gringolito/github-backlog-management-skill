@@ -7,10 +7,10 @@ description: >-
 argument-hint: "Optional: the backlog to import, such as a file path."
 ---
 
-Import the backlog given as the argument, or the one the user names. When you finish, every item
-in the source that isn't done and that the user kept is an issue in the Project, linked by the
-dependencies the user accepted, and the user has a report of what was created and what needs
-their attention.
+Import an existing backlog, such as a TODO.md or BACKLOG.md file, or another source the user
+provides. When you finish, every item in the source that isn't done and that the user kept is an
+issue in the Project, linked by the dependencies the user accepted, and the user has a report of
+what was created and what needs their attention.
 
 Don't edit the source: once imported, GitHub is the source of truth. Skip done items, which are
 history and would only clutter the Project. Import every other item, whatever its status.
@@ -31,8 +31,10 @@ list, and you revise until they approve it.
 
 Then add each approved item with the `add-item` skill, passing its source text as the request and
 its accepted relationships as the ones the user named. Keep the item's intent and wording. Don't
-invent what the source doesn't say: each gap becomes an open question in the body. Add blockers
-and parents first, so the issues they point to exist when the links are recorded.
+invent what the source doesn't say: each gap becomes an open question in the body. Tell `add-item`
+that an item failing INVEST is still created, with the failure written as an open question in the
+body and `needs-clarification` added, instead of stopping. Add blockers and parents first, so the
+issues they point to exist when the links are recorded.
 
 A constraint outside the repo that the source mentions goes in the report, not in a stub.
 
