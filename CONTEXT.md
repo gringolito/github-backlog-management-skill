@@ -167,10 +167,9 @@ Run by `/refine` (session over many items) and `/refine-item` (a single item).
 _Avoid_: grooming
 
 **Selection**:
-Picking, validating, planning, and assigning the topmost unblocked Workable Item from the
-Queue. Sets it to In Progress. Obeys Rank, skips blocked items, and descends into
-sub-issues. Run by `/pick-item`, whose hand-off suggests `/spike` as the next step for a
-`type:spike` item.
+Picking, planning, and assigning the topmost unblocked Workable Item from the Queue. Obeys
+Rank, skips blocked items and items that need clarification, and descends into sub-issues.
+Run by `/pick-item`, which hands a `type:spike` item to `/spike`.
 
 **Execution**:
 Implementation-through-PR for a non-spike Workable Item already selected. No dedicated skill;
