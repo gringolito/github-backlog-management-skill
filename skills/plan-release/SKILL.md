@@ -9,9 +9,6 @@ argument-hint: "Optional: the version to plan, or the open Milestone to re-plan.
 Plan a release. When you finish, an open Milestone exists with a version title, a due date, a
 description, and every item in its scope assigned to it, all approved by the user beforehand.
 
-Read the Project and label vocabulary from the repo's `docs/Backlog.md`, linked from its
-`CLAUDE.md` or `AGENTS.md`. If the configuration is missing, tell the user to run `/setup` and stop.
-
 If the argument names an open Milestone, or the version you propose matches one, this is a re-plan
 of that Milestone: read [re-planning.md](./re-planning.md) and follow it instead. Otherwise create
 a new one, using the argument as the suggested version.
