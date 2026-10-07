@@ -16,9 +16,9 @@ a sub-issue of a parent. Blockers may live in other repos or Projects.
 
 Write a short, specific title and a body that covers what is wanted, why, what is in and out of
 scope, and acceptance criteria. The criteria are a checklist of specific, verifiable conditions.
-The body has no fixed headings. It doesn't repeat the labels, blockers, parent or Milestone, which
-live in labels and GitHub's relationships. A question the user can't answer yet goes in the body
-as plain prose, and the item gets `needs-clarification`.
+It doesn't repeat the labels, blockers, parent or Milestone, which live in labels and GitHub's
+relationships. A question the user can't answer yet goes in the body as plain prose, and the item
+gets `needs-clarification`.
 
 Check the body against INVEST before creating anything. Epics are exempt from Small and Testable,
 which their sub-issues carry. When an item fails, say which letter and why, propose a fix such as
@@ -27,7 +27,7 @@ mixes several problems, and make exploratory work a `type:spike`.
 
 Apply exactly one type, one priority and one effort label from the vocabulary. Effort measures
 complexity, never time. Ask when a group can't be decided from the conversation. Never use
-`type:external-blocker`: it marks stubs for external constraints, which aren't workable items.
+`type:external-blocker`: it marks stubs for external constraints.
 
 A sub-issue inherits nothing from its parent, so set its Milestone, priority, effort, type and
 Rank on their own.
@@ -42,10 +42,6 @@ each, and apply it only if the user agrees.
 When an open Milestone exists, offer to put the item in it. Ask which when several are open and
 the user hasn't named one.
 
-Show the title, body, labels, Rank, relationships, Milestone and any suggested moves together, and
-confirm once before creating anything. Apply the user's amendments without asking again. Then
-make the changes, recording blockers with the `blocked_by` API and the parent with the sub-issue
-API.
-
-Once the issue exists, never create it again. If a later step fails, report what was and wasn't
-applied and finish the rest on the existing issue.
+Show the title, body, labels, Rank, relationships, Milestone and any suggested moves together.
+Apply the user's amendments without asking again. Then make the changes, recording blockers with
+the `blocked_by` API and the parent with the sub-issue API.
