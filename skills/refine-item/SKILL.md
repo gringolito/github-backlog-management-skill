@@ -17,8 +17,8 @@ faster". Don't invent details. Keep what the body already says that is still rig
 only what the conversation changed.
 
 The body covers what is wanted, why, what is in and out of scope, and acceptance criteria as a
-checklist of specific, verifiable conditions. It needs no fixed headings and no placeholder
-markers. What the user can't answer is written into the body as an open question in plain prose.
+checklist of specific, verifiable conditions. What the user can't answer is written into the body
+as an open question in plain prose. Keep the body clean, tight, concise, technical and direct.
 
 Judge the rewritten body against INVEST, with a short reason for each failure. Epics are exempt
 from Small and Testable, which their sub-issues carry. When the item fails, keep
@@ -34,16 +34,12 @@ Weigh where the item belongs in the Queue against the items already there, and l
 Rank or priority now looks wrong next to it.
 
 Check that each existing blocker is still relevant, whether refinement revealed new ones, and
-whether the parent should change or go. Blockers may live in other repos or Projects, and the
-confirmation says so when they do. Dependencies are recorded through the `blocked_by` API and
-parents through the sub-issue API.
+whether the parent should change or go. Blockers may live in other repos or Projects; flag those
+when you propose them. Dependencies are recorded through the `blocked_by` API and parents through
+the sub-issue API.
 
 The Milestone stays as it is unless the user asks to change it.
 
-Make one confirmation right before writing to GitHub. It covers the new body, every label, Rank and
-relationship change on this item and on others, and the removal of `needs-clarification` when the
-item passes, so the user can accept or adjust it as a whole.
-
-Remove `needs-clarification` once the writes have landed and the item as it now stands on GitHub
+Remove `needs-clarification` once the changes are written and the item as it now stands on GitHub
 still passes. If it doesn't, keep the label. Report what the item still needs from the user first,
 then what changed.
