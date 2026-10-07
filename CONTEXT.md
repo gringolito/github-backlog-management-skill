@@ -60,8 +60,7 @@ _Avoid_: estimate, size, story points (the label is "Effort")
 
 **INVEST**:
 The six-criterion quality bar every Workable Item must pass to enter the Queue: Independent,
-Negotiable, Valuable, Estimable, Small, Testable. Enforced at creation and Refinement by the
-invest-gate.
+Negotiable, Valuable, Estimable, Small, Testable. Enforced at creation and Refinement.
 
 **needs-clarification**:
 The operational label marking a Backlog Item that fails the quality bar and awaits Refinement.
@@ -100,21 +99,6 @@ _Avoid_: sprint, iteration
 **Milestone**:
 The GitHub object that realizes a Release (carries `due_on`, scope, and open/closed state).
 Use "Milestone" when you mean the concrete GitHub thing. Use "Release" when you mean the planning concept.
-
-**Active Release**:
-The Release targeted by default: the earliest open Milestone by `due_on`,
-tie-broken by lowest version parsed from the title (`v1.2.0` < `v1.3.0`), falling back to
-Milestone `number`. `/pick-item`, `/add-item`, `/migrate`, and
-`/release-status` all resolve to this when no Release is named. When a Release name is given, it is matched by
-case-insensitive title substring, then by stripping a leading `v` from both sides.
-Resolved at runtime by `resolve-milestone` (no-arg: Active Release; positional arg:
-named Release; `--exclude "<title>"`: Active Release skipping one Milestone by exact title).
-Output: `{"number": N, "title": "...", "due_on": "..."}` (`due_on` is `null` when unset).
-The Active Release is **undefined** when the backlog has zero open Milestones, whether
-none has ever been created, or all have been closed. This is an ordinary state, not an
-error: `/pick-item` continues to operate, scoped to un-milestoned items only, until a
-Milestone is opened.
-_Avoid_: current milestone, current release
 
 **Release artifact**:
 The published GitHub Release: release notes plus a version tag, cut when a Release closes.
