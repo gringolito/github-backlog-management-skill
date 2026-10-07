@@ -54,7 +54,7 @@ Run `/setup` once per repo. The other skills read `docs/Backlog.md` for the Proj
 | `/add-item` | Turns a request into one well-formed, ranked backlog item. |
 | `/add-idea` | Parks a rough idea at the bottom of the backlog, with no priority or effort, so it isn't lost. |
 | `/migrate` | Imports an existing `TODO.md`, `BACKLOG.md` or other list into GitHub Issues. |
-| `/refine` | Runs a refinement session over items that need clarification or labels, and parked ideas. |
+| `/refine` | Runs a refinement session over items that need clarification or labels. |
 | `/refine-item` | Brings one item up to standard and clears `needs-clarification`, or turns an idea into a defined item. |
 | `/pick-item` | Chooses the next unblocked item by rank, checks it is ready and assigns it to you. |
 | `/spike` | Investigates a spike and delivers a findings pull request with follow-on items. |
@@ -67,7 +67,7 @@ Run `/setup` once per repo. The other skills read `docs/Backlog.md` for the Proj
 
 ## Conventions
 
-Every Workable Item carries one `type:*`, one `priority:*` and one `effort:*` label. Priority is severity; execution order is the manual rank in the Project. Items that fail [INVEST](https://en.wikipedia.org/wiki/INVEST_(mnemonic)) get `needs-clarification` until refined. Ideas carry only `type:idea`, skip INVEST and sit below every Workable Item until refinement gives them a real type, priority, effort and rank. Blockers use GitHub's native dependencies (`blocked_by`). Edit `docs/Backlog.md` to change the label vocabulary.
+Every Workable Item carries one `type:*`, one `priority:*` and one `effort:*` label. Priority is severity; execution order is the manual rank in the Project. Items that fail [INVEST](https://en.wikipedia.org/wiki/INVEST_(mnemonic)) get `needs-clarification` until refined. Blockers use GitHub's native dependencies (`blocked_by`). Edit `docs/Backlog.md` to change the label vocabulary.
 
 ## Troubleshooting
 

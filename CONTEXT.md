@@ -28,31 +28,24 @@ Synonym: _Deliverable_.
 _Avoid_: work item (reads like a generic synonym for "task" and obscures the workable-vs-non-workable distinction)
 
 **Non-Workable Item**:
-A Backlog Item that is not built as it stands, excluded from all counts, metrics, release scope,
-and execution. The branch opposite a Workable Item. Its current kinds are the **Stub** and the
-**Idea**. Future kinds (e.g. an **Epic**: a container that organizes work without itself being
-built) belong here too.
+A Backlog Item that is never built, excluded from all counts, metrics, release scope, and
+execution. The branch opposite a Workable Item. Today its only kind is the **Stub**. Future
+kinds (e.g. an **Epic**: a container that organizes work without itself being built) belong
+here too.
 
 **Stub**:
-The Non-Workable Item that encapsulates an **External Blocker**, an out-of-team-control
-constraint recorded so it can block Workable Items. Carries `type:external-blocker` and is
-managed by `/external-blocker`.
+The one current kind of Non-Workable Item: the encapsulation of an **External Blocker**, an
+out-of-team-control constraint recorded so it can block Workable Items. Carries
+`type:external-blocker` and is managed by `/external-blocker`.
 _Avoid_: using "Stub" as a synonym for the whole Non-Workable Item category. It is one kind of it.
-
-**Idea**:
-The Non-Workable Item that captures something worth keeping before anyone has time to define
-it. Carries `type:idea` and nothing else: no Priority, no Effort, no Release, no INVEST gate.
-Captured by `/add-idea`. Sits at the bottom of the Queue, below every Workable Item, unless
-the user ranks it higher. Stops being an Idea only through Refinement.
-_Avoid_: draft, placeholder, wishlist item
 
 ### Classification
 
 **Type**:
-The category a Backlog Item belongs to: exactly one `type:*` label: `feature`, `bug`,
-`security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`, `epic`,
-`external-blocker`, or `idea`. `type:external-blocker` is reserved for Stubs and `type:idea`
-for Ideas. Neither is ever assigned to a Workable Item.
+The category of work a Workable Item represents: exactly one `type:*` label: `feature`,
+`bug`, `security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`, or
+`external-blocker`. `type:external-blocker` is reserved for Stubs and is never assigned to a
+Workable Item.
 _Avoid_: bucket (the retired name for this concept), category
 
 **Priority**:
@@ -93,7 +86,7 @@ _Avoid_: position (the GitHub Projects API term), priority (a different concept)
 
 **Queue**:
 The Rank-ordered list of `Todo` items awaiting execution. `/pick-item` pulls from
-the top of the Queue. Ideas sit at the bottom and are never pulled.
+the top of the Queue.
 _Avoid_: Todo column (acceptable informally, but "Queue" names the ordered intent)
 
 ### Releases
@@ -154,9 +147,7 @@ items, and items without an Effort estimate. The "how is this Release tracking?"
 **Refinement**:
 The mutating act of bringing an ambiguous Backlog Item up to standard: discovery dialogue,
 body rewrite, INVEST gate, label/Rank/Dependency fixes, and clearing `needs-clarification`.
-Refining an Idea turns it into a Workable Item with a real Type, a Priority, an Effort, and a
-Rank among Workable Items. Run by `/refine` (session over many items) and `/refine-item`
-(a single item).
+Run by `/refine` (session over many items) and `/refine-item` (a single item).
 _Avoid_: grooming
 
 **Selection**:
@@ -196,12 +187,6 @@ Done). "Release Status" is the read-only dashboard reporting on a whole Release.
 Audit checks _correctness_ (is the backlog well-formed?). Health checks _strategic shape_ (is
 the portfolio balanced?). Release Status checks _operational progress_ (how is one Release
 tracking?).
-
-**Idea vs needs-clarification**: both mean "not ready", but they are different states. An
-Idea is Non-Workable: nobody has defined it yet, it carries no Priority or Effort, and it sits
-below every Workable Item. A `needs-clarification` item is a Workable Item that went through
-definition and failed the quality bar; it keeps its Type, Priority, Effort, and Rank while it
-waits for Refinement. An Idea never carries `needs-clarification`.
 
 ## Example dialogue
 

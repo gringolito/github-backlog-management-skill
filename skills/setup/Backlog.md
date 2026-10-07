@@ -8,7 +8,7 @@ The backlog skills read this file for the repo's Project and label vocabulary. E
 
 ## Labels
 
-Every backlog item carries one type, one priority and one effort label, except ideas and external blockers, which carry only their type. Replace a default below with the repo's own label where one is mapped.
+Every backlog item carries one type, one priority and one effort label. Replace a default below with the repo's own label where one is mapped.
 
 ### Type
 
