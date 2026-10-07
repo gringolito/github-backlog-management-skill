@@ -15,8 +15,9 @@ a new one, using the argument as the suggested version.
 
 Take the scope, version and due date from the user where they gave them, and don't ask about them.
 Ask only about what you have to pick yourself, and when you do, offer the options for the user to
-choose between, such as two coherent scopes, or a patch versus a minor version. When the user gave
-everything, create the Milestone straight away.
+choose between, such as two coherent scopes, or a patch versus a minor version. Ask about the due
+date only when the earlier Milestones give no basis for setting it. When the user named the
+version and the issues, create the Milestone straight away.
 
 Candidates are the open backlog items with no Milestone, in Project rank order. Leave out
 `type:external-blocker` stubs, since they describe constraints and aren't workable. Propose a
