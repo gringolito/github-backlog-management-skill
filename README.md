@@ -92,12 +92,6 @@ MIT. See [LICENSE](LICENSE).
 
 ### On Beer-ware and the spirit that lives on
 
-There is a beautiful license called the Beerware License. It was written by Poul-Henning Kamp sometime in the 1990s and it says, more or less: *if you think this software is worth it, and we ever meet in person, you can buy me a beer.*
+Poul-Henning Kamp wrote the Beerware License in the 1990s: *if you think this software is worth it, and we ever meet in person, you can buy me a beer.* It is one of the most honest licenses ever written. Sadly, it isn't OSI-approved, and corporate legal teams can't wave it through, so this project is MIT. Lawyers can sleep soundly.
 
-It is one of the most honest licenses ever written. It captures exactly the spirit of open source: share freely, ask for nothing, and if someone's work genuinely helped you, buy them a drink and tell them about it.
-
-Sadly, the Beerware License is not OSI-approved. It lacks the formal language needed for corporate legal teams to wave it through, which means, in a cruel twist, the most human license ever written is the one least likely to be used by humans working inside institutions.
-
-So this project is MIT. Lawyers can sleep soundly.
-
-But the spirit is still here. If this skill saved you an afternoon of backlog wrangling, helped you ship something that mattered, or simply made your GitHub a little less of a mess, and if we ever happen to meet in person, you can buy me a beer.
+But the spirit is still here. If this skill saved you an afternoon of backlog wrangling, or simply made your GitHub a little less of a mess, and we ever happen to meet, you can buy me a beer.
