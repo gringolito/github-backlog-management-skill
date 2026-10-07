@@ -11,9 +11,9 @@ done when that item is assigned.
 Items are ranked within projects or milestones. Look into the open milestone, and ask which one
 when several are open. Then look at items without a milestone. The top of the queue wins.
 
-Skip an item that is blocked, or labelled `needs-clarification` or `type:external-blocker`. Use
-GitHub's `blocked_by` API to resolve blockers. When every candidate is blocked, list each blocker
-with its state.
+Skip an item that is blocked, or labelled `needs-clarification`, `type:external-blocker` or
+`type:idea`. Use GitHub's `blocked_by` API to resolve blockers. When every candidate is blocked,
+list each blocker with its state.
 
 When the top item has open sub-issues, pick the topmost one that qualifies instead. An epic with
 no sub-issues is not workable; ask the user to decompose it.

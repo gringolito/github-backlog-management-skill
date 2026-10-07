@@ -19,11 +19,11 @@ two coherent scopes, or a patch versus a minor version. Ask about the due date w
 infer it from a calendar versioning model.
 
 Candidates are the open backlog items with no Milestone, in Project rank order. Leave out
-`type:external-blocker` stubs, since they describe constraints and aren't workable. Propose a
-coherent scope rather than the top of the list: favor P0 and P1 items, keep a theme, and size it so
-the release is deliverable. If the user names the issues, use those, after checking that each
-exists, is open and isn't a stub. For a bug-fix or security release with no list, the unscoped bug
-and security items are the candidates.
+`type:external-blocker` stubs and `type:idea` ideas, since they aren't workable. Propose a coherent
+scope rather than the top of the list: favor P0 and P1 items, keep a theme, and size it so the
+release is deliverable. If the user names the issues, use those, after checking that each exists,
+is open and is neither a stub nor an idea. For a bug-fix or security release with no list, the
+unscoped bug and security items are the candidates.
 
 Check each candidate's `blocked_by` dependencies. An item whose blockers are all candidates can go
 in only together with them, with the blockers ranked above it. An item with an open blocker outside

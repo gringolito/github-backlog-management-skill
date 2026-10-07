@@ -6,7 +6,7 @@ grouped by whether they are done, in progress or still to do.
 Done items stay in the Milestone. Items in progress or still to do can be removed.
 
 Candidates to add are the same as for a new release: open items with no Milestone, in Project rank
-order, leaving out external-blocker stubs, with the same blocker checks.
+order, leaving out external-blocker stubs and ideas, with the same blocker checks.
 
 The user says which items to add and which to remove, or asks for a proposal. Apply the additions
 and removals they asked for directly. When they ask for a proposal, offer the choices and apply the

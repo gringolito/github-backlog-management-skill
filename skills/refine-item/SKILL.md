@@ -1,8 +1,9 @@
 ---
 name: refine-item
 description: >-
-  Bring one backlog item up to standard and clear its `needs-clarification` label. Use when the
-  user wants to refine a specific issue, or when `refine` hands one over.
+  Bring one backlog item up to standard and clear its `needs-clarification` label, or turn a parked
+  idea into a defined item. Use when the user wants to refine a specific issue or idea, or when
+  `refine` hands one over.
 ---
 
 Refine one backlog item until it passes: the body passes INVEST with no open questions, the item
@@ -20,11 +21,21 @@ The body covers what is wanted, why, what is in and out of scope, and acceptance
 checklist of specific, verifiable conditions. What the user can't answer is written into the body
 as an open question in plain prose. Keep the body clean, tight, concise, technical and direct.
 
+An idea, labeled `type:idea`, was parked without being defined, so refining it defines it from
+scratch. Ask all the questions above, and write the whole body from the user's original words and
+the answers. When it passes, replace `type:idea` with a type from the vocabulary and add a priority
+and an effort. It sat at the bottom of the Queue, so it needs a real position among the defined
+items. If the conversation shows the idea isn't worth doing, offer to close it as not planned.
+
 Judge the rewritten body against INVEST, with a short reason for each failure. Epics are exempt
 from Small and Testable, which their sub-issues carry. When the item fails, keep
 `needs-clarification` and leave labels, Rank and relationships alone until it passes. When it fails
 Small, suggest splitting it, narrow the original's scope to match, and leave creating the new
 items to `add-item`.
+
+An idea that fails is the user's call: keep it an idea, with what was learned written into its
+body, or make it a defined item now with a type, priority, effort and Rank, flagged
+`needs-clarification`.
 
 When the item passes, review what surrounds the body. The refined understanding can change the
 type, priority and effort, so check each against the vocabulary and against the item's scope and

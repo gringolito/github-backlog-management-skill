@@ -9,6 +9,9 @@ Create one backlog item from the user's request. When you finish, an issue exist
 with a clear body, one type, one priority and one effort label, a Rank in the Queue, and the
 blockers, blocked items and parent the user named.
 
+When the user only wants to park an idea for later, without defining it now, hand it to
+`add-idea`.
+
 Ask questions until the request is unambiguous: the desired outcome, who benefits and why,
 constraints, risks, edge cases and what is out of scope. Challenge vague requests and don't invent
 requirements. Also ask whether open issues block this one, whether it blocks any, and whether it is
@@ -27,17 +30,18 @@ mixes several problems, and make exploratory work a `type:spike`.
 
 Apply exactly one type, one priority and one effort label from the vocabulary. Effort measures
 complexity, never time. Ask when a group can't be decided from the conversation. Never use
-`type:external-blocker`: it marks stubs for external constraints.
+`type:external-blocker` or `type:idea`: they mark stubs for external constraints and ideas
+captured by `add-idea`.
 
 A sub-issue inherits nothing from its parent, so set its Milestone, priority, effort, type and
 Rank on their own.
 
 Execution order comes from Rank, so propose a position in the Queue by comparing the item with the
-open ones, not by defaulting to the bottom. Weigh impact, risk, urgency, how often the gap bites,
-and dependencies: an item goes above what it unblocks and below what it depends on. Priority and
-Rank should agree, with P0 near the top and P3 near the bottom, so say so and give the reason when
-the proposal diverges. If existing items look misranked next to the new one, suggest a move for
-each, and apply it only if the user agrees.
+open ones, not by defaulting to the bottom, where parked ideas sit. Weigh impact, risk,
+urgency, how often the gap bites, and dependencies: an item goes above what it unblocks and below
+what it depends on. Priority and Rank should agree, with P0 near the top and P3 near the bottom,
+so say so and give the reason when the proposal diverges. If existing items look misranked next to
+the new one, suggest a move for each, and apply it only if the user agrees.
 
 When an open Milestone exists, ask whether the item belongs in it, and which one when several
 are open. Adding to a Milestone changes its scope, so don't add the item to one without the

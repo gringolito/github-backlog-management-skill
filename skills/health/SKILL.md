@@ -9,9 +9,12 @@ description: >-
 Report on the shape of the whole backlog, covering every open issue. Measure ages in days from
 creation, and last activity in days from the last update.
 
+Ideas and external-blocker stubs aren't workable, so they count only toward the first question.
+
 The report answers these questions:
 
-- How many open issues are there, and how many of them are in the Project?
+- How many open issues are there, how many of them are in the Project, and how many are ideas
+  and stubs?
 - How are they distributed by type, priority and effort?
 - How old are they? Group by time open: under 7 days, 7 to 30, 30 to 90, and over 90.
 - Which P0 items have been open over 14 days, and which P1 items over 30?
