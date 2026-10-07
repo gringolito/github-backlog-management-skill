@@ -26,11 +26,10 @@ Import the items and dependencies you're confident in without asking for approva
 can't resolve yourself to the report, so the user decides what to do next. If the dependencies
 form a cycle, create the items without the conflicting link and report it.
 
-Use the `add-item` skill to create the issues. It runs without asking the user, since the source
-is the request. Don't invent what the source doesn't say: each gap becomes an open question in the
-body. An item that fails INVEST is still created, with the failure written as an open question in
-the body and `needs-clarification` added. Add blockers and parents first, so the issues they point
-to exist when the links are recorded.
+Use the `add-item` skill to create the issues. Don't invent what the source doesn't say: each gap
+becomes an open question in the body. An item that fails INVEST is still created, with the failure
+written as an open question in the body and `needs-clarification` added. Add blockers and parents
+first, so the issues they point to exist when the links are recorded.
 
 End with a migration report. Lead with what the user needs to decide: the items and dependencies
 you left out, the items marked `needs-clarification`, and the flags noted above. Then list the
