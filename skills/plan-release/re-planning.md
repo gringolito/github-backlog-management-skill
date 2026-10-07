@@ -13,10 +13,11 @@ and removals they asked for directly. When they ask for a proposal, offer the ch
 one they pick.
 
 Every removed item needs a disposition. Unless the user says otherwise, return it to the backlog
-with its Milestone cleared, and don't ask. Ask only when that default doesn't clearly fit the item.
+with its Milestone cleared. Ask only when that default doesn't clearly fit the item.
 The alternatives are to carry it to another open Milestone, which needs a target, or to close it as
 won't fix with a comment saying so. If no other open Milestone exists, carrying forward isn't
 possible.
 
 If the Milestone is a maintenance release, ask whether to open forward-ports for added items, as
-for a new release.
+for a new release. Keep the Milestone's version and due date unless the change calls for new ones;
+when it does, ask about them as for a new release.

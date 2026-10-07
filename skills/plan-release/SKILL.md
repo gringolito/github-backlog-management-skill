@@ -13,11 +13,10 @@ If the argument names an open Milestone, or the version you propose matches one,
 of that Milestone: read [re-planning.md](./re-planning.md) and follow it instead. Otherwise create
 a new one, using the argument as the suggested version.
 
-Take the scope, version and due date from the user where they gave them, and don't ask about them.
-Ask only about what you have to pick yourself, and when you do, offer the options for the user to
-choose between, such as two coherent scopes, or a patch versus a minor version. Ask about the due
-date only when the earlier Milestones give no basis for setting it. When the user named the
-version and the issues, create the Milestone straight away.
+Take the scope, version and due date from the user where they gave them. Ask only about what you
+have to pick yourself, and when you do, offer the options for the user to choose between, such as
+two coherent scopes, or a patch versus a minor version. Ask about the due date when you can't
+infer it from a calendar versioning model.
 
 Candidates are the open backlog items with no Milestone, in Project rank order. Leave out
 `type:external-blocker` stubs, since they describe constraints and aren't workable. Propose a
@@ -46,7 +45,7 @@ when the line isn't the latest, so the backport is visible. Any other version mu
 the latest released one and not match a closed release.
 
 For maintenance releases, ask whether to open a `[Forward-port]` issue for each scoped item, so the
-fix also reaches mainstream development. They create issues the user didn't ask for, so don't open
-them unprompted. These are added to the Project with no Milestone, and the body links the original.
+fix also reaches mainstream development. These are added to the Project with no Milestone, and
+the body links the original.
 
 Create the Milestone, assign every scoped item, and open the forward-ports the user accepted.
