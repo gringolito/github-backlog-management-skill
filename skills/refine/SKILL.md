@@ -9,9 +9,6 @@ description: >-
 Run a refinement session. When it ends, the items the user picked have each been through
 `refine-item`.
 
-The Project and the label vocabulary come from the repo's `docs/Backlog.md`, linked from its
-`CLAUDE.md` or `AGENTS.md`. If that configuration is missing, point the user to `/setup` and stop.
-
 Candidates are open issues in the linked Project that carry `needs-clarification` or lack a type,
 priority or effort label. Issues outside the Project are ignored, because the Project defines the
 backlog. If there are no candidates, say so and finish.
