@@ -2,6 +2,14 @@
 
 > A Claude Code plugin that turns GitHub Issues and Projects v2 into a disciplined, AI-assisted backlog. No extra tools, no databases, no webhooks.
 
+## Motivation
+
+Backlogs rot. Items accumulate without acceptance criteria, blockers go unrecorded, priorities drift from execution order, and eventually the backlog stops reflecting reality, so people stop trusting it.
+
+This skill keeps a GitHub backlog honest. Every item is INVEST-validated before it lands in the queue. Blockers are tracked with GitHub's native dependency API, not buried in comments. `/pick-item` picks the topmost unblocked work automatically, so "what do I do next?" has a deterministic answer.
+
+Claude enforces structure; it doesn't set your priorities. It flags vague items, surfaces dependency candidates for you to confirm, and picks the next item, but you decide what to do with it.
+
 ## Breaking changes
 
 - `.claude/backlog-project.json` is gone. `/setup` writes the Project and label vocabulary to `docs/Backlog.md` and links it from `CLAUDE.md` or `AGENTS.md`.
@@ -82,4 +90,14 @@ Open an Issue for a bug (which skill, what you expected, what happened) or a fea
 
 MIT. See [LICENSE](LICENSE).
 
-The project is MIT because lawyers like it, but the spirit is Beerware: if this saved you an afternoon of backlog wrangling and we ever meet, you can buy me a beer.
+### On Beer-ware and the spirit that lives on
+
+There is a beautiful license called the Beerware License. It was written by Poul-Henning Kamp sometime in the 1990s and it says, more or less: *if you think this software is worth it, and we ever meet in person, you can buy me a beer.*
+
+It is one of the most honest licenses ever written. It captures exactly the spirit of open source: share freely, ask for nothing, and if someone's work genuinely helped you, buy them a drink and tell them about it.
+
+Sadly, the Beerware License is not OSI-approved. It lacks the formal language needed for corporate legal teams to wave it through, which means, in a cruel twist, the most human license ever written is the one least likely to be used by humans working inside institutions.
+
+So this project is MIT. Lawyers can sleep soundly.
+
+But the spirit is still here. If this skill saved you an afternoon of backlog wrangling, helped you ship something that mattered, or simply made your GitHub a little less of a mess, and if we ever happen to meet in person, you can buy me a beer.
