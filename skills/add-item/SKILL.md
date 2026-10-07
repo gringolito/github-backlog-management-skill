@@ -7,7 +7,7 @@ description: >-
 
 Create one backlog item from the user's request. When you finish, an issue exists in the Project
 with a clear body, one type, one priority and one effort label, a Rank in the Queue, and the
-blockers, blocked items and parent the user named, all approved by the user beforehand.
+blockers, blocked items and parent the user named.
 
 Ask questions until the request is unambiguous: the desired outcome, who benefits and why,
 constraints, risks, edge cases and what is out of scope. Challenge vague requests and don't invent
@@ -36,17 +36,16 @@ Execution order comes from Rank, so propose a position in the Queue by comparing
 open ones, not by defaulting to the bottom. Weigh impact, risk, urgency, how often the gap bites,
 and dependencies: an item goes above what it unblocks and below what it depends on. Priority and
 Rank should agree, with P0 near the top and P3 near the bottom, so say so and give the reason when
-the proposal diverges. If existing items look misranked next to the new one, name them with a
-suggested move, and leave them where they are unless the user agrees.
+the proposal diverges. If existing items look misranked next to the new one, suggest a move for
+each, and apply it only if the user agrees.
 
 When an open Milestone exists, offer to put the item in it. Ask which when several are open and
 the user hasn't named one.
 
-Show the title, body, labels, Rank, relationships and Milestone together, and confirm once before
-creating anything. Apply the user's amendments without asking again. Then create the issue, add it
-to the Project, set its Rank, and record blockers with the `blocked_by` API and the parent with the
-sub-issue API.
+Show the title, body, labels, Rank, relationships, Milestone and any suggested moves together, and
+confirm once before creating anything. Apply the user's amendments without asking again. Then
+make the changes, recording blockers with the `blocked_by` API and the parent with the sub-issue
+API.
 
 Once the issue exists, never create it again. If a later step fails, report what was and wasn't
-applied and finish the rest on the existing issue. If creation itself fails, nothing exists yet,
-so fix the cause and retry.
+applied and finish the rest on the existing issue.
