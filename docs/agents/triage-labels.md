@@ -9,4 +9,4 @@ This repo uses the `github-backlog-management-skill`'s own label classification 
 - **Effort**: `effort:XS`, `effort:S`, `effort:M`, `effort:L`, `effort:XL`
 - **Special**: `needs-clarification`
 
-See `CLAUDE.md` for full invariants governing these labels.
+The descriptions of each label are in `skills/setup/Backlog.md`.
