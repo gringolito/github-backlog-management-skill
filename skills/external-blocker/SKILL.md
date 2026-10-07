@@ -15,14 +15,17 @@ it a short title naming the constraint, and a body with the reason and, when the
 them, the external reference and the expected resolution path.
 
 One constraint gets one issue. Look for an open one before creating, and reuse it when the user
-names another item it blocks. Link it to each blocked item with the `blocked_by` API. The
-blocked item can live in any repo or Project. Ask when the direction of a dependency is
-ambiguous, and confirm before blocking an item that is itself a `type:external-blocker` or
-closed.
+names another item it blocks. The blocked item can live in any repo or Project. Ask when the
+direction of a dependency is ambiguous.
 
 Resolve only issues labeled `type:external-blocker`; anything else is a real item and isn't
-closed here. Ask for the resolution if the user hasn't given it. List the items the issue
-blocks, comment the resolution, close it and set its Project Status to Done.
+closed here. Ask for the resolution if the user hasn't given it.
+
+Before writing, show what you will do: the issue to create or close with its resolution, and
+the items to link, including any that is closed or itself a `type:external-blocker`. Apply the
+user's amendments without asking again. Then link each blocked item with the `blocked_by` API.
+To resolve, list the items the issue blocks, comment the resolution, close it and set its
+Project Status to Done.
 
 Tell the user which of those items are now unblocked and which still have other open blockers,
 naming them. A closed one stays closed: if the constraint returns, create a new one.
