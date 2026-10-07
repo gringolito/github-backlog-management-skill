@@ -39,8 +39,8 @@ Rank should agree, with P0 near the top and P3 near the bottom, so say so and gi
 the proposal diverges. If existing items look misranked next to the new one, suggest a move for
 each, and apply it only if the user agrees.
 
-When an open Milestone exists, put the item in it. Ask which when several are open and the user
-hasn't named one.
+When an open Milestone exists, ask whether the item belongs in it, and which one when several
+are open. Adding to a Milestone changes its scope, so that is the user's call.
 
 Create the issue once the questions are settled, recording blockers with the `blocked_by` API and
 the parent with the sub-issue API. Report what was created so the user can correct it.
