@@ -1,169 +1,52 @@
 ---
 name: add-item
-description: Add a new backlog item to the GitHub Project with INVEST validation, labels, and optional dependencies.
+description: >-
+  Turn a request into one well-formed, ranked backlog item. Use when the user wants to add, file
+  or capture a new feature, bug, task or spike in the backlog.
 ---
 
-# add-item
+Create one backlog item from the user's request. When you finish, an issue exists in the Project
+with a clear body, one type, one priority and one effort label, a Rank in the Queue, and the
+blockers, blocked items and parent the user named, all approved by the user beforehand.
 
-You are an AI agent acting as a Senior Project Manager responsible for maintaining the project backlog.
+Ask questions until the request is unambiguous: the desired outcome, who benefits and why,
+constraints, risks, edge cases and what is out of scope. Challenge vague requests and don't invent
+requirements. Also ask whether open issues block this one, whether it blocks any, and whether it is
+a sub-issue of a parent. Blockers may live in other repos or Projects.
 
-## Workflow
+Write a short, specific title and a body that covers what is wanted, why, what is in and out of
+scope, and acceptance criteria. The criteria are a checklist of specific, verifiable conditions.
+The body has no fixed headings. It doesn't repeat the labels, blockers, parent or Milestone, which
+live in labels and GitHub's relationships. A question the user can't answer yet goes in the body
+as plain prose, and the item gets `needs-clarification`.
 
-### 1. Discovery
+Check the body against INVEST before creating anything. Epics are exempt from Small and Testable,
+which their sub-issues carry. When an item fails, say which letter and why, propose a fix such as
+narrowing, splitting or sharper criteria, and create nothing until it passes. Split an item that
+mixes several problems, and make exploratory work a `type:spike`.
 
-- Ask clarifying questions until ambiguities are resolved
-- Identify:
-  - Desired outcome
-  - User/business impact
-  - Constraints, risks, and edge cases
-- Ask about relationships to existing items:
-  - **Blocked by**: Is this item blocked by any open issue that must be done first? (provide issue numbers; cross-Project blockers are allowed, e.g. an infra issue tracked elsewhere)
-  - **Blocking**: Does this item block any open issue? (issue numbers, optional)
-  - **Sub-issue parent**: Is this a sub-task of a parent issue / epic? (issue number, optional; sub-issues stay independent: they do NOT inherit the parent's milestone, priority, or rank)
-- Challenge vague or poorly defined requests
-- DO NOT create a backlog item until all critical ambiguities are resolved
+Apply exactly one type, one priority and one effort label from the vocabulary. Effort measures
+complexity, never time. Ask when a group can't be decided from the conversation. Never use
+`type:external-blocker`: it marks stubs for external constraints, which aren't workable items.
 
-### 2. Definition
+A sub-issue inherits nothing from its parent, so set its Milestone, priority, effort, type and
+Rank on their own.
 
-Delegate body authoring to the `issue-body-author` agent in `create` mode, passing the title and all context from step 1: desired outcome, user/business impact, constraints, risks, edge cases, scope inclusions/exclusions, acceptance criteria, and classification notes.
+Execution order comes from Rank, so propose a position in the Queue by comparing the item with the
+open ones, not by defaulting to the bottom. Weigh impact, risk, urgency, how often the gap bites,
+and dependencies: an item goes above what it unblocks and below what it depends on. Priority and
+Rank should agree, with P0 near the top and P3 near the bottom, so say so and give the reason when
+the proposal diverges. If existing items look misranked next to the new one, name them with a
+suggested move, and leave them where they are unless the user agrees.
 
-The agent returns a fully structured body with canonical sections; read [../github-backlog-management/issue-body-sections.md](../github-backlog-management/issue-body-sections.md) for the exact headings and order.
+When an open Milestone exists, offer to put the item in it. Ask which when several are open and
+the user hasn't named one.
 
-If the agent marks any section with `<!-- TODO: ... -->`, STOP and resolve those gaps with the user before proceeding to step 3.
+Show the title, body, labels, Rank, relationships and Milestone together, and confirm once before
+creating anything. Apply the user's amendments without asking again. Then create the issue, add it
+to the Project, set its Rank, and record blockers with the `blocked_by` API and the parent with the
+sub-issue API.
 
-Issue title: short and specific.
-
-Type, Priority, and Effort are NOT in the body; they are applied as repository labels:
-
-- `type:<one>`: exactly one type label
-- `priority:<P0|P1|P2|P3>`: exactly one priority label
-- `effort:<XS|S|M|L|XL>`: exactly one effort label, based on complexity (NOT time)
-
-### 3. INVEST enforcement
-
-Delegate to the `invest-gate` agent with the body from step 2 and the issue title.
-
-If `invest-gate` returns `Overall: FAIL`:
-
-- STOP
-- Show the per-letter verdict to the user
-- For any `FAIL` letter, propose a corrected version of the relevant section
-- Do NOT proceed to step 4 until the user approves corrections and `invest-gate` returns `Overall: PASS`
-
-### 4. Classification + label application
-
-Delegate classification to the `label-classifier` agent, passing `owner`/`repo`, the issue title, and the body from step 2. The agent returns a verdict for each label group (`type:*`, `priority:*`, `effort:*`) with one-line reasoning.
-
-Handle the returned verdict:
-
-- `type:*`: if the agent returns `unclear: type`, STOP and use AskUserQuestion, offering the 3-4 most contextually likely types as options (choose from: `feature`, `bug`, `security`, `performance`, `dx`, `tech-debt`, `reliability`, `compliance`, `spike`, `epic`, `external-blocker`); "Other" is automatically provided for anything not listed
-- `priority:*`: if the agent returns `unclear: priority`, present the reasoning and use AskUserQuestion with options: `P0` / `P1` / `P2` / `P3`; default to `priority:P2` only if the user explicitly selects it
-- `effort:*`: if the agent returns `unclear: effort`, present the reasoning and use AskUserQuestion with the 4 most contextually relevant sizes as options (from `XS`, `S`, `M`, `L`, `XL`); "Other" is automatically provided for the fifth
-
-`type:external-blocker` is reserved for Stubs created by `/add-external-blocker`. DO NOT classify Workable Items with this type; if the agent returns it or the user attempts to, STOP and redirect them to `/add-external-blocker`.
-
-These labels will be passed as `labels` in the manifest in step 9.
-
-### 5. Validation
-
-Ensure:
-
-- No ambiguity remains
-- Scope is not overly broad
-- Item is not a mix of multiple concerns
-- Effort matches complexity
-
-If too large, propose splitting. If too vague, request clarification.
-
-### 6. Dependencies & sub-issue linkage
-
-Include in the manifest any relationships gathered in step 1: `blocked_by`, `blocking`, and `parent`.
-
-If the user did not name any blockers, blocking items, or a sub-issue parent, omit these fields entirely.
-
-### 7. Execution rank
-
-Execution order comes from Rank in the Queue; `pick-item` always picks the topmost item.
-
-Determine rank by RELATIVE analysis against existing Todo items, NOT by defaulting to bottom-of-column.
-
-The priority label classifies severity for filtering and reporting. It does NOT determine which item is executed next; execution order is set by Rank. Severity and rank should be kept consistent: a `priority:P0` item should generally land near the top of the Todo column, a `priority:P3` near the bottom, unless the user explicitly justifies a divergence.
-
-#### 7a. Determine the new item's rank by delegating to `rank-recommender`
-
-Call the `rank-recommender` agent, passing the issue title, one-line `### What` summary, and `type:*`, `priority:*`, `effort:*` labels from step 4.
-
-The agent fetches the current Todo list itself and returns:
-- `position:`: `top` | `after_issue: <N>` | `bottom`
-- `rationale:`: per-dimension Impact / Risk / Urgency / Frequency / Dependencies
-- `divergence_flag:` (if present): the agent detected a priority/rank conflict; surface this to the user and ask them to confirm or override
-
-Present the agent's recommendation and rationale to the user before proceeding. Normalize the output to the manifest `rank` field:
-- `position: top` → `{"position": "top"}`
-- `position: after_issue: 45` → `{"after_issue": 45}`
-- `position: bottom` → `{"position": "bottom"}`
-
-#### 7b. Surface re-rank suggestions for existing items
-
-If the analysis reveals existing items that appear misranked relative to the new item or each other (e.g. a `priority:P3` sitting above a `priority:P1`), list each suggested move with rationale. DO NOT apply them silently.
-
-#### 7c. Apply rank (user-confirmed only)
-
-After the user confirms the proposed Rank placements, include the confirmed `rank` in the manifest and any `rank_adjustments` for re-ranked existing items.
-
-If the user prefers to apply moves manually, omit `rank` and `rank_adjustments` from the manifest and instruct the user to drag-drop in the Project's web UI.
-
-### 8. Milestone assignment (optional, recommended)
-
-Run `resolve-milestone` via the Bash tool. If it exits non-zero, STOP and surface its output verbatim. On success, capture the JSON: `{"number": N, "title": "...", "due_on": "..."}`. If no Active Release exists, the script has already stopped with an error.
-
-Ask the user whether to assign this item to the Active Release:
-
-- If yes: include `"milestone": "<milestone-title>"` in the manifest passed to `create-item`
-- If no: omit the `milestone` field (will be picked up by `pick-item` only after items in the Active Release are exhausted)
-
-### 9. Issue creation & project setup
-
-After validation passes, invoke the `create-item` Bash tool to create the issue:
-
-1. Write the issue body to a temp file, e.g. `/tmp/add-item-body.md`
-2. Write the manifest JSON file, e.g. `/tmp/add-item-manifest.json`:
-
-See [issue-manifest.md](./issue-manifest.md) for the full manifest schema.
-
-3. Run: `create-item --input /tmp/add-item-manifest.json`
-4. Capture the JSON blob emitted to stdout; use it for step 10.
-
-Branch on the exit code:
-
-- **Exit 0**: success. Proceed to step 10 as normal.
-- **Exit 2**: the issue **was created**, but a post-creation step warned. Parse the JSON blob from stdout anyway and proceed to step 10, reporting the issue as created. Do NOT retry or re-run `create-item` for this request; retrying would create a duplicate.
-- **Any other non-zero exit**: nothing was created (e.g. `gh issue create` itself failed). STOP and surface its stderr output verbatim. It is safe to retry once the underlying input is fixed.
-
-### 10. Output
-
-Using the JSON blob returned by `create-item`, print:
-
-- Issue URL and number (`.issue.url`, `.issue.number`)
-- Applied labels (`.labels`)
-- Project Status (`.status`)
-- Milestone assignment (`.milestone` or "unassigned")
-- Rank applied (`.rank.applied`) and any re-ranked items (`.rank_adjustments_applied`)
-  - If `.rank.applied == false`, do NOT fold this into the generic bullet: render a standalone, prominent line instead: `⚠️ Rank NOT applied — item landed at the bottom of Todo, not the requested position. <matching warning text from .warnings>`
-- Blockers (`.blocked_by` list, with cross-Project / cross-repo blockers explicitly flagged), or "none"
-- Blocking (`.blocking` list), or "none"
-- Sub-issue parent (`.parent`), or "none"
-- Any warnings (`.warnings`: surface each one verbatim)
-
-## Rules & constraints
-
-- Ask questions before creating items unless the request is unambiguous
-- Never assume requirements
-- Keep items atomic and independently deliverable
-- Do NOT bundle multiple problems into a single item
-- Exploratory work: classify as Spike (`type:spike`)
-- Effort must NEVER be measured in time (no hours/days)
-- Issue body section headings MUST match the headings in [issue-body-sections.md](../github-backlog-management/issue-body-sections.md) exactly (case + ordering) so `audit` can parse them
-- Never apply more than one label per group (one type, one priority, one effort)
-- Dependencies and sub-issue parent are NOT mirrored in the issue body; GitHub's native API is the only source of truth for these relationships
-- Sub-issues stay independent: assigning a parent does NOT inherit the parent's milestone, priority, effort, type, or Project rank
+Once the issue exists, never create it again. If a later step fails, report what was and wasn't
+applied and finish the rest on the existing issue. If creation itself fails, nothing exists yet,
+so fix the cause and retry.
