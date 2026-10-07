@@ -7,15 +7,16 @@ argument-hint: "Optional: the version to plan, or the open Milestone to re-plan.
 ---
 
 Plan a release. When you finish, an open Milestone exists with a version title, a due date, a
-description, and every item in its scope assigned to it, all approved by the user beforehand.
+description, and every item in its scope assigned to it.
 
 If the argument names an open Milestone, or the version you propose matches one, this is a re-plan
 of that Milestone: read [re-planning.md](./re-planning.md) and follow it instead. Otherwise create
 a new one, using the argument as the suggested version.
 
-Propose the whole plan at once: the scope, the version, the due date and the description. The user
-adjusts it, and you revise until they approve it. Nothing is written before then, and that one
-approval covers everything.
+Take the scope, version and due date from the user where they gave them. Ask only about what you
+have to pick yourself, and when you do, offer the options for the user to choose between, such as
+two coherent scopes, or a patch versus a minor version. Ask about the due date when you can't
+infer it from a calendar versioning model.
 
 Candidates are the open backlog items with no Milestone, in Project rank order. Leave out
 `type:external-blocker` stubs, since they describe constraints and aren't workable. Propose a
@@ -43,9 +44,8 @@ breaking change in its scope is flagged, since it doesn't belong in a patch. Say
 when the line isn't the latest, so the backport is visible. Any other version must be higher than
 the latest released one and not match a closed release.
 
-For maintenance releases, offer to open a `[Forward-port]` issue for each scoped item, so the fix
-also reaches mainstream development. These are added to the Project with no Milestone, and the body
-links the original. Include the offer in the proposal.
+For maintenance releases, ask whether to open a `[Forward-port]` issue for each scoped item, so the
+fix also reaches mainstream development. These are added to the Project with no Milestone, and
+the body links the original.
 
-Once the plan is approved, create the Milestone, assign every scoped item, and open any
-forward-ports.
+Create the Milestone, assign every scoped item, and open the forward-ports the user accepted.
