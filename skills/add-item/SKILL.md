@@ -9,6 +9,9 @@ Create one backlog item from the user's request. When you finish, an issue exist
 with a clear body, one type, one priority and one effort label, a Rank in the Queue, and the
 blockers, blocked items and parent the user named.
 
+When the user only wants to park an idea for later, without defining it now, hand it to
+`add-idea`.
+
 Ask questions until the request is unambiguous: the desired outcome, who benefits and why,
 constraints, risks, edge cases and what is out of scope. Challenge vague requests and don't invent
 requirements. Also ask whether open issues block this one, whether it blocks any, and whether it is
@@ -27,7 +30,8 @@ mixes several problems, and make exploratory work a `type:spike`.
 
 Apply exactly one type, one priority and one effort label from the vocabulary. Effort measures
 complexity, never time. Ask when a group can't be decided from the conversation. Never use
-`type:external-blocker`: it marks stubs for external constraints.
+`type:external-blocker` or `type:idea`: they mark stubs for external constraints and rough
+undefined ideas.
 
 A sub-issue inherits nothing from its parent, so set its Milestone, priority, effort, type and
 Rank on their own.

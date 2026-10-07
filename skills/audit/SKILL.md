@@ -33,6 +33,9 @@ effort or full body, but they need a stated reason that explains the specific co
 reason that is missing, empty or generic, such as "TBD" or "external dependency". Flag an open
 blocker that blocks nothing.
 
+Flag an idea that has gone more than 30 days without an update; the fix is to refine it with
+`refine-item` or close it.
+
 Read each item's `blocked_by` relationships. A blocker that can no longer be resolved is dangling.
 A cycle is a defect even though GitHub rejects direct ones, because transfers and deletions can
 leave indirect ones.

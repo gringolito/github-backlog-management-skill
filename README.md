@@ -52,9 +52,10 @@ Run `/setup` once per repo. The other skills read `docs/Backlog.md` for the Proj
 |---|---|
 | `/setup` | Links a GitHub Project, creates the label vocabulary, and documents both in `docs/Backlog.md`. Safe to re-run. |
 | `/add-item` | Turns a request into one well-formed, ranked backlog item. |
+| `/add-idea` | Parks a rough idea at the bottom of the backlog, with no priority or effort, so it isn't lost. |
 | `/migrate` | Imports an existing `TODO.md`, `BACKLOG.md` or other list into GitHub Issues. |
 | `/refine` | Runs a refinement session over items that need clarification or labels. |
-| `/refine-item` | Brings one item up to standard and clears `needs-clarification`. |
+| `/refine-item` | Brings one item up to standard and clears `needs-clarification`, or turns an idea into a defined item. |
 | `/pick-item` | Chooses the next unblocked item by rank, checks it is ready and assigns it to you. |
 | `/spike` | Investigates a spike and delivers a findings pull request with follow-on items. |
 | `/external-blocker` | Records, links and resolves constraints outside the team's control that block items. |

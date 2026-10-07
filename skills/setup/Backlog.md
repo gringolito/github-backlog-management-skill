@@ -23,6 +23,7 @@ Every backlog item carries one type, one priority and one effort label. Replace 
 - `type:spike`: Time-boxed investigation to reduce uncertainty; deliverable is knowledge
 - `type:epic`: Large body of work, split into sub-issues
 - `type:external-blocker`: External constraint blocking a backlog item (Stub)
+- `type:idea`: Rough idea parked for later; not yet defined, prioritized or sized
 
 ### Priority
 

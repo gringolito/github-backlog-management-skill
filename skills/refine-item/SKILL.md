@@ -1,8 +1,9 @@
 ---
 name: refine-item
 description: >-
-  Bring one backlog item up to standard and clear its `needs-clarification` label. Use when the
-  user wants to refine a specific issue, or when `refine` hands one over.
+  Bring one backlog item up to standard and clear its `needs-clarification` label, or turn a parked
+  idea into a defined item. Use when the user wants to refine a specific issue or idea, or when
+  `refine` hands one over.
 ---
 
 Refine one backlog item until it passes: the body passes INVEST with no open questions, the item
