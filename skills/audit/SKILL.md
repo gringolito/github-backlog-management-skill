@@ -20,7 +20,9 @@ XL item probably needs splitting.
 
 The body states what is wanted, why, what is in and out of scope, and acceptance criteria.
 Acceptance criteria should be a checklist of specific, verifiable conditions. Flag vague ones such
-as "works correctly", and criteria that reach beyond the stated scope.
+as "works correctly", criteria that reach beyond the stated scope, and lists of files, packages or
+counts that stand in for a broader ask such as "everywhere `foo` is used", since they go stale as
+the code changes.
 
 Judge each item against INVEST and give a short reason for every failure. Epics are exempt from
 Small and Testable, which their sub-issues carry. An epic with no sub-issues hasn't been

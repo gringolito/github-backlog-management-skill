@@ -23,6 +23,13 @@ It doesn't repeat the labels, blockers, parent or Milestone, which live in label
 relationships. A question the user can't answer yet goes in the body as plain prose, and the item
 gets `needs-clarification`.
 
+State the scope the way the user framed it. When they ask to change something everywhere it
+happens, the body and criteria say that, such as "no call to `foo` remains", rather than listing
+the files, packages or counts found today. The code keeps changing before someone picks the item
+up, so a list goes stale while the intent stays true. Keep useful diagnostic locations as supporting
+evidence, whether supplied by the user or found during investigation. Treat locations as scope
+boundaries only when those limits are explicit.
+
 Check the body against INVEST before creating anything. Epics are exempt from Small and Testable,
 which their sub-issues carry. When an item fails, say which letter and why, propose a fix such as
 narrowing, splitting or sharper criteria, and create nothing until it passes. Split an item that

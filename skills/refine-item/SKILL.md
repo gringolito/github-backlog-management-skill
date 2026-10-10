@@ -21,6 +21,14 @@ The body covers what is wanted, why, what is in and out of scope, and acceptance
 checklist of specific, verifiable conditions. What the user can't answer is written into the body
 as an open question in plain prose. Keep the body clean, tight, concise, technical and direct.
 
+State the scope the way the user framed it. When the ask covers everything matching a pattern,
+the body and criteria say that rather than listing the files, packages or counts found today,
+because the code keeps changing and a list goes stale while the intent stays true. Keep useful
+diagnostic locations as supporting evidence, whether supplied by the user or found during
+investigation. Treat locations as scope boundaries only when those limits are explicit. An existing
+list that looks like a snapshot of a broader ask is confirmed with the user and rewritten as that
+ask.
+
 Judge the rewritten body against INVEST, with a short reason for each failure. Epics are exempt
 from Small and Testable, which their sub-issues carry. When the item fails, keep
 `needs-clarification` and leave labels, Rank and relationships alone until it passes. When it fails
